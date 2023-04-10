@@ -1,0 +1,7 @@
+[versions]
+coroutines = "1.6.4"
+ktor = "2.2.4"
+
+[libraries]
+coroutines = { module = "org.jetbrains.kotlinx:kotlinx-coroutines-core", version.ref = "coroutines" }
+ktor-utils = { module = "io.ktor:ktor-utils", version.ref = "ktor" }

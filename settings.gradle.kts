@@ -8,6 +8,7 @@ pluginManagement {
 
     plugins {
         kotlin("multiplatform").version(extra["kotlin.version"] as String)
+        id("org.jlleitschuh.gradle.ktlint").version("11.0.0")
     }
 }
 
