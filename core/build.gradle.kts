@@ -1,8 +1,11 @@
 plugins {
     kotlin("multiplatform")
+    id("org.jlleitschuh.gradle.ktlint")
 }
 
 kotlin {
+    explicitApi()
+
     jvm {
         jvmToolchain(11)
         withJava()
@@ -10,6 +13,7 @@ kotlin {
             useJUnitPlatform()
         }
     }
+
     js(IR) {
         browser {
             commonWebpackConfig {
@@ -19,6 +23,7 @@ kotlin {
             }
         }
     }
+
     val hostOs = System.getProperty("os.name")
     val isMingwX64 = hostOs.startsWith("Windows")
     val nativeTarget = when {
@@ -27,7 +32,6 @@ kotlin {
         isMingwX64 -> mingwX64("native")
         else -> throw GradleException("Host OS is not supported in Kotlin/Native.")
     }
-
 
     sourceSets {
         val commonMain by getting {
