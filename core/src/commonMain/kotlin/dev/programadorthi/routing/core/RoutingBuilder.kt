@@ -19,21 +19,11 @@ public fun Route.route(
 ): Route = createRouteFromPath(path, name).apply(build)
 
 @KtorDsl
-public fun Route.screen(
+public fun Route.handle(
     path: String,
     name: String? = null,
     body: PipelineInterceptor<Unit, ApplicationCall>,
 ): Route = route(path, name) { handle(body) }
-
-@KtorDsl
-public fun Route.screen(
-    body: PipelineInterceptor<Unit, ApplicationCall>,
-) {
-    check(this !is Routing) {
-        "Screen must be a child of Route. Found parent of: $this"
-    }
-    handle(body)
-}
 
 @KtorDsl
 public fun Route.redirectToName(name: String) {
