@@ -42,8 +42,3 @@ public class RouteNotFoundException(
     public override val message: String,
     public override val cause: Throwable? = null,
 ) : BadRequestException(message, cause)
-
-public class TooManyRedirectException(
-    public override val message: String?,
-    public override val cause: Throwable? = null,
-) : Exception(message, cause)

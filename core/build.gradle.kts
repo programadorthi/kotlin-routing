@@ -1,13 +1,17 @@
 plugins {
     kotlin("multiplatform")
     id("org.jlleitschuh.gradle.ktlint")
+    id("maven-publish")
 }
+
+group = "dev.programadorthi"
+version = "0.0.1"
 
 kotlin {
     explicitApi()
 
     jvm {
-        jvmToolchain(11)
+        jvmToolchain(8)
         withJava()
         testRuns["test"].executionTask.configure {
             useJUnitPlatform()
@@ -15,13 +19,7 @@ kotlin {
     }
 
     js(IR) {
-        browser {
-            commonWebpackConfig {
-                cssSupport {
-                    enabled.set(true)
-                }
-            }
-        }
+        browser()
     }
 
     val hostOs = System.getProperty("os.name")
@@ -45,10 +43,13 @@ kotlin {
                 implementation(kotlin("test"))
             }
         }
+
         val jvmMain by getting
         val jvmTest by getting
+
         val jsMain by getting
         val jsTest by getting
+
         val nativeMain by getting
         val nativeTest by getting
     }

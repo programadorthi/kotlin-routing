@@ -30,9 +30,4 @@ public data class ApplicationEnvironment(
      * Indicates if development mode is enabled.
      */
     public val developmentMode: Boolean,
-
-    /**
-     * Indicates the max attempt to try redirect a route and avoid loops
-     */
-    public val maxRedirectAttempts: Int,
 )

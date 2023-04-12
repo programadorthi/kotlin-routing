@@ -2,36 +2,34 @@ package dev.programadorthi.routing.core
 
 import dev.programadorthi.routing.core.application.ApplicationCall
 import dev.programadorthi.routing.core.application.call
+import dev.programadorthi.routing.core.http.Parameters
 import io.ktor.util.pipeline.PipelineContext
 import io.ktor.util.pipeline.PipelineInterceptor
 import io.ktor.util.pipeline.execute
+import kotlinx.coroutines.launch
 
 internal sealed class RedirectPipelineInterceptor(
     open val name: String,
     open val path: String,
+    open val pathParameters: Parameters,
 ) : PipelineInterceptor<Unit, ApplicationCall> {
-
-    init {
-        validate()
-    }
 
     override suspend fun invoke(context: PipelineContext<Unit, ApplicationCall>, p2: Unit) {
         validate()
         val call = context.call
-        var attempt = 0
-        // Checking if trying redirect from another redirect
-        if (call is RedirectApplicationCall) {
-            attempt = call.attempt
+        with(call.application) {
+            launch {
+                execute(
+                    RedirectApplicationCall(
+                        previousCall = call,
+                        name = name,
+                        uri = path,
+                        coroutineContext = context.coroutineContext,
+                        pathParameters = pathParameters,
+                    )
+                )
+            }
         }
-        call.application.execute(
-            RedirectApplicationCall(
-                previousCall = call,
-                name = name,
-                uri = path,
-                attempt = attempt + 1,
-                coroutineContext = context.coroutineContext,
-            )
-        )
     }
 
     private fun validate() {
@@ -42,9 +40,11 @@ internal sealed class RedirectPipelineInterceptor(
 
     data class NamedRedirectPipelineInterceptor(
         override val name: String,
+        override val pathParameters: Parameters = Parameters.Empty,
     ) : RedirectPipelineInterceptor(
         name = name,
         path = "",
+        pathParameters = pathParameters,
     )
 
     data class PathRedirectPipelineInterceptor(
@@ -52,5 +52,6 @@ internal sealed class RedirectPipelineInterceptor(
     ) : RedirectPipelineInterceptor(
         name = "",
         path = path,
+        pathParameters = Parameters.Empty,
     )
 }

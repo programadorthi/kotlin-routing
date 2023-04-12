@@ -36,13 +36,13 @@ public fun Route.handle(
 public fun Route.push(
     path: Regex,
     body: PipelineInterceptor<Unit, ApplicationCall>,
-): Route = route(path) { handlePush(body) }
+): Route = route(path) { push(body) }
 
 @KtorDsl
 public fun Route.replace(
     path: Regex,
     body: PipelineInterceptor<Unit, ApplicationCall>,
-): Route = route(path) { handleReplace(body) }
+): Route = route(path) { replace(body) }
 
 private fun Route.createRouteFromRegexPath(regex: Regex): Route {
     return this.createChild(PathSegmentRegexRouteSelector(regex))

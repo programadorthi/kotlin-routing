@@ -14,6 +14,12 @@ public sealed class NavigationApplicationCall : ApplicationCall, CoroutineScope 
 
     override val attributes: Attributes = Attributes()
 
+    public data class Pop(
+        override val application: Application,
+        override val uri: String,
+        override val parameters: Parameters = Parameters.Empty,
+    ) : NavigationApplicationCall()
+
     public data class Push(
         override val application: Application,
         override val uri: String,
@@ -24,7 +30,7 @@ public sealed class NavigationApplicationCall : ApplicationCall, CoroutineScope 
         override val application: Application,
         override val parameters: Parameters = Parameters.Empty,
         public val name: String,
-        public val pathReplacements: Parameters = Parameters.Empty,
+        public val pathParameters: Parameters = Parameters.Empty,
     ) : NavigationApplicationCall() {
 
         override val uri: String = ""
@@ -41,7 +47,7 @@ public sealed class NavigationApplicationCall : ApplicationCall, CoroutineScope 
         override val application: Application,
         override val parameters: Parameters = Parameters.Empty,
         public val name: String,
-        public val pathReplacements: Parameters = Parameters.Empty,
+        public val pathParameters: Parameters = Parameters.Empty,
         public val all: Boolean = false,
     ) : NavigationApplicationCall() {
 

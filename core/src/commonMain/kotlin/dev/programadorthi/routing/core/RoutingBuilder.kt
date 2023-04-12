@@ -6,6 +6,7 @@ package dev.programadorthi.routing.core
 
 import dev.programadorthi.routing.core.application.ApplicationCall
 import dev.programadorthi.routing.core.application.call
+import dev.programadorthi.routing.core.http.Parameters
 import io.ktor.util.KtorDsl
 import io.ktor.util.pipeline.PipelineInterceptor
 
@@ -31,20 +32,34 @@ public fun Route.push(
     path: String,
     name: String? = null,
     body: PipelineInterceptor<Unit, ApplicationCall>,
-): Route = route(path, name) { handlePush(body) }
+): Route = route(path, name) { push(body) }
 
 @KtorDsl
 public fun Route.replace(
     path: String,
     name: String? = null,
     body: PipelineInterceptor<Unit, ApplicationCall>,
-): Route = route(path, name) { handleReplace(body) }
+): Route = route(path, name) { replace(body) }
+
+@KtorDsl
+public fun Route.pop(
+    body: PipelineInterceptor<Unit, ApplicationCall>,
+): Route {
+    handleNavigation(
+        body = body,
+        predicate = { it is NavigationApplicationCall.Pop }
+    )
+    return this
+}
 
 @KtorDsl
 public fun Route.push(
     body: PipelineInterceptor<Unit, ApplicationCall>,
 ): Route {
-    handlePush(body)
+    handleNavigation(
+        body = body,
+        predicate = { it is NavigationApplicationCall.Push }
+    )
     return this
 }
 
@@ -52,16 +67,22 @@ public fun Route.push(
 public fun Route.replace(
     body: PipelineInterceptor<Unit, ApplicationCall>,
 ): Route {
-    handleReplace(body)
+    handleNavigation(
+        body = body,
+        predicate = { it is NavigationApplicationCall.Replace }
+    )
     return this
 }
 
 @KtorDsl
-public fun Route.redirectToName(name: String) {
+public fun Route.redirectToName(name: String, pathParameters: Parameters = Parameters.Empty) {
     check(this !is Routing) {
         "Redirect root is not allowed. You can do this changing rootPath on initialization"
     }
-    val body = RedirectPipelineInterceptor.NamedRedirectPipelineInterceptor(name = name)
+    val body = RedirectPipelineInterceptor.NamedRedirectPipelineInterceptor(
+        name = name,
+        pathParameters = pathParameters,
+    )
     handle(body::invoke)
 }
 
@@ -74,21 +95,14 @@ public fun Route.redirectToPath(path: String) {
     handle(body::invoke)
 }
 
-internal fun Route.handlePush(
+internal fun Route.handleNavigation(
+    predicate: (NavigationApplicationCall) -> Boolean,
     body: PipelineInterceptor<Unit, ApplicationCall>,
 ) {
     handle {
-        if (call is NavigationApplicationCall.Push) {
-            body(this@handle, Unit)
-        }
-    }
-}
-
-internal fun Route.handleReplace(
-    body: PipelineInterceptor<Unit, ApplicationCall>,
-) {
-    handle {
-        if (call is NavigationApplicationCall.Replace) {
+        val routingCall = call as RoutingApplicationCall
+        val navigationCall = routingCall.previousCall as NavigationApplicationCall
+        if (predicate(navigationCall)) {
             body(this@handle, Unit)
         }
     }
