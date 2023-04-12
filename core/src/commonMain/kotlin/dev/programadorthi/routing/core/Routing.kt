@@ -398,14 +398,12 @@ public fun <B : Any, F : Any> Route.install(
 public fun routing(
     parentCoroutineContext: CoroutineContext = EmptyCoroutineContext,
     log: Logger = KtorSimpleLogger("VoyagerRouting"),
-    startDestination: String = "/",
     developmentMode: Boolean = false,
     configuration: Routing.() -> Unit
 ): Routing {
     val environment = ApplicationEnvironment(
         parentCoroutineContext = parentCoroutineContext,
         log = log,
-        starterPath = startDestination,
         developmentMode = developmentMode,
     )
     return with(Application(environment)) {

@@ -1,5 +1,8 @@
 package dev.programadorthi.routing.core
 
+import dev.programadorthi.routing.core.application.call
+import dev.programadorthi.routing.core.http.Parameters
+import dev.programadorthi.routing.core.http.parametersOf
 import kotlinx.coroutines.ExperimentalCoroutinesApi
 import kotlinx.coroutines.Job
 import kotlinx.coroutines.test.runTest
@@ -8,7 +11,7 @@ import kotlin.test.Test
 import kotlin.test.assertEquals
 
 @OptIn(ExperimentalCoroutinesApi::class)
-class RoutingBuilderTest {
+class RoutingTest {
 
     @Test
     fun shouldNavigateByPath() {
@@ -31,6 +34,29 @@ class RoutingBuilderTest {
     }
 
     @Test
+    fun shouldNavigateByPathWithParameters() {
+        var result = ""
+        var parameters = Parameters.Empty
+
+        whenBody { handled ->
+            val routing = routing(parentCoroutineContext = this) {
+                route(path = "/path") {
+                    handle {
+                        result = "path-handled"
+                        parameters = call.parameters
+                        handled()
+                    }
+                }
+            }
+
+            routing.push(path = "/path", parameters = parametersOf("key", "value"))
+        }
+
+        assertEquals(result, "path-handled")
+        assertEquals(parameters, parametersOf("key", "value"))
+    }
+
+    @Test
     fun shouldNavigateByName() {
         var result = ""
 
@@ -48,6 +74,80 @@ class RoutingBuilderTest {
         }
 
         assertEquals(result, "name-handled")
+    }
+
+    @Test
+    fun shouldNavigateByNameWithParameters() {
+        var result = ""
+        var parameters = Parameters.Empty
+
+        whenBody { handled ->
+            val routing = routing(parentCoroutineContext = this) {
+                route(path = "/path", name = "path") {
+                    handle {
+                        result = "name-handled"
+                        parameters = call.parameters
+                        handled()
+                    }
+                }
+            }
+
+            routing.pushNamed(name = "path", parameters = parametersOf("key", "value"))
+        }
+
+        assertEquals(result, "name-handled")
+        assertEquals(parameters, parametersOf("key", "value"))
+    }
+
+    @Test
+    fun shouldNavigateByNameWithPathParameters() {
+        var result = ""
+        var parameters = Parameters.Empty
+
+        whenBody { handled ->
+            val routing = routing(parentCoroutineContext = this) {
+                route(path = "/path/{id}", name = "path") {
+                    handle {
+                        result = "name-handled"
+                        parameters = call.parameters
+                        handled()
+                    }
+                }
+            }
+
+            routing.pushNamed(
+                name = "path",
+                pathParameters = parametersOf("id", "123"),
+            )
+        }
+
+        assertEquals(result, "name-handled")
+        assertEquals(parameters, parametersOf("id", "123"))
+    }
+
+    @Test
+    fun shouldPopWithParameters() {
+        var result = ""
+        var parameters = Parameters.Empty
+
+        whenBody { handled ->
+            val routing = routing(parentCoroutineContext = this) {
+                route(path = "/path", name = "path") {
+                    pop {
+                        result = "popped"
+                        parameters = call.parameters
+                        handled()
+                    }
+                }
+            }
+
+            // A previous route must exist to pop
+            routing.pushNamed(name = "path")
+            routing.pop(parameters = parametersOf("key", "value"))
+        }
+
+        assertEquals(result, "popped")
+        assertEquals(parameters, parametersOf("key", "value"))
     }
 
     @Test

@@ -22,11 +22,6 @@ public data class ApplicationEnvironment(
     public val log: Logger,
 
     /**
-     * Application's root path (prefix, context path in servlet container).
-     */
-    public val starterPath: String,
-
-    /**
      * Indicates if development mode is enabled.
      */
     public val developmentMode: Boolean,
