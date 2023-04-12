@@ -476,6 +476,24 @@ public data class AndRouteSelector(
     override fun toString(): String = "{$first & $second}"
 }
 
+/**
+ * Evaluates a route against an [RouteMethod].
+ * @param method is an instance of [RouteMethod]
+ */
+public data class RouteMethodRouteSelector(
+    val method: RouteMethod
+) : RouteSelector() {
+
+    override fun evaluate(context: RoutingResolveContext, segmentIndex: Int): RouteSelectorEvaluation {
+        if (context.call.routeMethod == method) {
+            return RouteSelectorEvaluation.Constant
+        }
+        return RouteSelectorEvaluation.FailedMethod
+    }
+
+    override fun toString(): String = "(method:${method.value})"
+}
+
 internal fun evaluatePathSegmentParameter(
     segments: List<String>,
     segmentIndex: Int,

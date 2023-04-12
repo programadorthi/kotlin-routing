@@ -4,6 +4,7 @@
 
 package dev.programadorthi.routing.core.application
 
+import dev.programadorthi.routing.core.RouteMethod
 import io.ktor.http.Parameters
 import io.ktor.util.AttributeKey
 import io.ktor.util.Attributes
@@ -19,6 +20,11 @@ public interface ApplicationCall {
      * An application being called.
      */
     public val application: Application
+
+    /**
+     * The application call method
+     */
+    public val routeMethod: RouteMethod
 
     /**
      * Gets a request's URI, including a query string.

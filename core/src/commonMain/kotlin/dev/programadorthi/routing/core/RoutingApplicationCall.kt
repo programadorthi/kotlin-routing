@@ -7,10 +7,11 @@ import io.ktor.util.Attributes
 import kotlinx.coroutines.CoroutineScope
 import kotlin.coroutines.CoroutineContext
 
-internal class RoutingApplicationCall(
+public class RoutingApplicationCall(
+    override val coroutineContext: CoroutineContext,
+    override val routeMethod: RouteMethod,
     public val previousCall: ApplicationCall,
     public val route: Route,
-    override val coroutineContext: CoroutineContext,
     parameters: Parameters
 ) : ApplicationCall, CoroutineScope {
 

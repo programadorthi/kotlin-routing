@@ -22,59 +22,72 @@ public fun Route.route(
     build: Route.() -> Unit
 ): Route = createRouteFromPath(path, name).apply(build)
 
+/**
+ * Builds a route to match the specified HTTP [method] and [path].
+ * @see [Application.routing]
+ */
+@KtorDsl
+public fun Route.route(
+    path: String,
+    method: RouteMethod,
+    name: String? = null,
+    build: Route.() -> Unit,
+): Route {
+    val selector = RouteMethodRouteSelector(method)
+    return createRouteFromPath(path, name).createChild(selector).apply(build)
+}
+
+/**
+ * Builds a route to match the specified HTTP [method].
+ * @see [Application.routing]
+ */
+@KtorDsl
+public fun Route.method(method: RouteMethod, body: Route.() -> Unit): Route {
+    val selector = RouteMethodRouteSelector(method)
+    return createChild(selector).apply(body)
+}
+
+@KtorDsl
+public fun Route.push(
+    path: String,
+    name: String? = null,
+    body: PipelineInterceptor<Unit, ApplicationCall>,
+): Route = route(path = path, name = name, method = RouteMethod.Push) { handle(body) }
+
+@KtorDsl
+public fun Route.push(
+    body: PipelineInterceptor<Unit, ApplicationCall>,
+): Route {
+    return method(RouteMethod.Push) { handle(body) }
+}
+
+@KtorDsl
+public fun Route.replace(
+    path: String,
+    name: String? = null,
+    body: PipelineInterceptor<Unit, ApplicationCall>,
+): Route = route(path = path, name = name, method = RouteMethod.Replace) { handle(body) }
+
+@KtorDsl
+public fun Route.replace(
+    body: PipelineInterceptor<Unit, ApplicationCall>,
+): Route {
+    return method(RouteMethod.Replace) { handle(body) }
+}
+
+@KtorDsl
+public fun Route.pop(
+    body: PipelineInterceptor<Unit, ApplicationCall>,
+): Route {
+    return method(RouteMethod.Pop) { handle(body) }
+}
+
 @KtorDsl
 public fun Route.handle(
     path: String,
     name: String? = null,
     body: PipelineInterceptor<Unit, ApplicationCall>,
 ): Route = route(path, name) { handle(body) }
-
-@KtorDsl
-public fun Route.push(
-    path: String,
-    name: String? = null,
-    body: PipelineInterceptor<Unit, ApplicationCall>,
-): Route = route(path, name) { push(body) }
-
-@KtorDsl
-public fun Route.replace(
-    path: String,
-    name: String? = null,
-    body: PipelineInterceptor<Unit, ApplicationCall>,
-): Route = route(path, name) { replace(body) }
-
-@KtorDsl
-public fun Route.pop(
-    body: PipelineInterceptor<Unit, ApplicationCall>,
-): Route {
-    handleNavigation(
-        body = body,
-        predicate = { it is NavigationApplicationCall.Pop }
-    )
-    return this
-}
-
-@KtorDsl
-public fun Route.push(
-    body: PipelineInterceptor<Unit, ApplicationCall>,
-): Route {
-    handleNavigation(
-        body = body,
-        predicate = { it is NavigationApplicationCall.Push }
-    )
-    return this
-}
-
-@KtorDsl
-public fun Route.replace(
-    body: PipelineInterceptor<Unit, ApplicationCall>,
-): Route {
-    handleNavigation(
-        body = body,
-        predicate = { it is NavigationApplicationCall.Replace }
-    )
-    return this
-}
 
 @KtorDsl
 public fun Route.redirectToName(name: String, pathParameters: Parameters = Parameters.Empty) {
@@ -90,19 +103,6 @@ public fun Route.redirectToPath(path: String) {
         "Redirect root is not allowed. You can do this changing rootPath on initialization"
     }
     redirect(path = path, name = "")
-}
-
-internal fun Route.handleNavigation(
-    predicate: (NavigationApplicationCall) -> Boolean,
-    body: PipelineInterceptor<Unit, ApplicationCall>,
-) {
-    handle {
-        val routingCall = call as RoutingApplicationCall
-        val navigationCall = routingCall.previousCall as NavigationApplicationCall
-        if (predicate(navigationCall)) {
-            body(this@handle, Unit)
-        }
-    }
 }
 
 /**

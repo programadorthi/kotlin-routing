@@ -298,9 +298,10 @@ public class Routing internal constructor(
                 is RoutingResolveResult.Success -> {
                     val routingCallPipeline = resolveResult.route.buildPipeline()
                     val routingCall = RoutingApplicationCall(
+                        coroutineContext = context.coroutineContext,
+                        routeMethod = call.routeMethod,
                         previousCall = call,
                         route = resolveResult.route,
-                        coroutineContext = context.coroutineContext,
                         parameters = resolveResult.parameters,
                     )
                     routingCallPipeline.execute(routingCall)

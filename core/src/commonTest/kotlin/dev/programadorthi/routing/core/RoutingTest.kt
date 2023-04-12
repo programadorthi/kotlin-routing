@@ -133,6 +133,7 @@ class RoutingTest {
         whenBody { handled ->
             val routing = routing(parentCoroutineContext = this) {
                 route(path = "/path", name = "path") {
+                    push { }
                     pop {
                         result = "popped"
                         parameters = call.parameters

@@ -18,13 +18,19 @@ public sealed class NavigationApplicationCall : ApplicationCall, CoroutineScope 
         override val application: Application,
         override val uri: String,
         override val parameters: Parameters = Parameters.Empty,
-    ) : NavigationApplicationCall()
+    ) : NavigationApplicationCall() {
+
+        override val routeMethod: RouteMethod = RouteMethod.Pop
+    }
 
     public data class Push(
         override val application: Application,
         override val uri: String,
         override val parameters: Parameters = Parameters.Empty,
-    ) : NavigationApplicationCall()
+    ) : NavigationApplicationCall() {
+
+        override val routeMethod: RouteMethod = RouteMethod.Push
+    }
 
     public data class PushNamed(
         override val application: Application,
@@ -34,6 +40,8 @@ public sealed class NavigationApplicationCall : ApplicationCall, CoroutineScope 
     ) : NavigationApplicationCall() {
 
         override val uri: String = ""
+
+        override val routeMethod: RouteMethod = RouteMethod.Push
     }
 
     public data class Replace(
@@ -41,7 +49,10 @@ public sealed class NavigationApplicationCall : ApplicationCall, CoroutineScope 
         override val uri: String,
         override val parameters: Parameters = Parameters.Empty,
         public val all: Boolean = false,
-    ) : NavigationApplicationCall()
+    ) : NavigationApplicationCall() {
+
+        override val routeMethod: RouteMethod = RouteMethod.Replace
+    }
 
     public data class ReplaceNamed(
         override val application: Application,
@@ -52,5 +63,7 @@ public sealed class NavigationApplicationCall : ApplicationCall, CoroutineScope 
     ) : NavigationApplicationCall() {
 
         override val uri: String = ""
+
+        override val routeMethod: RouteMethod = RouteMethod.Replace
     }
 }
