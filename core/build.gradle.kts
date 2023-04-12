@@ -34,13 +34,14 @@ kotlin {
     sourceSets {
         val commonMain by getting {
             dependencies {
-                api(libs.coroutines)
+                api(libs.coroutines.core)
                 api(libs.ktor.utils)
             }
         }
         val commonTest by getting {
             dependencies {
                 implementation(kotlin("test"))
+                implementation(libs.coroutines.test)
             }
         }
 

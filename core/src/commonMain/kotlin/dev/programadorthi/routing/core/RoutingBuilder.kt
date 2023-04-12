@@ -9,6 +9,8 @@ import dev.programadorthi.routing.core.application.call
 import dev.programadorthi.routing.core.http.Parameters
 import io.ktor.util.KtorDsl
 import io.ktor.util.pipeline.PipelineInterceptor
+import io.ktor.util.pipeline.execute
+import kotlinx.coroutines.launch
 
 /**
  * Builds a route to match the specified [path].
@@ -79,11 +81,7 @@ public fun Route.redirectToName(name: String, pathParameters: Parameters = Param
     check(this !is Routing) {
         "Redirect root is not allowed. You can do this changing rootPath on initialization"
     }
-    val body = RedirectPipelineInterceptor.NamedRedirectPipelineInterceptor(
-        name = name,
-        pathParameters = pathParameters,
-    )
-    handle(body::invoke)
+    redirect(path = "", name = name, pathParameters = pathParameters)
 }
 
 @KtorDsl
@@ -91,8 +89,7 @@ public fun Route.redirectToPath(path: String) {
     check(this !is Routing) {
         "Redirect root is not allowed. You can do this changing rootPath on initialization"
     }
-    val body = RedirectPipelineInterceptor.PathRedirectPipelineInterceptor(path = path)
-    handle(body::invoke)
+    redirect(path = path, name = "")
 }
 
 internal fun Route.handleNavigation(
@@ -180,6 +177,28 @@ internal object PathSegmentSelectorBuilder {
             signature.endsWith("?") -> signature.dropLast(1)
             signature.endsWith("...") -> signature.dropLast(3)
             else -> signature
+        }
+    }
+}
+
+private fun Route.redirect(path: String, name: String, pathParameters: Parameters = Parameters.Empty) {
+    check(this !is Routing) {
+        "Redirect root is not allowed. You can do this changing rootPath on initialization"
+    }
+    handle {
+        val called = call
+        with(called.application) {
+            launch {
+                execute(
+                    RedirectApplicationCall(
+                        previousCall = called,
+                        name = name,
+                        uri = path,
+                        coroutineContext = this@with.coroutineContext,
+                        pathParameters = pathParameters,
+                    )
+                )
+            }
         }
     }
 }
