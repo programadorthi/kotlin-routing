@@ -35,7 +35,7 @@ kotlin {
         val commonMain by getting {
             dependencies {
                 api(libs.coroutines.core)
-                api(libs.ktor.utils)
+                api(libs.ktor.http)
             }
         }
         val commonTest by getting {

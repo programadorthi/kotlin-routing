@@ -4,9 +4,9 @@
 
 package dev.programadorthi.routing.core
 
-import dev.programadorthi.routing.core.http.Parameters
-import dev.programadorthi.routing.core.http.parametersOf
-import dev.programadorthi.routing.core.http.plus
+import io.ktor.http.Parameters
+import io.ktor.http.parametersOf
+import io.ktor.http.plus
 
 /**
  * A result of a route evaluation against a call.

@@ -2,7 +2,7 @@ package dev.programadorthi.routing.core
 
 import dev.programadorthi.routing.core.application.Application
 import dev.programadorthi.routing.core.application.ApplicationCall
-import dev.programadorthi.routing.core.http.Parameters
+import io.ktor.http.Parameters
 import io.ktor.util.Attributes
 import kotlinx.coroutines.CoroutineScope
 import kotlin.coroutines.CoroutineContext

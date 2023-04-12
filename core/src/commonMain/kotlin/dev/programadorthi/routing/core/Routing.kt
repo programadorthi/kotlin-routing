@@ -14,7 +14,7 @@ import dev.programadorthi.routing.core.application.install
 import dev.programadorthi.routing.core.application.log
 import dev.programadorthi.routing.core.errors.MissingRequestParameterException
 import dev.programadorthi.routing.core.errors.RouteNotFoundException
-import dev.programadorthi.routing.core.http.Parameters
+import io.ktor.http.Parameters
 import io.ktor.util.AttributeKey
 import io.ktor.util.KtorDsl
 import io.ktor.util.logging.KtorSimpleLogger

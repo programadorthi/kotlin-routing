@@ -4,7 +4,7 @@
 
 package dev.programadorthi.routing.core
 
-import dev.programadorthi.routing.core.http.decodeURLPart
+import io.ktor.http.decodeURLPart
 
 /**
  * A parsed routing path. Consist of number of segments [parts].

@@ -1,8 +1,8 @@
 package dev.programadorthi.routing.core
 
 import dev.programadorthi.routing.core.application.call
-import dev.programadorthi.routing.core.http.Parameters
-import dev.programadorthi.routing.core.http.parametersOf
+import io.ktor.http.Parameters
+import io.ktor.http.parametersOf
 import kotlinx.coroutines.ExperimentalCoroutinesApi
 import kotlinx.coroutines.Job
 import kotlinx.coroutines.test.runTest

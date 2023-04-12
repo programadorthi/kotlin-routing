@@ -4,7 +4,7 @@
 
 package dev.programadorthi.routing.core
 
-import dev.programadorthi.routing.core.http.Parameters
+import io.ktor.http.Parameters
 
 /**
  * Represents a result of routing resolution.

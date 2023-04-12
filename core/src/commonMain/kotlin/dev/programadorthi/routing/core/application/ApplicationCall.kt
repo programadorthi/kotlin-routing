@@ -4,7 +4,7 @@
 
 package dev.programadorthi.routing.core.application
 
-import dev.programadorthi.routing.core.http.Parameters
+import io.ktor.http.Parameters
 import io.ktor.util.AttributeKey
 import io.ktor.util.Attributes
 import io.ktor.util.reflect.TypeInfo

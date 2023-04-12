@@ -5,7 +5,7 @@
 package dev.programadorthi.routing.core
 
 import dev.programadorthi.routing.core.application.ApplicationCall
-import dev.programadorthi.routing.core.http.Parameters
+import io.ktor.http.Parameters
 import io.ktor.util.KtorDsl
 import io.ktor.util.pipeline.PipelineInterceptor
 

@@ -8,8 +8,8 @@ import dev.programadorthi.routing.core.application.ApplicationCall
 import dev.programadorthi.routing.core.application.path
 import dev.programadorthi.routing.core.errors.BadRequestException
 import dev.programadorthi.routing.core.errors.URLDecodeException
-import dev.programadorthi.routing.core.http.ParametersBuilder
-import dev.programadorthi.routing.core.http.decodeURLPart
+import io.ktor.http.ParametersBuilder
+import io.ktor.http.decodeURLPart
 import kotlin.math.max
 
 private const val ROUTING_DEFAULT_CAPACITY = 16

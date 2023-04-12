@@ -1,8 +1,11 @@
 [versions]
 coroutines = "1.6.4"
 ktor = "2.2.4"
+serialization = "1.4.1"
 
 [libraries]
 coroutines-core = { module = "org.jetbrains.kotlinx:kotlinx-coroutines-core", version.ref = "coroutines" }
 coroutines-test = { module = "org.jetbrains.kotlinx:kotlinx-coroutines-test", version.ref = "coroutines" }
-ktor-utils = { module = "io.ktor:ktor-utils", version.ref = "ktor" }
+ktor-http = { module = "io.ktor:ktor-http", version.ref = "ktor" }
+ktor-resources = { module = "io.ktor:ktor-resources", version.ref = "ktor" }
+serialization-core = { module = "org.jetbrains.kotlinx:kotlinx-serialization-core", version.ref = "serialization" }
