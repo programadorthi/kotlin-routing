@@ -5,6 +5,7 @@
 package dev.programadorthi.routing.core
 
 import dev.programadorthi.routing.core.application.ApplicationCall
+import dev.programadorthi.routing.core.application.call
 import io.ktor.util.KtorDsl
 import io.ktor.util.pipeline.PipelineInterceptor
 
@@ -26,6 +27,36 @@ public fun Route.handle(
 ): Route = route(path, name) { handle(body) }
 
 @KtorDsl
+public fun Route.push(
+    path: String,
+    name: String? = null,
+    body: PipelineInterceptor<Unit, ApplicationCall>,
+): Route = route(path, name) { handlePush(body) }
+
+@KtorDsl
+public fun Route.replace(
+    path: String,
+    name: String? = null,
+    body: PipelineInterceptor<Unit, ApplicationCall>,
+): Route = route(path, name) { handleReplace(body) }
+
+@KtorDsl
+public fun Route.push(
+    body: PipelineInterceptor<Unit, ApplicationCall>,
+): Route {
+    handlePush(body)
+    return this
+}
+
+@KtorDsl
+public fun Route.replace(
+    body: PipelineInterceptor<Unit, ApplicationCall>,
+): Route {
+    handleReplace(body)
+    return this
+}
+
+@KtorDsl
 public fun Route.redirectToName(name: String) {
     check(this !is Routing) {
         "Redirect root is not allowed. You can do this changing rootPath on initialization"
@@ -41,6 +72,26 @@ public fun Route.redirectToPath(path: String) {
     }
     val body = RedirectPipelineInterceptor.PathRedirectPipelineInterceptor(path = path)
     handle(body::invoke)
+}
+
+internal fun Route.handlePush(
+    body: PipelineInterceptor<Unit, ApplicationCall>,
+) {
+    handle {
+        if (call is NavigationApplicationCall.Push) {
+            body(this@handle, Unit)
+        }
+    }
+}
+
+internal fun Route.handleReplace(
+    body: PipelineInterceptor<Unit, ApplicationCall>,
+) {
+    handle {
+        if (call is NavigationApplicationCall.Replace) {
+            body(this@handle, Unit)
+        }
+    }
 }
 
 /**

@@ -49,7 +49,7 @@ public class Routing internal constructor(
 
     public fun push(path: String, parameters: Parameters = Parameters.Empty) {
         executeCall(
-            NavigationApplicationCall(
+            NavigationApplicationCall.Push(
                 application = application,
                 uri = path,
                 parameters = parameters,
@@ -63,7 +63,7 @@ public class Routing internal constructor(
         pathReplacements: Parameters = Parameters.Empty,
     ) {
         executeCall(
-            NavigationApplicationCall(
+            NavigationApplicationCall.PushNamed(
                 application = application,
                 name = name,
                 parameters = parameters,
@@ -74,22 +74,21 @@ public class Routing internal constructor(
 
     public fun replace(path: String, parameters: Parameters = Parameters.Empty) {
         executeCall(
-            NavigationApplicationCall(
+            NavigationApplicationCall.Replace(
                 application = application,
                 uri = path,
                 parameters = parameters,
-                replaceCurrent = true,
             )
         )
     }
 
     public fun replaceAll(path: String, parameters: Parameters = Parameters.Empty) {
         executeCall(
-            NavigationApplicationCall(
+            NavigationApplicationCall.Replace(
                 application = application,
                 uri = path,
                 parameters = parameters,
-                replaceAll = true,
+                all = true,
             )
         )
     }
@@ -100,12 +99,11 @@ public class Routing internal constructor(
         pathReplacements: Parameters = Parameters.Empty,
     ) {
         executeCall(
-            NavigationApplicationCall(
+            NavigationApplicationCall.ReplaceNamed(
                 application = application,
                 name = name,
                 parameters = parameters,
                 pathReplacements = pathReplacements,
-                replaceCurrent = true,
             )
         )
     }
@@ -116,12 +114,12 @@ public class Routing internal constructor(
         pathReplacements: Parameters = Parameters.Empty,
     ) {
         executeCall(
-            NavigationApplicationCall(
+            NavigationApplicationCall.ReplaceNamed(
                 application = application,
                 name = name,
                 parameters = parameters,
                 pathReplacements = pathReplacements,
-                replaceAll = true,
+                all = true,
             )
         )
     }
@@ -311,13 +309,19 @@ public class Routing internal constructor(
                     uri = mapNameToPath(name = call.name, pathReplacements = call.parameters),
                 )
             }
-        } else if (call is NavigationApplicationCall) {
-            if (call.name.isNotBlank()) {
-                call = call.copy(
-                    name = "",
-                    uri = mapNameToPath(name = call.name, pathReplacements = call.pathReplacements)
-                )
-            }
+        } else if (call is NavigationApplicationCall.PushNamed) {
+            call = NavigationApplicationCall.Push(
+                application = call.application,
+                parameters = call.parameters,
+                uri = mapNameToPath(name = call.name, pathReplacements = call.pathReplacements)
+            )
+        } else if (call is NavigationApplicationCall.ReplaceNamed) {
+            call = NavigationApplicationCall.Replace(
+                application = call.application,
+                parameters = call.parameters,
+                all = call.all,
+                uri = mapNameToPath(name = call.name, pathReplacements = call.pathReplacements)
+            )
         }
         return call
     }
