@@ -21,3 +21,5 @@ rootProject.name = "kotlin-routing"
 include(":core")
 include(":resources")
 include(":status-pages")
+
+includeBuild("samples")
