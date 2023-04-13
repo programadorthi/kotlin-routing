@@ -398,7 +398,7 @@ public fun <B : Any, F : Any> Route.install(
 @KtorDsl
 public fun routing(
     parentCoroutineContext: CoroutineContext = EmptyCoroutineContext,
-    log: Logger = KtorSimpleLogger("VoyagerRouting"),
+    log: Logger = KtorSimpleLogger("kotlin-routing"),
     developmentMode: Boolean = false,
     configuration: Routing.() -> Unit
 ): Routing {
