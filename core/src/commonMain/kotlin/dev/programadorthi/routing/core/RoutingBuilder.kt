@@ -23,8 +23,7 @@ public fun Route.route(
 ): Route = createRouteFromPath(path, name).apply(build)
 
 /**
- * Builds a route to match the specified HTTP [method] and [path].
- * @see [Application.routing]
+ * Builds a route to match the specified [RouteMethod] and [path].
  */
 @KtorDsl
 public fun Route.route(
@@ -38,8 +37,7 @@ public fun Route.route(
 }
 
 /**
- * Builds a route to match the specified HTTP [method].
- * @see [Application.routing]
+ * Builds a route to match the specified [RouteMethod].
  */
 @KtorDsl
 public fun Route.method(method: RouteMethod, body: Route.() -> Unit): Route {

@@ -329,6 +329,49 @@ class RoutingTest {
         assertEquals(result, "redirected-route")
     }
 
+    @Test
+    fun shouldRouteByRegex() {
+        var result = ""
+
+        whenBody { handled ->
+            val routing = routing(parentCoroutineContext = this) {
+                route(path = Regex("/(?<number>\\d+)")) {
+                    push(path = "/regex") {
+                        result = "pushed-to-regex"
+                        handled()
+                    }
+                }
+            }
+
+            routing.push(path = "/123/regex")
+        }
+
+        assertEquals(result, "pushed-to-regex")
+    }
+
+    @Test
+    fun shouldRouteByRegexWithParameters() {
+        var result = ""
+        var parameters = Parameters.Empty
+
+        whenBody { handled ->
+            val routing = routing(parentCoroutineContext = this) {
+                route(path = Regex("/(?<number>\\d+)")) {
+                    push(path = "/regex") {
+                        result = "pushed-to-regex"
+                        parameters = call.parameters
+                        handled()
+                    }
+                }
+            }
+
+            routing.push(path = "/123/regex")
+        }
+
+        assertEquals(result, "pushed-to-regex")
+        assertEquals(parameters, parametersOf("number", "123"))
+    }
+
     private fun whenBody(
         body: CoroutineContext.(() -> Unit) -> Unit
     ) = runTest {

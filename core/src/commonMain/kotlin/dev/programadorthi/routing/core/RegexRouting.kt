@@ -26,23 +26,43 @@ import io.ktor.util.pipeline.PipelineInterceptor
 @KtorDsl
 public fun Route.route(path: Regex, build: Route.() -> Unit): Route = createRouteFromRegexPath(path).apply(build)
 
+/**
+ * Builds a route to match the specified HTTP [method] and regex [path].
+ * Named parameters from regex can be accessed via [ApplicationCall.parameters].
+ *
+ * Example:
+ * ```
+ * route(Regex("/(?<name>.+)/hello"), HttpMethod.Get) {
+ *     handle {
+ *         val name = call.parameters["name"]
+ *         ...
+ *     }
+ * }
+ * ```
+ */
 @KtorDsl
-public fun Route.handle(
-    path: Regex,
-    body: PipelineInterceptor<Unit, ApplicationCall>,
-): Route = route(path) { handle(body) }
+public fun Route.route(path: Regex, method: RouteMethod, build: Route.() -> Unit): Route {
+    val selector = RouteMethodRouteSelector(method)
+    return createRouteFromRegexPath(path).createChild(selector).apply(build)
+}
 
 @KtorDsl
 public fun Route.push(
     path: Regex,
     body: PipelineInterceptor<Unit, ApplicationCall>,
-): Route = route(path) { push(body) }
+): Route = route(path = path, method = RouteMethod.Push) { handle(body) }
 
 @KtorDsl
 public fun Route.replace(
     path: Regex,
     body: PipelineInterceptor<Unit, ApplicationCall>,
-): Route = route(path) { replace(body) }
+): Route = route(path = path, method = RouteMethod.Replace) { handle(body) }
+
+@KtorDsl
+public fun Route.handle(
+    path: Regex,
+    body: PipelineInterceptor<Unit, ApplicationCall>,
+): Route = route(path) { handle(body) }
 
 private fun Route.createRouteFromRegexPath(regex: Regex): Route {
     return this.createChild(PathSegmentRegexRouteSelector(regex))

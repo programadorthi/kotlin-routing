@@ -6,11 +6,6 @@ pluginManagement {
         mavenCentral()
         gradlePluginPortal()
     }
-
-    plugins {
-        kotlin("multiplatform").version(extra["kotlin.version"] as String)
-        id("org.jlleitschuh.gradle.ktlint").version("11.0.0")
-    }
 }
 
 dependencyResolutionManagement {
@@ -24,3 +19,4 @@ dependencyResolutionManagement {
 rootProject.name = "kotlin-routing"
 
 include(":core")
+include(":resources")
