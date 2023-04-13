@@ -40,11 +40,13 @@ android {
         compose = true
     }
     composeOptions {
-        kotlinCompilerExtensionVersion = "1.3.2"
+        kotlinCompilerExtensionVersion = "1.4.4"
     }
 }
 
 dependencies {
+    implementation("dev.programadorthi.routing:resources:0.0.1")
+    implementation("dev.programadorthi.routing:status-pages:0.0.1")
 
     implementation(libs.core.ktx)
     implementation(libs.lifecycle.runtime.ktx)

@@ -65,6 +65,12 @@ public fun Route.replace(
 ): Route = route(path = path, method = RouteMethod.Replace) { handle(body) }
 
 @KtorDsl
+public fun Route.replaceAll(
+    path: Regex,
+    body: PipelineInterceptor<Unit, ApplicationCall>,
+): Route = route(path = path, method = RouteMethod.ReplaceAll) { handle(body) }
+
+@KtorDsl
 public fun Route.handle(
     path: Regex,
     body: PipelineInterceptor<Unit, ApplicationCall>,

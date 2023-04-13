@@ -5,7 +5,7 @@ plugins {
     id("maven-publish")
 }
 
-group = "dev.programadorthi"
+group = "dev.programadorthi.routing"
 version = "0.0.1"
 
 kotlin {

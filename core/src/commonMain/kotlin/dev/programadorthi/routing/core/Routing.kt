@@ -12,6 +12,7 @@ import dev.programadorthi.routing.core.application.Plugin
 import dev.programadorthi.routing.core.application.call
 import dev.programadorthi.routing.core.application.install
 import dev.programadorthi.routing.core.application.log
+import dev.programadorthi.routing.core.errors.BadRequestException
 import dev.programadorthi.routing.core.errors.MissingRequestParameterException
 import dev.programadorthi.routing.core.errors.RouteNotFoundException
 import io.ktor.http.Parameters
@@ -91,6 +92,7 @@ public class Routing internal constructor(
                 application = application,
                 uri = path,
                 parameters = parameters,
+                routeMethod = RouteMethod.Replace,
             )
         )
     }
@@ -101,7 +103,7 @@ public class Routing internal constructor(
                 application = application,
                 uri = path,
                 parameters = parameters,
-                all = true,
+                routeMethod = RouteMethod.ReplaceAll,
             )
         )
     }
@@ -117,6 +119,7 @@ public class Routing internal constructor(
                 name = name,
                 parameters = parameters,
                 pathParameters = pathParameters,
+                routeMethod = RouteMethod.Replace,
             )
         )
     }
@@ -132,9 +135,13 @@ public class Routing internal constructor(
                 name = name,
                 parameters = parameters,
                 pathParameters = pathParameters,
-                all = true,
+                routeMethod = RouteMethod.ReplaceAll,
             )
         )
+    }
+
+    public fun unregisterNamed(name: String) {
+        namedRoutes.remove(name)
     }
 
     /**
@@ -159,7 +166,8 @@ public class Routing internal constructor(
 
     internal fun mapNameToPath(name: String, pathParameters: Parameters): String {
         val namedRoute =
-            namedRoutes[name] ?: throw RouteNotFoundException(message = "Named route not found with name: $name")
+            namedRoutes[name]
+                ?: throw RouteNotFoundException(message = "Named route not found with name: $name")
         val routeSelectors = namedRoute.allSelectors()
         val skipPathParameters = routeSelectors.run {
             isEmpty() || all { selector -> selector is PathSegmentConstantRouteSelector }
@@ -291,6 +299,9 @@ public class Routing internal constructor(
     private suspend fun interceptor(context: PipelineContext<Unit, ApplicationCall>) {
         mutex.withLock {
             val call = mapCallBeforeResolve(context.call)
+            if (call.uri.isBlank()) {
+                throw BadRequestException("Received a empty uri. Maybe you are trying popping a route that not exists. Have you checked whether you can pop?")
+            }
             val resolveContext = RoutingResolveContext(this, call, tracers)
             when (val resolveResult = resolveContext.resolve()) {
                 is RoutingResolveResult.Failure -> throw RouteNotFoundException(message = resolveResult.reason)
@@ -317,8 +328,13 @@ public class Routing internal constructor(
             is RedirectApplicationCall -> NavigationApplicationCall.Replace(
                 application = call.application,
                 parameters = call.parameters,
+                routeMethod = RouteMethod.Replace,
                 uri = when {
-                    call.name.isNotBlank() -> mapNameToPath(name = call.name, pathParameters = call.pathParameters)
+                    call.name.isNotBlank() -> mapNameToPath(
+                        name = call.name,
+                        pathParameters = call.pathParameters
+                    )
+
                     else -> call.uri
                 }
             )
@@ -332,7 +348,7 @@ public class Routing internal constructor(
             is NavigationApplicationCall.ReplaceNamed -> NavigationApplicationCall.Replace(
                 application = call.application,
                 parameters = call.parameters,
-                all = call.all,
+                routeMethod = call.routeMethod,
                 uri = mapNameToPath(name = call.name, pathParameters = call.pathParameters)
             )
 
@@ -351,7 +367,7 @@ public class Routing internal constructor(
         }
 
         if (call is NavigationApplicationCall.Replace) {
-            if (call.all) {
+            if (call.routeMethod == RouteMethod.ReplaceAll) {
                 uriStack.clear()
             } else {
                 uriStack.removeLastOrNull()

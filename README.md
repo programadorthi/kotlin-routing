@@ -8,10 +8,10 @@ Create routing independent and extend to what you need.
 ```kotlin
 val router = routing {
     route(path = "/login") {
-        // handle {} is generic for any routing event (pop, push, replace, ...)
+        // handle {} is generic for any routing event (pop, push, replace, replaceAll...)
         handle {
             val application = call.application
-            val routeMethod = call.routeMethod (RouteMethod.Pop, RouteMethod.Push, RouteMethod.Replace)
+            val routeMethod = call.routeMethod (RouteMethod.Pop, RouteMethod.Push, RouteMethod.Replace, RouteMethod.ReplaceAll)
             val uri = call.uri
             val attributes = call.attributes // Always empty by default
             val parameters = call.parameters // All in one (path parameters ({...}) + routing parameters (push(parameters = ...)) + query parameters ("/path?q=search&name=routing"))
@@ -50,6 +50,9 @@ val router = routing {
         replace {
             // handle replace to this route only
         }
+        replaceAll {
+            // handle replaceAll to this route only
+        }
         pop {
             // handle pop to this route only
         }
@@ -70,21 +73,26 @@ val router = routing {
         // handle replace to this route only
     }
 
+    // push is short version to combine route { replaceAll{} }
+    replaceAll(path = "/path6", name = "path6") {
+        // handle replaceAll to this route only
+    }
+
     // pop is short version to combine route { pop{} }
     // pop can not be named
-    pop(path = "/path6") {
+    pop(path = "/path7") {
         // handle pop to this route only
     }
 
     // If you need redirect one route to another do:
-    route|handle|push|replace|pop(...) {
+    route|handle|push|replace|replaceAll|pop(...) {
         redirectToPath(path = "/path-destination")
         // or
         redirectToName(name = "destination-name")
     }
 
     // If you need a route Regex based do:
-    route|handle|push|replace|pop(path = Regex()) {
+    route|handle|push|replace|replaceAll|pop(path = Regex()) {
         // ...
     }
 }
@@ -120,7 +128,7 @@ router.pushNamed(
 
 // Replacing or replacing all works the same as push but 'replace' instead push :D
 router.replace(...)
-router.replaceAll(...) // WARNING: replaceAll() behaves the same as replace(). See next steps below
+router.replaceAll(...)
 
 // Popping the last pushed or replaced route
 router.pop()
@@ -162,6 +170,10 @@ val router = routing {
         // handle replace to this route only
     }
 
+    replaceAll<Articles> {
+        // handle replaceAll to this route only
+    }
+
     // There is no use case for type-safe pop handler. Maybe in the future?
 }
 
@@ -172,7 +184,7 @@ router.push(Articles.New())
 router.replace(Articles())
 
 // Pushing or Replacing a typed route with parameters
-router.push|replace(Articles.Id(id = 123))
+router.push|replace|replaceAll(Articles.Id(id = 123))
 
 // Popping the last pushed or replaced route
 router.pop()
@@ -205,8 +217,6 @@ router.push(path = "/path")
 ## Next steps
 
 [ ] - Helper functions for each platform (Android, iOS, Web, Desktop, ...)
-
-[ ] - Implement replaceAll handlers
 
 [ ] - Support query parameters from external URI as Deep Link, Browser URL, etc
 

@@ -1,7 +1,7 @@
-/.idea
-/local.properties
-/build
-/captures
+.idea
+local.properties
+build
+captures
 .DS_Store
 .externalNativeBuild
 .gradle

@@ -73,6 +73,25 @@ public inline fun <reified T : Any> Route.replace(
 }
 
 /**
+ * Registers a typed handler [body] for a [RouteMethod.ReplaceAll] resource defined by the [T] class.
+ *
+ * A class [T] **must** be annotated with [io.ktor.resources.Resource].
+ *
+ * @param body receives an instance of the typed resource [T] as the first parameter.
+ */
+public inline fun <reified T : Any> Route.replaceAll(
+    noinline body: suspend PipelineContext<Unit, ApplicationCall>.(T) -> Unit
+): Route {
+    lateinit var builtRoute: Route
+    resource<T> {
+        builtRoute = method(RouteMethod.ReplaceAll) {
+            handle(body)
+        }
+    }
+    return builtRoute
+}
+
+/**
  * Registers a handler [body] for a resource defined by the [T] class.
  *
  * @param body receives an instance of the typed resource [T] as the first parameter.

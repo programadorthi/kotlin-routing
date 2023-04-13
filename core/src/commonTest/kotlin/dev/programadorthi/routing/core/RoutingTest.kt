@@ -206,6 +206,24 @@ class RoutingTest {
     }
 
     @Test
+    fun shouldCreateARouteUsingReplaceAllDirectly() {
+        var result = ""
+
+        whenBody { handled ->
+            val routing = routing(parentCoroutineContext = this) {
+                replaceAll(path = "/path", name = "path") {
+                    result = "route-created"
+                    handled()
+                }
+            }
+
+            routing.replaceAllNamed(name = "path")
+        }
+
+        assertEquals(result, "route-created")
+    }
+
+    @Test
     fun shouldCreateARouteUsingPopDirectly() {
         var result = ""
 
@@ -267,6 +285,29 @@ class RoutingTest {
             }
 
             routing.replaceNamed(name = "path")
+        }
+
+        assertEquals(result, "replaced-route")
+    }
+
+    @Test
+    fun shouldHandleReplaceAllWhenReplacingAllRoutes() {
+        var result = ""
+
+        whenBody { handled ->
+            val routing = routing(parentCoroutineContext = this) {
+                route(path = "/path", name = "path") {
+                    push {
+                        result = "pushed-route"
+                    }
+                    replaceAll {
+                        result = "replaced-route"
+                        handled()
+                    }
+                }
+            }
+
+            routing.replaceAllNamed(name = "path")
         }
 
         assertEquals(result, "replaced-route")

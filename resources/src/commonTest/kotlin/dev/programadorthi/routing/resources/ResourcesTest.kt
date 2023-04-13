@@ -67,7 +67,7 @@ class ResourcesTest {
             val routing = routing(parentCoroutineContext = this) {
                 install(Resources)
 
-                replace<Routing> {
+                replaceAll<Routing> {
                     result = "path-handled"
                     handled()
                 }

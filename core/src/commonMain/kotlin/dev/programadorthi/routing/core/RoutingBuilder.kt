@@ -74,6 +74,20 @@ public fun Route.replace(
 }
 
 @KtorDsl
+public fun Route.replaceAll(
+    path: String,
+    name: String? = null,
+    body: PipelineInterceptor<Unit, ApplicationCall>,
+): Route = route(path = path, name = name, method = RouteMethod.ReplaceAll) { handle(body) }
+
+@KtorDsl
+public fun Route.replaceAll(
+    body: PipelineInterceptor<Unit, ApplicationCall>,
+): Route {
+    return method(RouteMethod.ReplaceAll) { handle(body) }
+}
+
+@KtorDsl
 public fun Route.pop(
     path: String,
     body: PipelineInterceptor<Unit, ApplicationCall>,
@@ -150,7 +164,13 @@ internal object PathSegmentSelectorBuilder {
 
         val signature = value.substring(prefixIndex + 1, suffixIndex)
         return when {
-            signature.endsWith("?") -> PathSegmentOptionalParameterRouteSelector(signature.dropLast(1), prefix, suffix)
+            signature.endsWith("?") -> PathSegmentOptionalParameterRouteSelector(
+                signature.dropLast(
+                    1
+                ),
+                prefix, suffix
+            )
+
             signature.endsWith("...") -> {
                 if (!suffix.isNullOrEmpty()) {
                     throw IllegalArgumentException("Suffix after tailcard is not supported")
@@ -185,7 +205,11 @@ internal object PathSegmentSelectorBuilder {
     }
 }
 
-private fun Route.redirect(path: String, name: String, pathParameters: Parameters = Parameters.Empty) {
+private fun Route.redirect(
+    path: String,
+    name: String,
+    pathParameters: Parameters = Parameters.Empty
+) {
     check(this !is Routing) {
         "Redirect root is not allowed. You can do this changing rootPath on initialization"
     }

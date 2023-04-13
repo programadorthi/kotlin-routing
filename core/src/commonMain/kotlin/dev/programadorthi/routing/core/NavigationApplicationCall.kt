@@ -47,15 +47,13 @@ public sealed class NavigationApplicationCall : ApplicationCall, CoroutineScope 
     public data class Replace(
         override val application: Application,
         override val uri: String,
+        override val routeMethod: RouteMethod,
         override val parameters: Parameters = Parameters.Empty,
-        public val all: Boolean = false,
-    ) : NavigationApplicationCall() {
-
-        override val routeMethod: RouteMethod = RouteMethod.Replace
-    }
+    ) : NavigationApplicationCall()
 
     public data class ReplaceNamed(
         override val application: Application,
+        override val routeMethod: RouteMethod,
         override val parameters: Parameters = Parameters.Empty,
         public val name: String,
         public val pathParameters: Parameters = Parameters.Empty,
@@ -63,7 +61,5 @@ public sealed class NavigationApplicationCall : ApplicationCall, CoroutineScope 
     ) : NavigationApplicationCall() {
 
         override val uri: String = ""
-
-        override val routeMethod: RouteMethod = RouteMethod.Replace
     }
 }
