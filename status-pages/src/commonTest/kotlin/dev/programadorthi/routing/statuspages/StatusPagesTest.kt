@@ -49,7 +49,7 @@ class StatusPagesTest {
         whenBody { handled ->
             val routing = routing(parentCoroutineContext = this) {
                 install(StatusPages) {
-                    exception<RouteNotFoundException> { _, cause ->
+                    exception<RouteNotFoundException> { call, cause ->
                         result = cause
                         handled()
                     }

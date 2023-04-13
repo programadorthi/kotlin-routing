@@ -75,6 +75,12 @@ public fun Route.replace(
 
 @KtorDsl
 public fun Route.pop(
+    path: String,
+    body: PipelineInterceptor<Unit, ApplicationCall>,
+): Route = route(path = path, method = RouteMethod.Pop) { handle(body) }
+
+@KtorDsl
+public fun Route.pop(
     body: PipelineInterceptor<Unit, ApplicationCall>,
 ): Route {
     return method(RouteMethod.Pop) { handle(body) }

@@ -206,6 +206,27 @@ class RoutingTest {
     }
 
     @Test
+    fun shouldCreateARouteUsingPopDirectly() {
+        var result = ""
+
+        whenBody { handled ->
+            val routing = routing(parentCoroutineContext = this) {
+                push(path = "/path") { }
+                pop(path = "/path") {
+                    result = "popped-handled"
+                    handled()
+                }
+            }
+
+            // A previous route must exist to pop
+            routing.push(path = "/path")
+            routing.pop()
+        }
+
+        assertEquals(result, "popped-handled")
+    }
+
+    @Test
     fun shouldHandlePushWhenPushingARoute() {
         var result = ""
 
