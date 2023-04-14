@@ -12,7 +12,6 @@ import org.jetbrains.kotlin.gradle.targets.jvm.tasks.*
 
 fun Project.configureJvm() {
     val libs = extensions.getByType<VersionCatalogsExtension>().named("libs")
-    val configuredVersion: String by rootProject.extra
 
     kotlin {
         jvm()

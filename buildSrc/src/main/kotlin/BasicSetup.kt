@@ -14,6 +14,8 @@ fun Project.applyBasicSetup() {
     configureTargets()
 
     kotlin {
+        explicitApi()
+
         setCompilationOptions()
         configureSourceSets()
         setupJvmToolchain()
@@ -21,7 +23,7 @@ fun Project.applyBasicSetup() {
 }
 
 
-private fun KotlinMultiplatformExtension.setCompilationOptions() {
+fun KotlinMultiplatformExtension.setCompilationOptions() {
     targets.all {
         if (this is KotlinJsTarget) {
             irTarget?.compilations?.all {
@@ -34,7 +36,7 @@ private fun KotlinMultiplatformExtension.setCompilationOptions() {
     }
 }
 
-private fun KotlinCompilation<KotlinCommonOptions>.configureCompilation() {
+fun KotlinCompilation<KotlinCommonOptions>.configureCompilation() {
     kotlinOptions {
         if (platformType == KotlinPlatformType.jvm) {
             allWarningsAsErrors = true
@@ -44,7 +46,7 @@ private fun KotlinCompilation<KotlinCommonOptions>.configureCompilation() {
     }
 }
 
-private fun KotlinMultiplatformExtension.configureSourceSets() {
+fun KotlinMultiplatformExtension.configureSourceSets() {
     sourceSets
         .matching { it.name !in listOf("main", "test") }
         .all {
@@ -68,7 +70,7 @@ private fun KotlinMultiplatformExtension.configureSourceSets() {
     }
 }
 
-private fun Project.setupJvmToolchain() {
+fun Project.setupJvmToolchain() {
     kotlin {
         jvmToolchain {
             languageVersion.set(JavaLanguageVersion.of(8))
