@@ -5,6 +5,7 @@ pluginManagement {
     repositories {
         mavenCentral()
         gradlePluginPortal()
+        google()
     }
 }
 
@@ -14,14 +15,13 @@ dependencyResolutionManagement {
     repositories {
         mavenCentral()
         maven(url = "https://maven.pkg.jetbrains.space/public/p/compose/dev" )
+        google()
     }
 }
 
 rootProject.name = "kotlin-routing"
 
 include(":core")
-include(":resources")
-include(":status-pages")
-include(":voyager")
-
-includeBuild("samples")
+//include(":resources")
+//include(":status-pages")
+//include(":voyager")

@@ -1,13 +1,22 @@
 [versions]
+plugin-android = "7.4.1"
+plugin-ktlint = "11.0.0"
+plugin-maven = "0.22.0"
+plugin-multiplatform-compose = "1.3.1"
+
+compose-compiler = "1.4.4"
 compose-runtime = "1.3.1"
 coroutines = "1.6.4"
+kotlin = "1.8.10"
 ktor = "2.2.4"
 serialization = "1.4.1"
+slf4j = "2.0.4"
 voyager = "1.0.0-rc04"
+
+junit = "4.13.2"
 
 # SAMPLE VERSIONS #
 core-ktx = "1.9.0"
-junit = "4.13.2"
 androidx-test-ext-junit = "1.1.5"
 espresso-core = "3.5.1"
 lifecycle-runtime-ktx = "2.3.1"
@@ -16,14 +25,22 @@ compose-bom = "2022.10.00"
 # SAMPLE VERSIONS #
 
 [libraries]
+plugin-android = { module = "com.android.tools.build:gradle", version.ref = "plugin-android" }
+plugin-kotlin = { module = "org.jetbrains.kotlin:kotlin-gradle-plugin", version.ref = "kotlin" }
+
 compose-runtime = { module = "org.jetbrains.compose.runtime:runtime", version.ref = "compose-runtime" }
 compose-runtime-saveable = { module = "org.jetbrains.compose.runtime:runtime-saveable", version.ref = "compose-runtime" }
 coroutines-core = { module = "org.jetbrains.kotlinx:kotlinx-coroutines-core", version.ref = "coroutines" }
-coroutines-test = { module = "org.jetbrains.kotlinx:kotlinx-coroutines-test", version.ref = "coroutines" }
 ktor-http = { module = "io.ktor:ktor-http", version.ref = "ktor" }
 ktor-resources = { module = "io.ktor:ktor-resources", version.ref = "ktor" }
 serialization-core = { module = "org.jetbrains.kotlinx:kotlinx-serialization-core", version.ref = "serialization" }
+slf4j-api = { module = "org.slf4j:slf4j-api", version.ref = "slf4j" }
 voyager-navigator = { module = "cafe.adriel.voyager:voyager-navigator", version.ref = "voyager" }
+
+test-coroutines = { module = "org.jetbrains.kotlinx:kotlinx-coroutines-test", version.ref = "coroutines" }
+test-coroutines-debug = { module = "org.jetbrains.kotlinx:kotlinx-coroutines-debug", version.ref = "coroutines" }
+test-junit = { module = "junit:junit", version.ref = "junit" }
+test-kotlin-test-junit = { module = "org.jetbrains.kotlin:kotlin-test-junit", version.ref = "kotlin" }
 
 # SAMPLE LIBRARIES #
 core-ktx = { group = "androidx.core", name = "core-ktx", version.ref = "core-ktx" }
@@ -41,3 +58,8 @@ ui-test-manifest = { group = "androidx.compose.ui", name = "ui-test-manifest" }
 ui-test-junit4 = { group = "androidx.compose.ui", name = "ui-test-junit4" }
 material3 = { group = "androidx.compose.material3", name = "material3" }
 # SAMPLE LIBRARIES #
+
+[plugins]
+ktlint = { id = "org.jlleitschuh.gradle.ktlint", version.ref = "plugin-ktlint"}
+maven-publish = { id = "com.vanniktech.maven.publish", version.ref = "plugin-maven"}
+plugin-multiplatform-compose = { id = "org.jetbrains.compose", version.ref = "plugin-multiplatform-compose"}
