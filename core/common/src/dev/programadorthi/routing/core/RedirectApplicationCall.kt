@@ -22,7 +22,7 @@ internal data class RedirectApplicationCall(
     override val parameters: Parameters get() = previousCall.parameters
 
     // Redirect is always a replace
-    override val routeMethod: RouteMethod get() = RouteMethod.Replace
+    override val routeMethod: dev.programadorthi.routing.core.RouteMethod get() = dev.programadorthi.routing.core.RouteMethod.Companion.Replace
 
     override fun toString(): String = "RedirectApplicationCall(from=${previousCall.uri}, toName=$name, toPath=$uri)"
 }

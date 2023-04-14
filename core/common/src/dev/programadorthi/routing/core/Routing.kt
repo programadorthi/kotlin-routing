@@ -53,7 +53,7 @@ public class Routing internal constructor(
 
     public fun pop(parameters: Parameters = Parameters.Empty) {
         executeCall(
-            NavigationApplicationCall.Pop(
+            dev.programadorthi.routing.core.NavigationApplicationCall.Pop(
                 application = application,
                 parameters = parameters,
                 uri = uriStack.lastOrNull() ?: "",
@@ -63,7 +63,7 @@ public class Routing internal constructor(
 
     public fun push(path: String, parameters: Parameters = Parameters.Empty) {
         executeCall(
-            NavigationApplicationCall.Push(
+            dev.programadorthi.routing.core.NavigationApplicationCall.Push(
                 application = application,
                 uri = path,
                 parameters = parameters,
@@ -77,7 +77,7 @@ public class Routing internal constructor(
         pathParameters: Parameters = Parameters.Empty,
     ) {
         executeCall(
-            NavigationApplicationCall.PushNamed(
+            dev.programadorthi.routing.core.NavigationApplicationCall.PushNamed(
                 application = application,
                 name = name,
                 parameters = parameters,
@@ -88,7 +88,7 @@ public class Routing internal constructor(
 
     public fun replace(path: String, parameters: Parameters = Parameters.Empty) {
         executeCall(
-            NavigationApplicationCall.Replace(
+            dev.programadorthi.routing.core.NavigationApplicationCall.Replace(
                 application = application,
                 uri = path,
                 parameters = parameters,
@@ -99,7 +99,7 @@ public class Routing internal constructor(
 
     public fun replaceAll(path: String, parameters: Parameters = Parameters.Empty) {
         executeCall(
-            NavigationApplicationCall.Replace(
+            dev.programadorthi.routing.core.NavigationApplicationCall.Replace(
                 application = application,
                 uri = path,
                 parameters = parameters,
@@ -114,7 +114,7 @@ public class Routing internal constructor(
         pathParameters: Parameters = Parameters.Empty,
     ) {
         executeCall(
-            NavigationApplicationCall.ReplaceNamed(
+            dev.programadorthi.routing.core.NavigationApplicationCall.ReplaceNamed(
                 application = application,
                 name = name,
                 parameters = parameters,
@@ -130,7 +130,7 @@ public class Routing internal constructor(
         pathParameters: Parameters = Parameters.Empty,
     ) {
         executeCall(
-            NavigationApplicationCall.ReplaceNamed(
+            dev.programadorthi.routing.core.NavigationApplicationCall.ReplaceNamed(
                 application = application,
                 name = name,
                 parameters = parameters,
@@ -325,7 +325,7 @@ public class Routing internal constructor(
     private fun mapCallBeforeResolve(call: ApplicationCall): ApplicationCall {
         return when (call) {
             // Redirect is always a replace call
-            is RedirectApplicationCall -> NavigationApplicationCall.Replace(
+            is dev.programadorthi.routing.core.RedirectApplicationCall -> dev.programadorthi.routing.core.NavigationApplicationCall.Replace(
                 application = call.application,
                 parameters = call.parameters,
                 routeMethod = RouteMethod.Replace,
@@ -339,13 +339,13 @@ public class Routing internal constructor(
                 }
             )
 
-            is NavigationApplicationCall.PushNamed -> NavigationApplicationCall.Push(
+            is dev.programadorthi.routing.core.NavigationApplicationCall.PushNamed -> dev.programadorthi.routing.core.NavigationApplicationCall.Push(
                 application = call.application,
                 parameters = call.parameters,
                 uri = mapNameToPath(name = call.name, pathParameters = call.pathParameters)
             )
 
-            is NavigationApplicationCall.ReplaceNamed -> NavigationApplicationCall.Replace(
+            is dev.programadorthi.routing.core.NavigationApplicationCall.ReplaceNamed -> dev.programadorthi.routing.core.NavigationApplicationCall.Replace(
                 application = call.application,
                 parameters = call.parameters,
                 routeMethod = call.routeMethod,
@@ -353,20 +353,20 @@ public class Routing internal constructor(
             )
 
             // Trying to get last uri added after last lock release
-            is NavigationApplicationCall.Pop -> call.copy(uri = uriStack.lastOrNull() ?: "")
+            is dev.programadorthi.routing.core.NavigationApplicationCall.Pop -> call.copy(uri = uriStack.lastOrNull() ?: "")
 
             else -> call
         }
     }
 
     private fun updateUriStack(call: ApplicationCall) {
-        if (call is NavigationApplicationCall.Pop) {
+        if (call is dev.programadorthi.routing.core.NavigationApplicationCall.Pop) {
             // After a pop removing popped URI from list
             uriStack.removeLastOrNull()
             return
         }
 
-        if (call is NavigationApplicationCall.Replace) {
+        if (call is dev.programadorthi.routing.core.NavigationApplicationCall.Replace) {
             if (call.routeMethod == RouteMethod.ReplaceAll) {
                 uriStack.clear()
             } else {

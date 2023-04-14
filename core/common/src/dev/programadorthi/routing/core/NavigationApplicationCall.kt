@@ -18,18 +18,20 @@ public sealed class NavigationApplicationCall : ApplicationCall, CoroutineScope 
         override val application: Application,
         override val uri: String,
         override val parameters: Parameters = Parameters.Empty,
-    ) : NavigationApplicationCall() {
+    ) : dev.programadorthi.routing.core.NavigationApplicationCall() {
 
-        override val routeMethod: RouteMethod = RouteMethod.Pop
+        override val routeMethod: dev.programadorthi.routing.core.RouteMethod =
+            dev.programadorthi.routing.core.RouteMethod.Companion.Pop
     }
 
     public data class Push(
         override val application: Application,
         override val uri: String,
         override val parameters: Parameters = Parameters.Empty,
-    ) : NavigationApplicationCall() {
+    ) : dev.programadorthi.routing.core.NavigationApplicationCall() {
 
-        override val routeMethod: RouteMethod = RouteMethod.Push
+        override val routeMethod: dev.programadorthi.routing.core.RouteMethod =
+            dev.programadorthi.routing.core.RouteMethod.Companion.Push
     }
 
     public data class PushNamed(
@@ -37,28 +39,29 @@ public sealed class NavigationApplicationCall : ApplicationCall, CoroutineScope 
         override val parameters: Parameters = Parameters.Empty,
         public val name: String,
         public val pathParameters: Parameters = Parameters.Empty,
-    ) : NavigationApplicationCall() {
+    ) : dev.programadorthi.routing.core.NavigationApplicationCall() {
 
         override val uri: String = ""
 
-        override val routeMethod: RouteMethod = RouteMethod.Push
+        override val routeMethod: dev.programadorthi.routing.core.RouteMethod =
+            dev.programadorthi.routing.core.RouteMethod.Companion.Push
     }
 
     public data class Replace(
         override val application: Application,
         override val uri: String,
-        override val routeMethod: RouteMethod,
+        override val routeMethod: dev.programadorthi.routing.core.RouteMethod,
         override val parameters: Parameters = Parameters.Empty,
-    ) : NavigationApplicationCall()
+    ) : dev.programadorthi.routing.core.NavigationApplicationCall()
 
     public data class ReplaceNamed(
         override val application: Application,
-        override val routeMethod: RouteMethod,
+        override val routeMethod: dev.programadorthi.routing.core.RouteMethod,
         override val parameters: Parameters = Parameters.Empty,
         public val name: String,
         public val pathParameters: Parameters = Parameters.Empty,
         public val all: Boolean = false,
-    ) : NavigationApplicationCall() {
+    ) : dev.programadorthi.routing.core.NavigationApplicationCall() {
 
         override val uri: String = ""
     }
