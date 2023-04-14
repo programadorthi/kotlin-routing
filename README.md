@@ -2,102 +2,109 @@
     Kotlin Routing
 </h1>
 
-A multiplatform, extensible and independent "navigation" routing library powered by Ktor.
-Create routing independent and extend to what you need.
+A multiplatform, extensible, and independent "navigation" routing library powered by Ktor.
+Create routing independently and extend it to what you need.
 
 ```kotlin
 val router = routing {
     route(path = "/login") {
-        // handle {} is generic for any routing event (pop, push, replace, replaceAll...)
         handle {
-            val application = call.application
-            val routeMethod = call.routeMethod (RouteMethod.Pop, RouteMethod.Push, RouteMethod.Replace, RouteMethod.ReplaceAll)
-            val uri = call.uri
-            val attributes = call.attributes // Always empty by default
-            val parameters = call.parameters // All in one (path parameters ({...}) + routing parameters (push(parameters = ...)) + query parameters ("/path?q=search&name=routing"))
-            
-            // Here is your time
-            // Are you on Android? Do your Intent or finish your Activity
-            // Are you on Desktop? Use your Stack based navigation and navigate
-            // Are you on iOS? Do your navigation like using UINavigationController
-            // Are you on Web? Push, replace or pop your history state
+          // ready to go to any screen in any platform that you want
         }
     }
 }
 
-// And to route do:
 router.push(path = "/login")
 ```
 
-## Declaring routes
-
+## Defining routes
 > Based on [Ktor Routing](https://ktor.io/docs/routing-in-ktor.html)
 
 ```kotlin
 val router = routing {
-    // name is optional and used to named navigation
-    route(path = "/path", name = "path") {
+    route(path = "/path") {     
+}
+
+```
+It's also possible to define a name to navigate instead of using the path value.
+```Kotlin
+route(path = "/path", name = "path") {
+}
+router.push("path")
+```
+
+[Type-safe](https://github.com/programadorthi/kotlin-routing/edit/main/README.md#type-safe-routing) navigation is also supported.
+
+## Handling routes
+Since you defined your routes, it's time to handle them. Use the `handle` block to do that.
+```kotlin
+val router = routing {
+    route(path = "/path") {
         handle {
-            // handle any routing action to this route (pop, push, replace, ...)
         }
     }
+}  
+```
+It's possible to define an action for each RouteMethod available
+```Kotlin
+(RouteMethod.Pop, RouteMethod.Push, RouteMethod.Replace, RouteMethod.ReplaceAll)
 
-    // name is optional and used to named navigation
-    route(path = "/path2", name = "path2") {
-        push {
-            // handle push to this route only
-        }
-        replace {
-            // handle replace to this route only
-        }
-        replaceAll {
-            // handle replaceAll to this route only
-        }
-        pop {
-            // handle pop to this route only
-        }
-    }
-
-    // handle is short version to combine route { handle{} }
-    handle(path = "/path3", name = "path3") {
-        // handle any routing action to this route (pop, push, replace, ...)
-    }
-
-    // push is short version to combine route { push{} }
-    push(path = "/path4", name = "path4") {
-        // handle push to this route only
-    }
-
-    // push is short version to combine route { replace{} }
-    replace(path = "/path5", name = "path5") {
-        // handle replace to this route only
-    }
-
-    // push is short version to combine route { replaceAll{} }
-    replaceAll(path = "/path6", name = "path6") {
-        // handle replaceAll to this route only
-    }
-
-    // pop is short version to combine route { pop{} }
-    // pop can not be named
-    pop(path = "/path7") {
-        // handle pop to this route only
-    }
-
-    // If you need redirect one route to another do:
-    route|handle|push|replace|replaceAll|pop(...) {
-        redirectToPath(path = "/path-destination")
-        // or
-        redirectToName(name = "destination-name")
-    }
-
-    // If you need a route Regex based do:
-    route|handle|push|replace|replaceAll|pop(path = Regex()) {
-        // ...
-    }
+route(path = "/path2") {
+    push { }   // handle push to this route only
+    replace { }  // handle replace to this route only
+    replaceAll { }  // handle replaceAll to this route only
+    pop { }  // handle pop to this route only
 }
 ```
 
+### Handling route short version
+
+```Kotlin
+handle(path = "/path3", name = "path3") {
+
+}
+push(path = "/path4", name = "path4") {
+
+}
+replace(path = "/path5", name = "path5") {
+
+}
+replaceAll(path = "/path6", name = "path6") {
+
+}
+// Pop can not be named
+pop(path = "/path7") {
+
+}
+```
+### Getting route detail 
+Use `call` inside of handle block or any `RouteMethod`  to get all details available of a route that was called
+
+```Kotlin
+val application = call.application
+val routeMethod = call.routeMethod
+val uri = call.uri
+val attributes = call.attributes
+val parameters = call.parameters
+```
+
+### Redirecting route
+Using handle, any RouteMethod or short version you can redirect one route to another
+
+```Kotlin
+route|handle|push|replace|replaceAll|pop(...) {
+    redirectToPath(path = "/path-destination")
+    // or
+    redirectToName(name = "destination-name")
+}
+```
+### Regex route
+You can also create a route using regex
+```Kotlin
+route|handle|push|replace|replaceAll|pop(path = Regex()) {
+    // ...
+}
+```
 ## Routing routes
 
 > There is no behavior in Ktor for that
