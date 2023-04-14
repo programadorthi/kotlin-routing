@@ -22,6 +22,6 @@ dependencyResolutionManagement {
 rootProject.name = "kotlin-routing"
 
 include(":core")
-//include(":resources")
+include(":resources")
 //include(":status-pages")
 //include(":voyager")
