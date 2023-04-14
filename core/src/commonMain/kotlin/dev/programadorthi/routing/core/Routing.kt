@@ -153,7 +153,7 @@ public class Routing internal constructor(
         tracers.add(block)
     }
 
-    internal fun dispose() {
+    public fun dispose() {
         application.dispose()
     }
 

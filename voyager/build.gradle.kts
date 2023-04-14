@@ -1,5 +1,6 @@
 plugins {
     kotlin("multiplatform")
+    id("org.jetbrains.compose")
     id("org.jlleitschuh.gradle.ktlint")
     id("maven-publish")
 }
@@ -35,12 +36,17 @@ kotlin {
         val commonMain by getting {
             dependencies {
                 api(projects.core)
+                compileOnly(libs.compose.runtime)
+                compileOnly(libs.compose.runtime.saveable)
+                api(libs.voyager.navigator)
             }
         }
         val commonTest by getting {
             dependencies {
                 implementation(kotlin("test"))
                 implementation(libs.coroutines.test)
+                implementation(libs.compose.runtime)
+                implementation(libs.compose.runtime.saveable)
             }
         }
 
