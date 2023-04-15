@@ -25,3 +25,5 @@ include(":core")
 include(":resources")
 include(":status-pages")
 include(":voyager")
+
+include(":samples:android-sample")
