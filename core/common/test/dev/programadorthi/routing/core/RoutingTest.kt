@@ -23,9 +23,9 @@ class RoutingTest {
         override val uri: String = "",
         override val parameters: Parameters = Parameters.Empty,
     ) : ApplicationCall {
-        override val routeMethod: RouteMethod get() = RouteMethod.Empty
+        override val attributes: Attributes = Attributes()
 
-        override val attributes: Attributes get() = Attributes()
+        override val routeMethod: RouteMethod get() = RouteMethod.Empty
     }
 
     @Test
