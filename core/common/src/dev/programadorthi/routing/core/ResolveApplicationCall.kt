@@ -7,9 +7,8 @@ import io.ktor.util.Attributes
 import kotlinx.coroutines.CoroutineScope
 import kotlin.coroutines.CoroutineContext
 
-internal class RedirectApplicationCall(
+internal class ResolveApplicationCall(
     override val coroutineContext: CoroutineContext,
-    override val name: String = "",
     override val uri: String = "",
     private val previousCall: ApplicationCall,
     parameters: Parameters,
@@ -21,6 +20,8 @@ internal class RedirectApplicationCall(
 
     override val routeMethod: RouteMethod get() = previousCall.routeMethod
 
+    override val name: String get() = previousCall.name
+
     override val parameters: Parameters by lazy(LazyThreadSafetyMode.NONE) {
         Parameters.build {
             appendAll(previousCall.parameters)
@@ -28,5 +29,5 @@ internal class RedirectApplicationCall(
         }
     }
 
-    override fun toString(): String = "RedirectApplicationCall(from=${previousCall.uri}, toName=$name, toPath=$uri)"
+    override fun toString(): String = "NamedApplicationCall(name=$name, uri=$uri)"
 }

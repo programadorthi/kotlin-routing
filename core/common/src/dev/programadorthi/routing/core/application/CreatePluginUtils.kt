@@ -27,8 +27,9 @@ import io.ktor.util.AttributeKey
  * @param name A name of a plugin that is used to get its instance.
  * @param createConfiguration Defines how the initial [PluginConfigT] of your new plugin can be created.
  * Note that it may be modified later when a user of your plugin calls [Application.install].
- * @param body Allows you to define handlers ([onCall], [onCallReceive], [onCallRespond] and so on) that
- * can modify the behaviour of an [Application] where your plugin is installed.
+ * @param body Allows you to define handlers ([PluginBuilder.onCall], [PluginBuilder.onCallReceive],
+ * [PluginBuilder.onCallRespond] and so on) that can modify the behaviour of an [Application]
+ * where your plugin is installed.
  *
  **/
 public fun <PluginConfigT : Any> createApplicationPlugin(
@@ -65,11 +66,12 @@ public fun <PluginConfigT : Any> createApplicationPlugin(
  * You can learn more from [Custom plugins](https://ktor.io/docs/custom-plugins.html).
  *
  * @param name A name of a plugin that is used to get its instance
- * when it is installed to [VoyagerRouting].
+ * when it is installed to [dev.programadorthi.routing.core.Routing].
  * @param createConfiguration Defines how the initial [PluginConfigT] of your new plugin can be created. Please
  * note that it may be modified later when a user of your plugin calls [install].
- * @param body Allows you to define handlers ([onCall], [onCallReceive], [onCallRespond] and so on) that
- * can modify the behaviour of an [Application] where your plugin is installed.
+ * @param body Allows you to define handlers ([PluginBuilder.onCall], [PluginBuilder.onCallReceive],
+ * [PluginBuilder.onCallRespond] and so on) that can modify the behaviour of an [Application]
+ * where your plugin is installed.
  **/
 public fun <PluginConfigT : Any> createRouteScopedPlugin(
     name: String,
@@ -110,8 +112,9 @@ public fun <PluginConfigT : Any> createRouteScopedPlugin(
  * You can learn more from [Custom plugins](https://ktor.io/docs/custom-plugins.html).
  *
  * @param name A name of a plugin that is used to get an instance of the plugin installed to the [Application].
- * @param body Allows you to define handlers ([onCall], [onCallReceive], [onCallRespond] and so on) that
- * can modify the behaviour of an [Application] where your plugin is installed.
+ * @param body Allows you to define handlers ([PluginBuilder.onCall], [PluginBuilder.onCallReceive],
+ * [PluginBuilder.onCallRespond] and so on) that can modify the behaviour of an [Application]
+ * where your plugin is installed.
  **/
 public fun createApplicationPlugin(
     name: String,
@@ -119,7 +122,7 @@ public fun createApplicationPlugin(
 ): ApplicationPlugin<Unit> = createApplicationPlugin(name, {}, body)
 
 /**
- * Creates a [RouteScopedPlugin] that can be installed into a [io.ktor.server.routing.Route].
+ * Creates a [RouteScopedPlugin] that can be installed into a [dev.programadorthi.routing.core.Route].
  *
  * The example below creates a plugin that prints a requested URL each time your application receives a call:
  * ```
@@ -137,8 +140,9 @@ public fun createApplicationPlugin(
  * You can learn more from [Custom plugins](https://ktor.io/docs/custom-plugins.html).
  *
  * @param name A name of a plugin that is used to get an instance of the plugin installed to the [Route].
- * @param body Allows you to define handlers ([onCall], [onCallReceive], [onCallRespond] and so on) that
- * can modify the behaviour of an [Application] where your plugin is installed.
+ * @param body Allows you to define handlers ([PluginBuilder.onCall], [PluginBuilder.onCallReceive],
+ * [PluginBuilder.onCallRespond] and so on) that can modify the behaviour of an [Application]
+ * where your plugin is installed.
  **/
 public fun createRouteScopedPlugin(
     name: String,

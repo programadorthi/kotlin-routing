@@ -21,8 +21,8 @@ public open class CallContext<PluginConfig : Any> internal constructor(
 }
 
 /**
- * A context associated with the call handling by your application. [OnCallContext] is a receiver for [PluginBuilder.onCall] handler
- * of your [PluginBuilder].
+ * A context associated with the call handling by your application. [OnCallContext] is a receiver
+ * for [PluginBuilder.onCall] handler of your [PluginBuilder].
  *
  * @see CallContext
  **/

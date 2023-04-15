@@ -1,446 +1,505 @@
 package dev.programadorthi.routing.core
 
+import dev.programadorthi.routing.core.application.Application
+import dev.programadorthi.routing.core.application.ApplicationCall
 import dev.programadorthi.routing.core.application.call
 import io.ktor.http.Parameters
 import io.ktor.http.parametersOf
+import io.ktor.util.Attributes
 import kotlinx.coroutines.ExperimentalCoroutinesApi
 import kotlinx.coroutines.Job
+import kotlinx.coroutines.test.advanceTimeBy
 import kotlinx.coroutines.test.runTest
-import kotlin.coroutines.CoroutineContext
 import kotlin.test.Test
 import kotlin.test.assertEquals
+import kotlin.test.assertNotNull
 
 @OptIn(ExperimentalCoroutinesApi::class)
 class RoutingTest {
 
-    @Test
-    fun shouldNavigateByPath() {
-        var result = ""
+    class BasicApplicationCall(
+        override val application: Application,
+        override val name: String = "",
+        override val uri: String = "",
+        override val parameters: Parameters = Parameters.Empty,
+    ) : ApplicationCall {
+        override val routeMethod: RouteMethod get() = RouteMethod.Empty
 
-        whenBody { handled ->
-            val routing = routing(parentCoroutineContext = this) {
-                route(path = "/path") {
-                    handle {
-                        result = "path-handled"
-                        handled()
-                    }
-                }
-            }
-
-            routing.push(path = "/path")
-        }
-
-        assertEquals(result, "path-handled")
+        override val attributes: Attributes get() = Attributes()
     }
 
     @Test
-    fun shouldNavigateByPathWithParameters() {
-        var result = ""
-        var parameters = Parameters.Empty
-
-        whenBody { handled ->
-            val routing = routing(parentCoroutineContext = this) {
-                route(path = "/path") {
-                    handle {
-                        result = "path-handled"
-                        parameters = call.parameters
-                        handled()
-                    }
-                }
-            }
-
-            routing.push(path = "/path", parameters = parametersOf("key", "value"))
-        }
-
-        assertEquals(result, "path-handled")
-        assertEquals(parameters, parametersOf("key", "value"))
-    }
-
-    @Test
-    fun shouldNavigateByName() {
-        var result = ""
-
-        whenBody { handled ->
-            val routing = routing(parentCoroutineContext = this) {
-                route(path = "/path", name = "path") {
-                    handle {
-                        result = "name-handled"
-                        handled()
-                    }
-                }
-            }
-
-            routing.pushNamed(name = "path")
-        }
-
-        assertEquals(result, "name-handled")
-    }
-
-    @Test
-    fun shouldNavigateByNameWithParameters() {
-        var result = ""
-        var parameters = Parameters.Empty
-
-        whenBody { handled ->
-            val routing = routing(parentCoroutineContext = this) {
-                route(path = "/path", name = "path") {
-                    handle {
-                        result = "name-handled"
-                        parameters = call.parameters
-                        handled()
-                    }
-                }
-            }
-
-            routing.pushNamed(name = "path", parameters = parametersOf("key", "value"))
-        }
-
-        assertEquals(result, "name-handled")
-        assertEquals(parameters, parametersOf("key", "value"))
-    }
-
-    @Test
-    fun shouldNavigateByNameWithPathParameters() {
-        var result = ""
-        var parameters = Parameters.Empty
-
-        whenBody { handled ->
-            val routing = routing(parentCoroutineContext = this) {
-                route(path = "/path/{id}", name = "path") {
-                    handle {
-                        result = "name-handled"
-                        parameters = call.parameters
-                        handled()
-                    }
-                }
-            }
-
-            routing.pushNamed(
-                name = "path",
-                pathParameters = parametersOf("id", "123"),
-            )
-        }
-
-        assertEquals(result, "name-handled")
-        assertEquals(parameters, parametersOf("id", "123"))
-    }
-
-    @Test
-    fun shouldPopWithParameters() {
-        var result = ""
-        var parameters = Parameters.Empty
-
-        whenBody { handled ->
-            val routing = routing(parentCoroutineContext = this) {
-                route(path = "/path", name = "path") {
-                    push { }
-                    pop {
-                        result = "popped"
-                        parameters = call.parameters
-                        handled()
-                    }
-                }
-            }
-
-            // A previous route must exist to pop
-            routing.pushNamed(name = "path")
-            routing.pop(parameters = parametersOf("key", "value"))
-        }
-
-        assertEquals(result, "popped")
-        assertEquals(parameters, parametersOf("key", "value"))
-    }
-
-    @Test
-    fun shouldCreateARouteUsingHandleDirectly() {
-        var result = ""
-
-        whenBody { handled ->
-            val routing = routing(parentCoroutineContext = this) {
-                handle(path = "/path", name = "path") {
-                    result = "route-created"
-                    handled()
-                }
-            }
-
-            routing.pushNamed(name = "path")
-        }
-
-        assertEquals(result, "route-created")
-    }
-
-    @Test
-    fun shouldCreateARouteUsingPushDirectly() {
-        var result = ""
-
-        whenBody { handled ->
-            val routing = routing(parentCoroutineContext = this) {
-                push(path = "/path", name = "path") {
-                    result = "route-created"
-                    handled()
-                }
-            }
-
-            routing.pushNamed(name = "path")
-        }
-
-        assertEquals(result, "route-created")
-    }
-
-    @Test
-    fun shouldCreateARouteUsingReplaceDirectly() {
-        var result = ""
-
-        whenBody { handled ->
-            val routing = routing(parentCoroutineContext = this) {
-                replace(path = "/path", name = "path") {
-                    result = "route-created"
-                    handled()
-                }
-            }
-
-            routing.replaceNamed(name = "path")
-        }
-
-        assertEquals(result, "route-created")
-    }
-
-    @Test
-    fun shouldCreateARouteUsingReplaceAllDirectly() {
-        var result = ""
-
-        whenBody { handled ->
-            val routing = routing(parentCoroutineContext = this) {
-                replaceAll(path = "/path", name = "path") {
-                    result = "route-created"
-                    handled()
-                }
-            }
-
-            routing.replaceAllNamed(name = "path")
-        }
-
-        assertEquals(result, "route-created")
-    }
-
-    @Test
-    fun shouldCreateARouteUsingPopDirectly() {
-        var result = ""
-
-        whenBody { handled ->
-            val routing = routing(parentCoroutineContext = this) {
-                push(path = "/path") { }
-                pop(path = "/path") {
-                    result = "popped-handled"
-                    handled()
-                }
-            }
-
-            // A previous route must exist to pop
-            routing.push(path = "/path")
-            routing.pop()
-        }
-
-        assertEquals(result, "popped-handled")
-    }
-
-    @Test
-    fun shouldHandlePushWhenPushingARoute() {
-        var result = ""
-
-        whenBody { handled ->
-            val routing = routing(parentCoroutineContext = this) {
-                route(path = "/path", name = "path") {
-                    push {
-                        result = "pushed-route"
-                        handled()
-                    }
-                    replace {
-                        result = "replaced-route"
-                    }
-                }
-            }
-
-            routing.pushNamed(name = "path")
-        }
-
-        assertEquals(result, "pushed-route")
-    }
-
-    @Test
-    fun shouldHandleReplaceWhenReplacingARoute() {
-        var result = ""
-
-        whenBody { handled ->
-            val routing = routing(parentCoroutineContext = this) {
-                route(path = "/path", name = "path") {
-                    push {
-                        result = "pushed-route"
-                    }
-                    replace {
-                        result = "replaced-route"
-                        handled()
-                    }
-                }
-            }
-
-            routing.replaceNamed(name = "path")
-        }
-
-        assertEquals(result, "replaced-route")
-    }
-
-    @Test
-    fun shouldHandleReplaceAllWhenReplacingAllRoutes() {
-        var result = ""
-
-        whenBody { handled ->
-            val routing = routing(parentCoroutineContext = this) {
-                route(path = "/path", name = "path") {
-                    push {
-                        result = "pushed-route"
-                    }
-                    replaceAll {
-                        result = "replaced-route"
-                        handled()
-                    }
-                }
-            }
-
-            routing.replaceAllNamed(name = "path")
-        }
-
-        assertEquals(result, "replaced-route")
-    }
-
-    @Test
-    fun shouldHandlePopWhenPoppingARoute() {
-        var result = ""
-
-        whenBody { handled ->
-            val routing = routing(parentCoroutineContext = this) {
-                route(path = "/path", name = "path") {
-                    push {
-                        result = "pushed-route"
-                    }
-                    replace {
-                        result = "replaced-route"
-                    }
-                    pop {
-                        result = "popped-route"
-                        handled()
-                    }
-                }
-            }
-
-            // A previous route must exist to pop
-            routing.pushNamed(name = "path")
-            routing.pop()
-        }
-
-        assertEquals(result, "popped-route")
-    }
-
-    @Test
-    fun shouldRedirectToOtherRouteByPath() {
-        var result = ""
-
-        whenBody { handled ->
-            val routing = routing(parentCoroutineContext = this) {
-                route(path = "/path", name = "path") {
-                    redirectToPath(path = "/path2")
-                }
-
-                route(path = "/path2", name = "path2") {
-                    // Any redirections are transformed to a replace route
-                    replace {
-                        result = "redirected-route"
-                        handled()
-                    }
-                }
-            }
-
-            routing.pushNamed(name = "path")
-        }
-
-        assertEquals(result, "redirected-route")
-    }
-
-    @Test
-    fun shouldRedirectToOtherRouteByName() {
-        var result = ""
-
-        whenBody { handled ->
-            val routing = routing(parentCoroutineContext = this) {
-                route(path = "/path", name = "path") {
-                    redirectToName(name = "path2")
-                }
-
-                route(path = "/path2", name = "path2") {
-                    // Any redirections are transformed to a replace route
-                    replace {
-                        result = "redirected-route"
-                        handled()
-                    }
-                }
-            }
-
-            routing.pushNamed(name = "path")
-        }
-
-        assertEquals(result, "redirected-route")
-    }
-
-    @Test
-    fun shouldRouteByRegex() {
-        var result = ""
-
-        whenBody { handled ->
-            val routing = routing(parentCoroutineContext = this) {
-                route(path = Regex("/(?<number>\\d+)")) {
-                    push(path = "/regex") {
-                        result = "pushed-to-regex"
-                        handled()
-                    }
-                }
-            }
-
-            routing.push(path = "/123/regex")
-        }
-
-        assertEquals(result, "pushed-to-regex")
-    }
-
-    @Test
-    fun shouldRouteByRegexWithParameters() {
-        var result = ""
-        var parameters = Parameters.Empty
-
-        whenBody { handled ->
-            val routing = routing(parentCoroutineContext = this) {
-                route(path = Regex("/(?<number>\\d+)")) {
-                    push(path = "/regex") {
-                        result = "pushed-to-regex"
-                        parameters = call.parameters
-                        handled()
-                    }
-                }
-            }
-
-            routing.push(path = "/123/regex")
-        }
-
-        assertEquals(result, "pushed-to-regex")
-        assertEquals(parameters, parametersOf("number", "123"))
-    }
-
-    private fun whenBody(
-        body: CoroutineContext.(() -> Unit) -> Unit
-    ) = runTest {
+    fun shouldCreateARouteAndHandleIt() = runTest {
+        // GIVEN
         val job = Job()
-        (coroutineContext + job).body {
-            job.cancel()
+        var result: ApplicationCall? = null
+
+        val routing = routing(parentCoroutineContext = coroutineContext + job) {
+            route(path = "/path") {
+                handle {
+                    result = call
+                    job.complete()
+                }
+            }
         }
-        job.join()
+
+        // WHEN
+        routing.execute(
+            BasicApplicationCall(
+                application = routing.application,
+                uri = "/path",
+            )
+        )
+        advanceTimeBy(99)
+
+        // THEN
+        assertNotNull(result)
+        assertEquals("/path", "${result?.uri}")
+        assertEquals("", "${result?.name}")
+        assertEquals(RouteMethod.Empty, result?.routeMethod)
+        assertEquals(Parameters.Empty, result?.parameters)
+    }
+
+    @Test
+    fun shouldCreateARouteUsingHandleDirectly() = runTest {
+        // GIVEN
+        val job = Job()
+        var result: ApplicationCall? = null
+
+        val routing = routing(parentCoroutineContext = coroutineContext + job) {
+            handle(path = "/path") {
+                result = call
+                job.complete()
+            }
+        }
+
+        // WHEN
+        routing.execute(
+            BasicApplicationCall(
+                application = routing.application,
+                uri = "/path",
+            )
+        )
+        advanceTimeBy(99)
+
+        // THEN
+        assertNotNull(result)
+        assertEquals("/path", "${result?.uri}")
+        assertEquals("", "${result?.name}")
+        assertEquals(RouteMethod.Empty, result?.routeMethod)
+        assertEquals(Parameters.Empty, result?.parameters)
+    }
+
+    @Test
+    fun shouldPassParametersInRoutingUsingPath() = runTest {
+        // GIVEN
+        val job = Job()
+        var result: ApplicationCall? = null
+
+        val routing = routing(parentCoroutineContext = coroutineContext + job) {
+            handle(path = "/path") {
+                result = call
+                job.complete()
+            }
+        }
+
+        // WHEN
+        routing.execute(
+            BasicApplicationCall(
+                application = routing.application,
+                uri = "/path",
+                parameters = parametersOf("key", "values"),
+            )
+        )
+        advanceTimeBy(99)
+
+        // THEN
+        assertNotNull(result)
+        assertEquals("/path", "${result?.uri}")
+        assertEquals("", "${result?.name}")
+        assertEquals(RouteMethod.Empty, result?.routeMethod)
+        assertEquals(parametersOf("key", "values"), result?.parameters)
+    }
+
+    @Test
+    fun shouldRoutingUsingName() = runTest {
+        // GIVEN
+        val job = Job()
+        var result: ApplicationCall? = null
+
+        val routing = routing(parentCoroutineContext = coroutineContext + job) {
+            handle(path = "/path", name = "named") {
+                result = call
+                job.complete()
+            }
+        }
+
+        // WHEN
+        routing.execute(
+            BasicApplicationCall(
+                application = routing.application,
+                name = "named",
+            )
+        )
+        advanceTimeBy(99)
+
+        // THEN
+        assertNotNull(result)
+        assertEquals("/path", "${result?.uri}")
+        assertEquals("named", "${result?.name}")
+        assertEquals(RouteMethod.Empty, result?.routeMethod)
+        assertEquals(Parameters.Empty, result?.parameters)
+    }
+
+    @Test
+    fun shouldPassParametersInRoutingUsingName() = runTest {
+        // GIVEN
+        val job = Job()
+        var result: ApplicationCall? = null
+
+        val routing = routing(parentCoroutineContext = coroutineContext + job) {
+            handle(path = "/path", name = "named") {
+                result = call
+                job.complete()
+            }
+        }
+
+        // WHEN
+        routing.execute(
+            BasicApplicationCall(
+                application = routing.application,
+                name = "named",
+                parameters = parametersOf("key", "values"),
+            )
+        )
+        advanceTimeBy(99)
+
+        // THEN
+        assertNotNull(result)
+        assertEquals("/path", "${result?.uri}")
+        assertEquals("named", "${result?.name}")
+        assertEquals(RouteMethod.Empty, result?.routeMethod)
+        assertEquals(parametersOf("key", "values"), result?.parameters)
+    }
+
+    @Test
+    fun shouldGetParametersFromPath() = runTest {
+        // GIVEN
+        val job = Job()
+        var result: ApplicationCall? = null
+
+        val routing = routing(parentCoroutineContext = coroutineContext + job) {
+            handle(path = "/path/{id}") {
+                result = call
+                job.complete()
+            }
+        }
+
+        // WHEN
+        routing.execute(
+            BasicApplicationCall(
+                application = routing.application,
+                uri = "/path/123"
+            )
+        )
+        advanceTimeBy(99)
+
+        // THEN
+        assertNotNull(result)
+        assertEquals("/path/123", "${result?.uri}")
+        assertEquals("", "${result?.name}")
+        assertEquals(RouteMethod.Empty, result?.routeMethod)
+        assertEquals(parametersOf("id", "123"), result?.parameters)
+    }
+
+    @Test
+    fun shouldReplacePathParametersWhenProvidingParametersToNamedRouting() = runTest {
+        // GIVEN
+        val job = Job()
+        var result: ApplicationCall? = null
+
+        val routing = routing(parentCoroutineContext = coroutineContext + job) {
+            handle(path = "/path/{id}/hello/{name}", name = "named") {
+                result = call
+                job.complete()
+            }
+        }
+
+        // WHEN
+        routing.execute(
+            BasicApplicationCall(
+                application = routing.application,
+                name = "named",
+                parameters = parametersOf(
+                    "id" to listOf("123"),
+                    "name" to listOf("routing"),
+                )
+            )
+        )
+        advanceTimeBy(99)
+
+        // THEN
+        assertNotNull(result)
+        assertEquals("/path/123/hello/routing", "${result?.uri}")
+        assertEquals("named", "${result?.name}")
+        assertEquals(RouteMethod.Empty, result?.routeMethod)
+        assertEquals(
+            parametersOf(
+                "id" to listOf("123"),
+                "name" to listOf("routing"),
+            ),
+            result?.parameters
+        )
+    }
+
+    @Test
+    fun shouldCaptureQueryParametersWhenProvided() = runTest {
+        // GIVEN
+        val job = Job()
+        var result: ApplicationCall? = null
+
+        val routing = routing(parentCoroutineContext = coroutineContext + job) {
+            handle(path = "/path") {
+                result = call
+                job.complete()
+            }
+        }
+
+        // WHEN
+        routing.execute(
+            BasicApplicationCall(
+                application = routing.application,
+                uri = "/path?q=routing&kind=multiplatform"
+            )
+        )
+        advanceTimeBy(99)
+
+        // THEN
+        assertNotNull(result)
+        assertEquals("/path?q=routing&kind=multiplatform", "${result?.uri}")
+        assertEquals("", "${result?.name}")
+        assertEquals(RouteMethod.Empty, result?.routeMethod)
+        assertEquals(
+            parametersOf(
+                "q" to listOf("routing"),
+                "kind" to listOf("multiplatform"),
+            ),
+            result?.parameters
+        )
+    }
+
+    @Test
+    fun shouldRedirectToAnotherPath() = runTest {
+        // GIVEN
+        val job = Job()
+        var result: ApplicationCall? = null
+
+        val routing = routing(parentCoroutineContext = coroutineContext + job) {
+            route(path = "/path1") {
+                redirectToPath(path = "/path2")
+            }
+            handle(path = "/path2") {
+                result = call
+                job.complete()
+            }
+        }
+
+        // WHEN
+        routing.execute(
+            BasicApplicationCall(
+                application = routing.application,
+                uri = "/path1"
+            )
+        )
+        advanceTimeBy(99)
+
+        // THEN
+        assertNotNull(result)
+        assertEquals("/path2", "${result?.uri}")
+        assertEquals("", "${result?.name}")
+        assertEquals(RouteMethod.Empty, result?.routeMethod)
+        assertEquals(Parameters.Empty, result?.parameters)
+    }
+
+    @Test
+    fun shouldRedirectToAnotherName() = runTest {
+        // GIVEN
+        val job = Job()
+        var result: ApplicationCall? = null
+
+        val routing = routing(parentCoroutineContext = coroutineContext + job) {
+            route(path = "/path1", name = "path1") {
+                redirectToName(name = "path2")
+            }
+            handle(path = "/path2", name = "path2") {
+                result = call
+                job.complete()
+            }
+        }
+
+        // WHEN
+        routing.execute(
+            BasicApplicationCall(
+                application = routing.application,
+                name = "path1"
+            )
+        )
+        advanceTimeBy(99)
+
+        // THEN
+        assertNotNull(result)
+        assertEquals("/path2", "${result?.uri}")
+        assertEquals("path2", "${result?.name}")
+        assertEquals(RouteMethod.Empty, result?.routeMethod)
+        assertEquals(Parameters.Empty, result?.parameters)
+    }
+
+    @Test
+    fun shouldPutParametersWhenRedirectToAnotherName() = runTest {
+        // GIVEN
+        val job = Job()
+        var result: ApplicationCall? = null
+
+        val routing = routing(parentCoroutineContext = coroutineContext + job) {
+            route(path = "/path1", name = "path1") {
+                redirectToName(name = "path2", parameters = parametersOf("key", "value"))
+            }
+            handle(path = "/path2", name = "path2") {
+                result = call
+                job.complete()
+            }
+        }
+
+        // WHEN
+        routing.execute(
+            BasicApplicationCall(
+                application = routing.application,
+                name = "path1"
+            )
+        )
+        advanceTimeBy(99)
+
+        // THEN
+        assertNotNull(result)
+        assertEquals("/path2", "${result?.uri}")
+        assertEquals("path2", "${result?.name}")
+        assertEquals(RouteMethod.Empty, result?.routeMethod)
+        assertEquals(parametersOf("key", "value"), result?.parameters)
+    }
+
+    @Test
+    fun shouldReplaceParametersWhenRedirectToAnotherName() = runTest {
+        // GIVEN
+        val job = Job()
+        var result: ApplicationCall? = null
+
+        val routing = routing(parentCoroutineContext = coroutineContext + job) {
+            route(path = "/path1", name = "path1") {
+                redirectToName(
+                    name = "path2",
+                    parameters = parametersOf(
+                        "id" to listOf("123"),
+                        "key" to listOf("value"),
+                    )
+                )
+            }
+            handle(path = "/path2/{id}", name = "path2") {
+                result = call
+                job.complete()
+            }
+        }
+
+        // WHEN
+        routing.execute(
+            BasicApplicationCall(
+                application = routing.application,
+                name = "path1"
+            )
+        )
+        advanceTimeBy(99)
+
+        // THEN
+        assertNotNull(result)
+        assertEquals("/path2/123", "${result?.uri}")
+        assertEquals("path2", "${result?.name}")
+        assertEquals(RouteMethod.Empty, result?.routeMethod)
+        assertEquals(
+            parametersOf(
+                "id" to listOf("123"),
+                "key" to listOf("value"),
+            ),
+            result?.parameters
+        )
+    }
+
+    @Test
+    fun shouldRoutingByRegex() = runTest {
+        // GIVEN
+        val job = Job()
+        var result: ApplicationCall? = null
+
+        val routing = routing(parentCoroutineContext = coroutineContext + job) {
+            route(path = Regex("/(?<number>\\d+)")) {
+                handle(path = "/hello") {
+                    result = call
+                    job.complete()
+                }
+            }
+        }
+
+        // WHEN
+        routing.execute(
+            BasicApplicationCall(
+                application = routing.application,
+                uri = "/123/hello"
+            )
+        )
+        advanceTimeBy(99)
+
+        // THEN
+        assertNotNull(result)
+        assertEquals("/123/hello", "${result?.uri}")
+        assertEquals("", "${result?.name}")
+        assertEquals(RouteMethod.Empty, result?.routeMethod)
+        assertEquals(parametersOf("number", "123"), result?.parameters)
+    }
+
+    @Test
+    fun shouldGetParametersWhenRoutingByRegex() = runTest {
+        // GIVEN
+        val job = Job()
+        var result: ApplicationCall? = null
+
+        val routing = routing(parentCoroutineContext = coroutineContext + job) {
+            route(path = Regex("/(?<number>\\d+)")) {
+                handle(path = Regex("(?<user>\\w+)/(?<login>.+)")) {
+                    result = call
+                    job.complete()
+                }
+            }
+        }
+
+        // WHEN
+        routing.execute(
+            BasicApplicationCall(
+                application = routing.application,
+                uri = "/456/qwe/rty"
+            )
+        )
+        advanceTimeBy(99)
+
+        // THEN
+        assertNotNull(result)
+        assertEquals("/456/qwe/rty", "${result?.uri}")
+        assertEquals("", "${result?.name}")
+        assertEquals(RouteMethod.Empty, result?.routeMethod)
+        assertEquals(
+            parametersOf(
+                "number" to listOf("456"),
+                "user" to listOf("qwe"),
+                "login" to listOf("rty"),
+            ),
+            result?.parameters
+        )
     }
 }

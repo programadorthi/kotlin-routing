@@ -16,6 +16,8 @@ import dev.programadorthi.routing.core.errors.BadRequestException
 import dev.programadorthi.routing.core.errors.MissingRequestParameterException
 import dev.programadorthi.routing.core.errors.RouteNotFoundException
 import io.ktor.http.Parameters
+import io.ktor.http.Url
+import io.ktor.http.plus
 import io.ktor.util.AttributeKey
 import io.ktor.util.KtorDsl
 import io.ktor.util.logging.KtorSimpleLogger
@@ -24,8 +26,6 @@ import io.ktor.util.logging.isTraceEnabled
 import io.ktor.util.pipeline.PipelineContext
 import io.ktor.util.pipeline.execute
 import kotlinx.coroutines.launch
-import kotlinx.coroutines.sync.Mutex
-import kotlinx.coroutines.sync.withLock
 import kotlin.coroutines.CoroutineContext
 import kotlin.coroutines.EmptyCoroutineContext
 
@@ -42,102 +42,19 @@ public class Routing internal constructor(
     application.environment.developmentMode,
     application.environment
 ) {
-    private val mutex = Mutex()
     private val tracers = mutableListOf<(RoutingResolveTrace) -> Unit>()
     private val namedRoutes = mutableMapOf<String, Route>()
-    private val uriStack = mutableListOf<String>()
 
     init {
         addDefaultTracing()
     }
 
-    public fun pop(parameters: Parameters = Parameters.Empty) {
-        executeCall(
-            dev.programadorthi.routing.core.NavigationApplicationCall.Pop(
-                application = application,
-                parameters = parameters,
-                uri = uriStack.lastOrNull() ?: "",
-            )
-        )
-    }
-
-    public fun push(path: String, parameters: Parameters = Parameters.Empty) {
-        executeCall(
-            dev.programadorthi.routing.core.NavigationApplicationCall.Push(
-                application = application,
-                uri = path,
-                parameters = parameters,
-            )
-        )
-    }
-
-    public fun pushNamed(
-        name: String,
-        parameters: Parameters = Parameters.Empty,
-        pathParameters: Parameters = Parameters.Empty,
-    ) {
-        executeCall(
-            dev.programadorthi.routing.core.NavigationApplicationCall.PushNamed(
-                application = application,
-                name = name,
-                parameters = parameters,
-                pathParameters = pathParameters,
-            )
-        )
-    }
-
-    public fun replace(path: String, parameters: Parameters = Parameters.Empty) {
-        executeCall(
-            dev.programadorthi.routing.core.NavigationApplicationCall.Replace(
-                application = application,
-                uri = path,
-                parameters = parameters,
-                routeMethod = RouteMethod.Replace,
-            )
-        )
-    }
-
-    public fun replaceAll(path: String, parameters: Parameters = Parameters.Empty) {
-        executeCall(
-            dev.programadorthi.routing.core.NavigationApplicationCall.Replace(
-                application = application,
-                uri = path,
-                parameters = parameters,
-                routeMethod = RouteMethod.ReplaceAll,
-            )
-        )
-    }
-
-    public fun replaceNamed(
-        name: String,
-        parameters: Parameters = Parameters.Empty,
-        pathParameters: Parameters = Parameters.Empty,
-    ) {
-        executeCall(
-            dev.programadorthi.routing.core.NavigationApplicationCall.ReplaceNamed(
-                application = application,
-                name = name,
-                parameters = parameters,
-                pathParameters = pathParameters,
-                routeMethod = RouteMethod.Replace,
-            )
-        )
-    }
-
-    public fun replaceAllNamed(
-        name: String,
-        parameters: Parameters = Parameters.Empty,
-        pathParameters: Parameters = Parameters.Empty,
-    ) {
-        executeCall(
-            dev.programadorthi.routing.core.NavigationApplicationCall.ReplaceNamed(
-                application = application,
-                name = name,
-                parameters = parameters,
-                pathParameters = pathParameters,
-                routeMethod = RouteMethod.ReplaceAll,
-            )
-        )
+    public fun execute(call: ApplicationCall) {
+        with(application) {
+            launch {
+                execute(call)
+            }
+        }
     }
 
     public fun unregisterNamed(name: String) {
@@ -164,7 +81,7 @@ public class Routing internal constructor(
         namedRoutes[name] = route
     }
 
-    internal fun mapNameToPath(name: String, pathParameters: Parameters): String {
+    private fun mapNameToPath(name: String, pathParameters: Parameters): String {
         val namedRoute =
             namedRoutes[name]
                 ?: throw RouteNotFoundException(message = "Named route not found with name: $name")
@@ -182,14 +99,6 @@ public class Routing internal constructor(
             pathParameters = pathParameters,
             routeSelectors = routeSelectors,
         )
-    }
-
-    private fun executeCall(call: ApplicationCall) {
-        with(application) {
-            launch {
-                execute(call)
-            }
-        }
     }
 
     private fun tryReplacePathParameters(
@@ -270,7 +179,7 @@ public class Routing internal constructor(
                 }
             }
         }
-        return destination.joinToString(separator = "/")
+        return destination.joinToString(separator = "/", prefix = "/")
     }
 
     private fun addDefaultTracing() {
@@ -297,84 +206,51 @@ public class Routing internal constructor(
     }
 
     private suspend fun interceptor(context: PipelineContext<Unit, ApplicationCall>) {
-        mutex.withLock {
-            val call = mapCallBeforeResolve(context.call)
-            if (call.uri.isBlank()) {
-                throw BadRequestException("Received a empty uri. Maybe you are trying popping a route that not exists. Have you checked whether you can pop?")
-            }
-            val resolveContext = RoutingResolveContext(this, call, tracers)
-            when (val resolveResult = resolveContext.resolve()) {
-                is RoutingResolveResult.Failure -> throw RouteNotFoundException(message = resolveResult.reason)
+        var call = context.call
 
-                is RoutingResolveResult.Success -> {
-                    val routingCallPipeline = resolveResult.route.buildPipeline()
-                    val routingCall = RoutingApplicationCall(
-                        coroutineContext = context.coroutineContext,
-                        routeMethod = call.routeMethod,
-                        previousCall = call,
-                        route = resolveResult.route,
-                        parameters = resolveResult.parameters,
-                    )
-                    routingCallPipeline.execute(routingCall)
-                    updateUriStack(call)
-                }
-            }
-        }
-    }
-
-    private fun mapCallBeforeResolve(call: ApplicationCall): ApplicationCall {
-        return when (call) {
-            // Redirect is always a replace call
-            is dev.programadorthi.routing.core.RedirectApplicationCall -> dev.programadorthi.routing.core.NavigationApplicationCall.Replace(
-                application = call.application,
-                parameters = call.parameters,
-                routeMethod = RouteMethod.Replace,
-                uri = when {
-                    call.name.isNotBlank() -> mapNameToPath(
-                        name = call.name,
-                        pathParameters = call.pathParameters
-                    )
-
-                    else -> call.uri
-                }
-            )
-
-            is dev.programadorthi.routing.core.NavigationApplicationCall.PushNamed -> dev.programadorthi.routing.core.NavigationApplicationCall.Push(
-                application = call.application,
-                parameters = call.parameters,
-                uri = mapNameToPath(name = call.name, pathParameters = call.pathParameters)
-            )
-
-            is dev.programadorthi.routing.core.NavigationApplicationCall.ReplaceNamed -> dev.programadorthi.routing.core.NavigationApplicationCall.Replace(
-                application = call.application,
-                parameters = call.parameters,
-                routeMethod = call.routeMethod,
-                uri = mapNameToPath(name = call.name, pathParameters = call.pathParameters)
-            )
-
-            // Trying to get last uri added after last lock release
-            is dev.programadorthi.routing.core.NavigationApplicationCall.Pop -> call.copy(uri = uriStack.lastOrNull() ?: "")
-
-            else -> call
-        }
-    }
-
-    private fun updateUriStack(call: ApplicationCall) {
-        if (call is dev.programadorthi.routing.core.NavigationApplicationCall.Pop) {
-            // After a pop removing popped URI from list
-            uriStack.removeLastOrNull()
-            return
+        // Getting query parameters provided in the URI
+        var queryParameters = Parameters.Empty
+        if (call.uri.isNotBlank()) {
+            queryParameters = Url(call.uri).parameters
         }
 
-        if (call is dev.programadorthi.routing.core.NavigationApplicationCall.Replace) {
-            if (call.routeMethod == RouteMethod.ReplaceAll) {
-                uriStack.clear()
-            } else {
-                uriStack.removeLastOrNull()
+        // Transforming a name to a URI
+        val uri = if (call.name.isBlank()) {
+            call.uri
+        } else {
+            mapNameToPath(
+                name = call.name,
+                pathParameters = call.parameters,
+            )
+        }
+
+        if (uri.isBlank()) {
+            throw BadRequestException("Received call with an empty uri: $call")
+        }
+
+        call = ResolveApplicationCall(
+            coroutineContext = context.coroutineContext,
+            previousCall = call,
+            parameters = call.parameters + queryParameters,
+            uri = uri,
+        )
+
+        val resolveContext = RoutingResolveContext(this, call, tracers)
+        when (val resolveResult = resolveContext.resolve()) {
+            is RoutingResolveResult.Failure -> throw RouteNotFoundException(message = resolveResult.reason)
+
+            is RoutingResolveResult.Success -> {
+                val routingCallPipeline = resolveResult.route.buildPipeline()
+                val routingCall = RoutingApplicationCall(
+                    coroutineContext = context.coroutineContext,
+                    routeMethod = call.routeMethod,
+                    previousCall = call,
+                    route = resolveResult.route,
+                    parameters = resolveResult.parameters,
+                )
+                routingCallPipeline.execute(routingCall)
             }
         }
-
-        uriStack += call.uri
     }
 
     /**

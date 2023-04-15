@@ -47,30 +47,6 @@ public fun Route.route(path: Regex, method: RouteMethod, build: Route.() -> Unit
 }
 
 @KtorDsl
-public fun Route.pop(
-    path: Regex,
-    body: PipelineInterceptor<Unit, ApplicationCall>,
-): Route = route(path = path, method = RouteMethod.Pop) { handle(body) }
-
-@KtorDsl
-public fun Route.push(
-    path: Regex,
-    body: PipelineInterceptor<Unit, ApplicationCall>,
-): Route = route(path = path, method = RouteMethod.Push) { handle(body) }
-
-@KtorDsl
-public fun Route.replace(
-    path: Regex,
-    body: PipelineInterceptor<Unit, ApplicationCall>,
-): Route = route(path = path, method = RouteMethod.Replace) { handle(body) }
-
-@KtorDsl
-public fun Route.replaceAll(
-    path: Regex,
-    body: PipelineInterceptor<Unit, ApplicationCall>,
-): Route = route(path = path, method = RouteMethod.ReplaceAll) { handle(body) }
-
-@KtorDsl
 public fun Route.handle(
     path: Regex,
     body: PipelineInterceptor<Unit, ApplicationCall>,

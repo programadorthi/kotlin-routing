@@ -16,7 +16,7 @@ public class RoutingPath private constructor(public val parts: List<RoutingPathS
         /**
          * A constant for a root routing path.
          */
-        public val root: RoutingPath = RoutingPath(listOf())
+        private val root: RoutingPath = RoutingPath(listOf())
 
         /**
          * Parses the specified [path] and creates an instance of [RoutingPath].

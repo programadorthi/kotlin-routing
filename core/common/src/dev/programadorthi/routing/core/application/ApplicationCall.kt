@@ -27,6 +27,12 @@ public interface ApplicationCall {
     public val routeMethod: RouteMethod
 
     /**
+     * The named route to be handled.
+     * The name is just an identity to the real URI that will be handled
+     */
+    public val name: String
+
+    /**
      * Gets a request's URI, including a query string.
      */
     public val uri: String

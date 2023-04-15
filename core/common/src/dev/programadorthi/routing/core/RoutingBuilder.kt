@@ -46,61 +46,6 @@ public fun Route.method(method: RouteMethod, body: Route.() -> Unit): Route {
 }
 
 @KtorDsl
-public fun Route.push(
-    path: String,
-    name: String? = null,
-    body: PipelineInterceptor<Unit, ApplicationCall>,
-): Route = route(path = path, name = name, method = RouteMethod.Push) { handle(body) }
-
-@KtorDsl
-public fun Route.push(
-    body: PipelineInterceptor<Unit, ApplicationCall>,
-): Route {
-    return method(RouteMethod.Push) { handle(body) }
-}
-
-@KtorDsl
-public fun Route.replace(
-    path: String,
-    name: String? = null,
-    body: PipelineInterceptor<Unit, ApplicationCall>,
-): Route = route(path = path, name = name, method = RouteMethod.Replace) { handle(body) }
-
-@KtorDsl
-public fun Route.replace(
-    body: PipelineInterceptor<Unit, ApplicationCall>,
-): Route {
-    return method(RouteMethod.Replace) { handle(body) }
-}
-
-@KtorDsl
-public fun Route.replaceAll(
-    path: String,
-    name: String? = null,
-    body: PipelineInterceptor<Unit, ApplicationCall>,
-): Route = route(path = path, name = name, method = RouteMethod.ReplaceAll) { handle(body) }
-
-@KtorDsl
-public fun Route.replaceAll(
-    body: PipelineInterceptor<Unit, ApplicationCall>,
-): Route {
-    return method(RouteMethod.ReplaceAll) { handle(body) }
-}
-
-@KtorDsl
-public fun Route.pop(
-    path: String,
-    body: PipelineInterceptor<Unit, ApplicationCall>,
-): Route = route(path = path, method = RouteMethod.Pop) { handle(body) }
-
-@KtorDsl
-public fun Route.pop(
-    body: PipelineInterceptor<Unit, ApplicationCall>,
-): Route {
-    return method(RouteMethod.Pop) { handle(body) }
-}
-
-@KtorDsl
 public fun Route.handle(
     path: String,
     name: String? = null,
@@ -108,11 +53,11 @@ public fun Route.handle(
 ): Route = route(path, name) { handle(body) }
 
 @KtorDsl
-public fun Route.redirectToName(name: String, pathParameters: Parameters = Parameters.Empty) {
+public fun Route.redirectToName(name: String, parameters: Parameters = Parameters.Empty) {
     check(this !is Routing) {
         "Redirect root is not allowed. You can do this changing rootPath on initialization"
     }
-    redirect(path = "", name = name, pathParameters = pathParameters)
+    redirect(path = "", name = name, parameters = parameters)
 }
 
 @KtorDsl
@@ -208,7 +153,7 @@ internal object PathSegmentSelectorBuilder {
 private fun Route.redirect(
     path: String,
     name: String,
-    pathParameters: Parameters = Parameters.Empty
+    parameters: Parameters = Parameters.Empty
 ) {
     check(this !is Routing) {
         "Redirect root is not allowed. You can do this changing rootPath on initialization"
@@ -223,7 +168,7 @@ private fun Route.redirect(
                         name = name,
                         uri = path,
                         coroutineContext = this@with.coroutineContext,
-                        pathParameters = pathParameters,
+                        parameters = parameters,
                     )
                 )
             }

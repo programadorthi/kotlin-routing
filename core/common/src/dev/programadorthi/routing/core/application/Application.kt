@@ -28,7 +28,7 @@ public class Application(
     override val coroutineContext: CoroutineContext = environment.parentCoroutineContext + applicationJob
 
     /**
-     * Called by [ApplicationEngine] when [Application] is terminated
+     * Called by [dev.programadorthi.routing.core.Routing] when is disposed
      */
     public fun dispose() {
         applicationJob.cancel()
