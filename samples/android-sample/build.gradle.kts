@@ -45,7 +45,7 @@ android {
 }
 
 dependencies {
-    implementation(projects.resources)
+    implementation(projects.resourcesStack)
     implementation(projects.statusPages)
 
     implementation(libs.core.ktx)

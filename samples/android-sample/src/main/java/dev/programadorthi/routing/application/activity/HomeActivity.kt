@@ -19,6 +19,8 @@ import androidx.compose.ui.platform.LocalContext
 import androidx.compose.ui.unit.dp
 import dev.programadorthi.routing.application.router
 import dev.programadorthi.routing.application.ui.theme.RoutingApplicationTheme
+import dev.programadorthi.routing.core.pop
+import dev.programadorthi.routing.core.replaceNamed
 import io.ktor.http.parametersOf
 
 class HomeActivity : ComponentActivity() {

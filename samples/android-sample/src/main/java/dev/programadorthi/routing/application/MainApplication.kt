@@ -4,9 +4,9 @@ import android.app.Activity
 import android.app.Application
 import android.content.Context
 import android.content.Intent
-import dev.programadorthi.routing.core.RouteMethod
 import dev.programadorthi.routing.core.Routing
-import dev.programadorthi.routing.core.application.call
+import dev.programadorthi.routing.core.StackRouting
+import dev.programadorthi.routing.core.install
 import dev.programadorthi.routing.core.pop
 import dev.programadorthi.routing.core.push
 import dev.programadorthi.routing.core.replace
@@ -26,6 +26,8 @@ class MainApplication : Application() {
     // You can create a router anywhere
     // I am creating here to routing to main activity wherever I can
     val router = routing {
+        install(StackRouting)
+
         route(path = "/main", name = "main") {
             push {
                 startMain()

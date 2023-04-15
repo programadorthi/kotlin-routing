@@ -32,9 +32,11 @@ import dev.programadorthi.routing.core.Route
 import dev.programadorthi.routing.core.application.call
 import dev.programadorthi.routing.core.pop
 import dev.programadorthi.routing.core.push
+import dev.programadorthi.routing.core.pushNamed
 import dev.programadorthi.routing.core.replace
+import dev.programadorthi.routing.core.replaceAllNamed
+import dev.programadorthi.routing.core.replaceNamed
 import dev.programadorthi.routing.core.route
-import dev.programadorthi.routing.core.routing
 import io.ktor.http.parametersOf
 
 // Simulating a stack based navigation as:
@@ -158,7 +160,7 @@ fun List(modifier: Modifier = Modifier) {
                         .clickable {
                             context.router.pushNamed(
                                 name = "view",
-                                pathParameters = parametersOf("id", "${index + 1}"),
+                                parameters = parametersOf("id", "${index + 1}"),
                             )
                         }
                         .padding(10.dp)

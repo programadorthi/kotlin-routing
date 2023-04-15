@@ -26,6 +26,7 @@ import dev.programadorthi.routing.core.Route
 import dev.programadorthi.routing.core.application.call
 import dev.programadorthi.routing.core.pop
 import dev.programadorthi.routing.core.push
+import dev.programadorthi.routing.core.pushNamed
 import dev.programadorthi.routing.core.replace
 import dev.programadorthi.routing.core.route
 

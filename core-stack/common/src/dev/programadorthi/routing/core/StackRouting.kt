@@ -5,14 +5,19 @@
 package dev.programadorthi.routing.core
 
 import io.ktor.http.Parameters
+import kotlinx.coroutines.launch
 
 public fun Routing.pop(parameters: Parameters = Parameters.Empty) {
-    execute(
-        StackApplicationCall.Pop(
-            application = application,
-            parameters = parameters,
+    application.launch {
+        val stackManager = application.stackManager
+        execute(
+            StackApplicationCall.Pop(
+                application = application,
+                parameters = parameters,
+                uri = stackManager.last(),
+            )
         )
-    )
+    }
 }
 
 public fun Routing.push(path: String, parameters: Parameters = Parameters.Empty) {

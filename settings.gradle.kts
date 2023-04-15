@@ -28,4 +28,4 @@ include(":resources-stack")
 include(":status-pages")
 include(":voyager")
 
-//include(":samples:android-sample")
+include(":samples:android-sample")
