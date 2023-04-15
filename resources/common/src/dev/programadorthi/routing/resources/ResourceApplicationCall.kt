@@ -9,11 +9,10 @@ import io.ktor.util.Attributes
 public class ResourceApplicationCall(
     override val application: Application,
     override val uri: String,
+    override val routeMethod: RouteMethod = RouteMethod.Empty,
 ) : ApplicationCall {
 
     override val attributes: Attributes = Attributes()
-
-    override val routeMethod: RouteMethod get() = RouteMethod.Empty
 
     override val name: String get() = ""
 
