@@ -225,8 +225,8 @@ router.push(path = "/path")
 
 [ ] - Helper functions for each platform (Android, iOS, Web, Desktop, ...)
 
-[ ] - Support query parameters from external URI as Deep Link, Browser URL, etc
+[ ] - Deep Link support by platform
 
 [ ] - More plugins like Session, CallLogging, etc
 
-[ ] - Samples
+[ ] - More samples
