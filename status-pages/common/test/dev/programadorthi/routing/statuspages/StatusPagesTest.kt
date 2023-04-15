@@ -1,77 +1,101 @@
 package dev.programadorthi.routing.statuspages
 
+import dev.programadorthi.routing.core.RouteMethod
+import dev.programadorthi.routing.core.application
+import dev.programadorthi.routing.core.application.Application
+import dev.programadorthi.routing.core.application.ApplicationCall
 import dev.programadorthi.routing.core.errors.RouteNotFoundException
+import dev.programadorthi.routing.core.handle
 import dev.programadorthi.routing.core.install
-import dev.programadorthi.routing.core.push
 import dev.programadorthi.routing.core.routing
-import kotlinx.coroutines.ExperimentalCoroutinesApi
-import kotlinx.coroutines.Job
-import kotlinx.coroutines.test.runTest
-import kotlin.coroutines.CoroutineContext
+import io.ktor.http.Parameters
+import io.ktor.util.Attributes
 import kotlin.test.Test
 import kotlin.test.assertEquals
 import kotlin.test.assertIs
+import kotlinx.coroutines.ExperimentalCoroutinesApi
+import kotlinx.coroutines.Job
+import kotlinx.coroutines.test.advanceTimeBy
+import kotlinx.coroutines.test.runTest
 
 @OptIn(ExperimentalCoroutinesApi::class)
 class StatusPagesTest {
 
-    @Test
-    fun shouldHandleAnyException() {
-        var result: Throwable? = null
+    class BasicApplicationCall(
+        override val application: Application,
+        override val name: String = "",
+        override val uri: String = "",
+        override val parameters: Parameters = Parameters.Empty,
+    ) : ApplicationCall {
+        override val attributes: Attributes = Attributes()
 
-        whenBody { handled ->
-            val routing = routing(parentCoroutineContext = this) {
-                install(StatusPages) {
-                    exception<Throwable> { _, cause ->
-                        result = cause
-                        handled()
-                    }
-                }
-
-                push(path = "/exception") {
-                    throw IllegalArgumentException("stop navigation")
-                }
-            }
-
-            routing.push(path = "/exception")
-        }
-
-        assertIs<IllegalArgumentException>(result)
-
-        val cast = result as IllegalArgumentException
-        assertEquals(cast.message, "stop navigation")
+        override val routeMethod: RouteMethod get() = RouteMethod.Empty
     }
 
     @Test
-    fun shouldHandleRouteNotFoundException() {
-        var result: Throwable? = null
-
-        whenBody { handled ->
-            val routing = routing(parentCoroutineContext = this) {
-                install(StatusPages) {
-                    exception<RouteNotFoundException> { _, cause ->
-                        result = cause
-                        handled()
-                    }
-                }
-            }
-
-            routing.push(path = "/invalid-path")
-        }
-
-        assertIs<RouteNotFoundException>(result)
-
-        val cast = result as RouteNotFoundException
-        assertEquals(cast.message, "No matched subtrees found")
-    }
-
-    private fun whenBody(
-        body: CoroutineContext.(() -> Unit) -> Unit
-    ) = runTest {
+    fun shouldHandleAnyException() = runTest {
+        // GIVEN
         val job = Job()
-        (coroutineContext + job).body {
-            job.cancel()
+        var result: Throwable? = null
+
+        val routing = routing(parentCoroutineContext = coroutineContext + job) {
+            install(StatusPages) {
+                exception<Throwable> { _, cause ->
+                    result = cause
+                    job.complete()
+                }
+            }
+
+            handle(path = "/exception") {
+                throw IllegalArgumentException("stop routing")
+            }
         }
-        job.join()
+
+        // WHEN
+        routing.execute(
+            BasicApplicationCall(
+                application = routing.application,
+                uri = "/exception",
+            )
+        )
+        advanceTimeBy(99)
+
+        // THEN
+        assertIs<IllegalArgumentException>(result)
+        assertEquals("stop routing", result?.message)
     }
+
+    @Test
+    fun shouldHandleRouteNotFoundException() = runTest {
+        // GIVEN
+        val job = Job()
+        var result: Throwable? = null
+
+        val routing = routing(parentCoroutineContext = coroutineContext + job) {
+            install(StatusPages) {
+                exception<RouteNotFoundException> { _, cause ->
+                    result = cause
+                    job.complete()
+                }
+            }
+
+            handle(path = "/exception") {
+                throw IllegalArgumentException("stop routing")
+            }
+        }
+
+        // WHEN
+        routing.execute(
+            BasicApplicationCall(
+                application = routing.application,
+                uri = "/not-registered-path",
+            )
+        )
+        advanceTimeBy(99)
+
+        // THEN
+        assertIs<RouteNotFoundException>(result)
+        assertEquals("No matched subtrees found", result?.message)
+    }
+
 }
