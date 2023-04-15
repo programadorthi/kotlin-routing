@@ -502,4 +502,38 @@ class RoutingTest {
             result?.parameters
         )
     }
+
+    @Test
+    fun shouldInstallAndRoutingOnDemand() = runTest {
+        // GIVEN
+        val job = Job()
+        var result: ApplicationCall? = null
+
+        val routing = routing(parentCoroutineContext = coroutineContext + job) {
+            route(path = "/default") {
+                handle { }
+            }
+        }
+
+        routing.handle(path = "/ondemand") {
+            result = call
+            job.complete()
+        }
+
+        // WHEN
+        routing.execute(
+            BasicApplicationCall(
+                application = routing.application,
+                uri = "/ondemand"
+            )
+        )
+        advanceTimeBy(99)
+
+        // THEN
+        assertNotNull(result)
+        assertEquals("/ondemand", "${result?.uri}")
+        assertEquals("", "${result?.name}")
+        assertEquals(RouteMethod.Empty, result?.routeMethod)
+        assertEquals(Parameters.Empty, result?.parameters)
+    }
 }
