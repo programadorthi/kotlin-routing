@@ -1,8 +1,10 @@
 package dev.programadorthi.routing.voyager
 
-import dev.programadorthi.routing.core.RouteMethod
+import dev.programadorthi.routing.core.StackRouteMethod
+import dev.programadorthi.routing.core.StackRouting
 import dev.programadorthi.routing.core.application.ApplicationPlugin
 import dev.programadorthi.routing.core.application.createApplicationPlugin
+import dev.programadorthi.routing.core.application.install
 import io.ktor.util.KtorDsl
 
 /**
@@ -12,6 +14,8 @@ public val VoyagerNavigator: ApplicationPlugin<VoyagerNavigatorConfig> = createA
     "VoyagerNavigator",
     ::VoyagerNavigatorConfig,
 ) {
+    application.install(StackRouting)
+
     application.voyagerEventManager = VoyagerEventManager(
         coroutineContext = application.coroutineContext,
         initialUri = pluginConfig.initialUri,
@@ -19,7 +23,7 @@ public val VoyagerNavigator: ApplicationPlugin<VoyagerNavigatorConfig> = createA
 
     // Intercepts all call, check for a pop and emit to [VoyagerEventManager]
     on(VoyagerCallHook) { call ->
-        if (call.routeMethod == RouteMethod.Pop) {
+        if (call.routeMethod == StackRouteMethod.Pop) {
             call.voyagerEventManager.pop()
         }
     }

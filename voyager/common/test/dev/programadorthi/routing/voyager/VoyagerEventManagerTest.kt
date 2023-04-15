@@ -23,6 +23,7 @@ class VoyagerEventManagerTest {
         backgroundScope.launch(UnconfinedTestDispatcher()) {
             manager.navigation.toList(result)
         }
+
         // THEN
         assertEquals(result, listOf<VoyagerRouteEvent>(VoyagerRouteEvent.Idle))
     }
@@ -35,9 +36,11 @@ class VoyagerEventManagerTest {
         backgroundScope.launch(UnconfinedTestDispatcher()) {
             manager.navigation.toList(result)
         }
+
         // WHEN
         manager.pop()
         advanceTimeBy(99)
+
         // THEN
         assertEquals(result, listOf(VoyagerRouteEvent.Idle, VoyagerRouteEvent.Pop))
     }
@@ -50,9 +53,11 @@ class VoyagerEventManagerTest {
         backgroundScope.launch(UnconfinedTestDispatcher()) {
             manager.navigation.toList(result)
         }
+
         // WHEN
         manager.push(screen = TestScreen(value = "test"))
         advanceTimeBy(99)
+
         // THEN
         assertEquals(result.size, 2)
         assertIs<VoyagerRouteEvent.Push>(result.last())
@@ -69,9 +74,11 @@ class VoyagerEventManagerTest {
         backgroundScope.launch(UnconfinedTestDispatcher()) {
             manager.navigation.toList(result)
         }
+
         // WHEN
         manager.replace(screen = TestScreen(value = "test"), replaceAll = false)
         advanceTimeBy(99)
+
         // THEN
         assertEquals(result.size, 2)
         assertIs<VoyagerRouteEvent.Replace>(result.last())
@@ -89,9 +96,11 @@ class VoyagerEventManagerTest {
         backgroundScope.launch(UnconfinedTestDispatcher()) {
             manager.navigation.toList(result)
         }
+
         // WHEN
         manager.replace(screen = TestScreen(value = "test"), replaceAll = true)
         advanceTimeBy(99)
+
         // THEN
         assertEquals(result.size, 2)
         assertIs<VoyagerRouteEvent.Replace>(result.last())
@@ -109,11 +118,13 @@ class VoyagerEventManagerTest {
         backgroundScope.launch(UnconfinedTestDispatcher()) {
             manager.navigation.toList(result)
         }
+
         // WHEN
         manager.push(screen = TestScreen(value = "test"))
         advanceTimeBy(99)
         manager.clearEvent()
         advanceTimeBy(99)
+
         // THEN
         assertEquals(result.size, 3)
         assertIs<VoyagerRouteEvent.Idle>(result.last())

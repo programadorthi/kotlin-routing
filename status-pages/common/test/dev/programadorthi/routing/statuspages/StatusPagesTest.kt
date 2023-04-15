@@ -10,13 +10,13 @@ import dev.programadorthi.routing.core.install
 import dev.programadorthi.routing.core.routing
 import io.ktor.http.Parameters
 import io.ktor.util.Attributes
-import kotlin.test.Test
-import kotlin.test.assertEquals
-import kotlin.test.assertIs
 import kotlinx.coroutines.ExperimentalCoroutinesApi
 import kotlinx.coroutines.Job
 import kotlinx.coroutines.test.advanceTimeBy
 import kotlinx.coroutines.test.runTest
+import kotlin.test.Test
+import kotlin.test.assertEquals
+import kotlin.test.assertIs
 
 @OptIn(ExperimentalCoroutinesApi::class)
 class StatusPagesTest {
@@ -97,5 +97,4 @@ class StatusPagesTest {
         assertIs<RouteNotFoundException>(result)
         assertEquals("No matched subtrees found", result?.message)
     }
-
 }

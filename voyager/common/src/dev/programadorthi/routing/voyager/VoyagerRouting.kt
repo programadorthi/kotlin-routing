@@ -5,83 +5,90 @@
 package dev.programadorthi.routing.voyager
 
 import dev.programadorthi.routing.core.Route
-import dev.programadorthi.routing.core.RouteMethod
+import dev.programadorthi.routing.core.application
 import dev.programadorthi.routing.core.application.ApplicationCall
 import dev.programadorthi.routing.core.application.call
-import dev.programadorthi.routing.core.method
+import dev.programadorthi.routing.core.application.pluginOrNull
+import dev.programadorthi.routing.core.push
+import dev.programadorthi.routing.core.replace
+import dev.programadorthi.routing.core.replaceAll
 import dev.programadorthi.routing.core.route
 import io.ktor.util.KtorDsl
 
 @KtorDsl
-public fun Route.push(
+public fun Route.pushScreen(
     path: String,
     name: String? = null,
     body: VoyagerPipelineInterceptor<Unit, ApplicationCall>,
 ): Route = route(path = path, name = name) {
-    push(body)
+    pushScreen(body)
 }
 
 @KtorDsl
-public fun Route.push(
+public fun Route.pushScreen(
     body: VoyagerPipelineInterceptor<Unit, ApplicationCall>,
 ): Route {
-    return method(RouteMethod.Push) {
-        handle {
-            val screen = body(this, Unit)
-            call.voyagerEventManager.push(screen = screen)
-        }
+    checkPluginInstalled()
+    return push {
+        val screen = body(this, Unit)
+        call.voyagerEventManager.push(screen = screen)
     }
 }
 
 @KtorDsl
-public fun Route.replace(
+public fun Route.replaceScreen(
     path: String,
     name: String? = null,
     body: VoyagerPipelineInterceptor<Unit, ApplicationCall>,
 ): Route = route(path = path, name = name) {
-    replace(body)
+    replaceScreen(body)
 }
 
 @KtorDsl
-public fun Route.replace(
+public fun Route.replaceScreen(
     body: VoyagerPipelineInterceptor<Unit, ApplicationCall>,
 ): Route {
-    return method(RouteMethod.Replace) {
-        handle {
-            val screen = body(this, Unit)
-            call.voyagerEventManager.replace(screen = screen, replaceAll = false)
-        }
+    checkPluginInstalled()
+    return replace {
+        val screen = body(this, Unit)
+        call.voyagerEventManager.replace(screen = screen, replaceAll = false)
     }
 }
 
 @KtorDsl
-public fun Route.replaceAll(
+public fun Route.replaceAllScreen(
     path: String,
     name: String? = null,
     body: VoyagerPipelineInterceptor<Unit, ApplicationCall>,
 ): Route = route(path = path, name = name) {
-    replaceAll(body)
+    replaceAllScreen(body)
 }
 
 @KtorDsl
-public fun Route.replaceAll(
+public fun Route.replaceAllScreen(
     body: VoyagerPipelineInterceptor<Unit, ApplicationCall>,
 ): Route {
-    return method(RouteMethod.ReplaceAll) {
-        handle {
-            val screen = body(this, Unit)
-            call.voyagerEventManager.replace(screen = screen, replaceAll = true)
-        }
+    checkPluginInstalled()
+    return replaceAll {
+        val screen = body(this, Unit)
+        call.voyagerEventManager.replace(screen = screen, replaceAll = true)
     }
 }
 
 @KtorDsl
-public fun Route.handle(
+public fun Route.handleScreen(
     path: String,
     name: String? = null,
     body: VoyagerPipelineInterceptor<Unit, ApplicationCall>,
 ): Route = route(path, name) {
-    push(body)
-    replace(body)
-    replaceAll(body)
+    pushScreen(body)
+    replaceScreen(body)
+    replaceAllScreen(body)
+    // By default, there is reason to pop handle return a Screen
+}
+
+private fun Route.checkPluginInstalled() {
+    checkNotNull(application.pluginOrNull(VoyagerNavigator)) {
+        "VoyagerNavigator plugin not installed"
+    }
 }

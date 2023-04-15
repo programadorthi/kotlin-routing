@@ -40,7 +40,7 @@ kotlin {
     sourceSets {
         commonMain {
             dependencies {
-                api(projects.core)
+                api(projects.coreStack)
                 compileOnly(libs.compose.runtime)
                 compileOnly(libs.compose.runtime.saveable)
                 api(libs.voyager.navigator)

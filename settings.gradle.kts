@@ -26,6 +26,6 @@ include(":core-stack")
 include(":resources")
 include(":resources-stack")
 include(":status-pages")
-//include(":voyager")
+include(":voyager")
 
 //include(":samples:android-sample")

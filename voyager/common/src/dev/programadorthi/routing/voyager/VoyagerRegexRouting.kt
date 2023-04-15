@@ -10,35 +10,36 @@ import dev.programadorthi.routing.core.route
 import io.ktor.util.KtorDsl
 
 @KtorDsl
-public fun Route.push(
+public fun Route.pushScreen(
     path: Regex,
     body: VoyagerPipelineInterceptor<Unit, ApplicationCall>,
 ): Route = route(path = path) {
-    push(body)
+    pushScreen(body)
 }
 
 @KtorDsl
-public fun Route.replace(
+public fun Route.replaceScreen(
     path: Regex,
     body: VoyagerPipelineInterceptor<Unit, ApplicationCall>,
 ): Route = route(path = path) {
-    replace(body)
+    replaceScreen(body)
 }
 
 @KtorDsl
-public fun Route.replaceAll(
+public fun Route.replaceAllScreen(
     path: Regex,
     body: VoyagerPipelineInterceptor<Unit, ApplicationCall>,
 ): Route = route(path = path) {
-    replaceAll(body)
+    replaceAllScreen(body)
 }
 
 @KtorDsl
-public fun Route.handle(
+public fun Route.handleScreen(
     path: Regex,
     body: VoyagerPipelineInterceptor<Unit, ApplicationCall>,
 ): Route = route(path) {
-    push(body)
-    replace(body)
-    replaceAll(body)
+    pushScreen(body)
+    replaceScreen(body)
+    replaceAllScreen(body)
+    // By default, there is reason to pop handle return a Screen
 }

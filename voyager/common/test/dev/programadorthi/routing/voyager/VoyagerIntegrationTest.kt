@@ -6,6 +6,9 @@ import androidx.compose.runtime.Recomposer
 import dev.programadorthi.routing.core.application
 import dev.programadorthi.routing.core.install
 import dev.programadorthi.routing.core.pop
+import dev.programadorthi.routing.core.push
+import dev.programadorthi.routing.core.replace
+import dev.programadorthi.routing.core.replaceAll
 import dev.programadorthi.routing.core.routing
 import kotlinx.coroutines.CoroutineScope
 import kotlinx.coroutines.ExperimentalCoroutinesApi
@@ -66,7 +69,7 @@ class VoyagerIntegrationTest {
                     initialUri("")
                 }
 
-                push(path = "/path") {
+                pushScreen(path = "/path") {
                     TestScreen(value = "push test")
                 }
             }
@@ -103,11 +106,11 @@ class VoyagerIntegrationTest {
                     initialUri("")
                 }
 
-                push(path = "/path") {
+                pushScreen(path = "/path") {
                     TestScreen(value = "push test")
                 }
 
-                replace(path = "/path") {
+                replaceScreen(path = "/path") {
                     TestScreen(value = "replace test")
                 }
             }
@@ -148,11 +151,11 @@ class VoyagerIntegrationTest {
                     initialUri("")
                 }
 
-                push(path = "/path") {
+                pushScreen(path = "/path") {
                     TestScreen(value = "push test")
                 }
 
-                replaceAll(path = "/path") {
+                replaceAllScreen(path = "/path") {
                     TestScreen(value = "replace all test")
                 }
             }
@@ -194,7 +197,7 @@ class VoyagerIntegrationTest {
                     initialUri("")
                 }
 
-                push(path = "/path") {
+                pushScreen(path = "/path") {
                     TestScreen(value = "push test")
                 }
 
