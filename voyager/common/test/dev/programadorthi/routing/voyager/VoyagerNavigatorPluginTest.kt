@@ -17,11 +17,11 @@ class VoyagerNavigatorPluginTest {
         val router = routing { }
         val result = assertFails {
             // WHEN
-            router.application.voyagerEventManager
+            router.application.voyagerNavigatorManager
         }
         // THEN
         assertIs<IllegalStateException>(result)
-        assertEquals(result.message, "No instance for key AttributeKey: VoyagerEventManager")
+        assertEquals(result.message, "No instance for key AttributeKey: VoyagerNavigatorManager")
     }
 
     @Test
@@ -31,7 +31,7 @@ class VoyagerNavigatorPluginTest {
             install(VoyagerNavigator)
         }
         // WHEN
-        val result = router.application.voyagerEventManager
+        val result = router.application.voyagerNavigatorManager
         // THEN
         assertNotNull(result)
     }
@@ -45,7 +45,7 @@ class VoyagerNavigatorPluginTest {
             }
         }
         // WHEN
-        val result = router.application.voyagerEventManager
+        val result = router.application.voyagerNavigatorManager
         // THEN
         assertEquals(result.initialUri, "/uri")
     }

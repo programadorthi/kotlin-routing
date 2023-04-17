@@ -1,6 +1,5 @@
 package dev.programadorthi.routing.voyager
 
-import dev.programadorthi.routing.core.StackRouteMethod
 import dev.programadorthi.routing.core.StackRouting
 import dev.programadorthi.routing.core.application.ApplicationPlugin
 import dev.programadorthi.routing.core.application.createApplicationPlugin
@@ -14,19 +13,12 @@ public val VoyagerNavigator: ApplicationPlugin<VoyagerNavigatorConfig> = createA
     "VoyagerNavigator",
     ::VoyagerNavigatorConfig,
 ) {
-    application.install(StackRouting)
+    application.install(StackRouting) // Helps to track last pushed path
 
-    application.voyagerEventManager = VoyagerEventManager(
-        coroutineContext = application.coroutineContext,
+    application.voyagerNavigatorManager = VoyagerNavigatorManager(
+        application = application,
         initialUri = pluginConfig.initialUri,
     )
-
-    // Intercepts all call, check for a pop and emit to [VoyagerEventManager]
-    on(VoyagerCallHook) { call ->
-        if (call.routeMethod == StackRouteMethod.Pop) {
-            call.voyagerEventManager.pop()
-        }
-    }
 }
 
 @KtorDsl

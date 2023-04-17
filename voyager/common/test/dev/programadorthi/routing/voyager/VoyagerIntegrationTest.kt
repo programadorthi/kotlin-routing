@@ -3,7 +3,9 @@ package dev.programadorthi.routing.voyager
 import androidx.compose.runtime.BroadcastFrameClock
 import androidx.compose.runtime.Composition
 import androidx.compose.runtime.Recomposer
-import dev.programadorthi.routing.core.application
+import dev.programadorthi.routing.core.RouteMethod
+import dev.programadorthi.routing.core.StackRouteMethod
+import dev.programadorthi.routing.core.application.call
 import dev.programadorthi.routing.core.install
 import dev.programadorthi.routing.core.pop
 import dev.programadorthi.routing.core.push
@@ -13,19 +15,16 @@ import dev.programadorthi.routing.core.routing
 import kotlinx.coroutines.CoroutineScope
 import kotlinx.coroutines.ExperimentalCoroutinesApi
 import kotlinx.coroutines.Job
-import kotlinx.coroutines.flow.toList
 import kotlinx.coroutines.launch
 import kotlinx.coroutines.test.TestScope
-import kotlinx.coroutines.test.UnconfinedTestDispatcher
 import kotlinx.coroutines.test.advanceTimeBy
 import kotlinx.coroutines.test.runTest
 import kotlin.coroutines.CoroutineContext
 import kotlin.test.Test
 import kotlin.test.assertEquals
 import kotlin.test.assertFails
-import kotlin.test.assertFalse
 import kotlin.test.assertIs
-import kotlin.test.assertTrue
+import kotlin.test.assertNotNull
 
 @OptIn(ExperimentalCoroutinesApi::class)
 class VoyagerIntegrationTest {
@@ -42,7 +41,7 @@ class VoyagerIntegrationTest {
             }
             // THEN
             assertIs<IllegalStateException>(result)
-            assertEquals(result.message, "No instance for key AttributeKey: VoyagerEventManager")
+            assertEquals("No instance for key AttributeKey: VoyagerNavigatorManager", result.message)
         }
     }
 
@@ -62,6 +61,8 @@ class VoyagerIntegrationTest {
 
     @Test
     fun shouldPushAScreen() {
+        var result: TestScreen? = null
+
         executeBody { coroutineContext, composition ->
             // GIVEN
             val router = routing(parentCoroutineContext = coroutineContext) {
@@ -69,14 +70,11 @@ class VoyagerIntegrationTest {
                     initialUri("")
                 }
 
-                pushScreen(path = "/path") {
-                    TestScreen(value = "push test")
+                screen(path = "/path") {
+                    TestScreen(value = "push test").also {
+                        result = it
+                    }
                 }
-            }
-
-            val events = mutableListOf<VoyagerRouteEvent>()
-            backgroundScope.launch(UnconfinedTestDispatcher()) {
-                router.application.voyagerEventManager.navigation.toList(events)
             }
 
             composition.setContent {
@@ -88,17 +86,16 @@ class VoyagerIntegrationTest {
             advanceTimeBy(99)
 
             // THEN
-            assertEquals(events.size, 2)
-            assertIs<VoyagerRouteEvent.Idle>(events.first())
-            assertIs<VoyagerRouteEvent.Push>(events.last())
-            val event = events.last() as VoyagerRouteEvent.Push
-            assertIs<TestScreen>(event.screen)
-            assertEquals(event.screen.value, "push test")
+            assertNotNull(result)
+            assertEquals("push test", result?.value)
         }
     }
 
     @Test
     fun shouldReplaceAScreen() {
+        var event: RouteMethod? = null
+        var result: TestScreen? = null
+
         executeBody { coroutineContext, composition ->
             // GIVEN
             val router = routing(parentCoroutineContext = coroutineContext) {
@@ -106,18 +103,16 @@ class VoyagerIntegrationTest {
                     initialUri("")
                 }
 
-                pushScreen(path = "/path") {
+                screen(path = "/path") {
                     TestScreen(value = "push test")
                 }
 
-                replaceScreen(path = "/path") {
-                    TestScreen(value = "replace test")
+                screen(path = "/path2") {
+                    TestScreen(value = "replace test").also {
+                        result = it
+                        event = call.routeMethod
+                    }
                 }
-            }
-
-            val events = mutableListOf<VoyagerRouteEvent>()
-            backgroundScope.launch(UnconfinedTestDispatcher()) {
-                router.application.voyagerEventManager.navigation.toList(events)
             }
 
             composition.setContent {
@@ -127,23 +122,21 @@ class VoyagerIntegrationTest {
             // WHEN
             router.push(path = "/path")
             advanceTimeBy(99)
-            router.replace(path = "/path")
+            router.replace(path = "/path2")
             advanceTimeBy(99)
 
             // THEN
-            assertEquals(events.size, 3)
-            assertIs<VoyagerRouteEvent.Idle>(events.first())
-            assertIs<VoyagerRouteEvent.Push>(events[1])
-            assertIs<VoyagerRouteEvent.Replace>(events.last())
-            val event = events.last() as VoyagerRouteEvent.Replace
-            assertIs<TestScreen>(event.screen)
-            assertEquals(event.screen.value, "replace test")
-            assertFalse { event.replaceAll }
+            assertNotNull(result)
+            assertEquals("replace test", result?.value)
+            assertEquals(StackRouteMethod.Replace, event)
         }
     }
 
     @Test
     fun shouldReplaceAllAScreen() {
+        var event: RouteMethod? = null
+        var result: TestScreen? = null
+
         executeBody { coroutineContext, composition ->
             // GIVEN
             val router = routing(parentCoroutineContext = coroutineContext) {
@@ -151,18 +144,16 @@ class VoyagerIntegrationTest {
                     initialUri("")
                 }
 
-                pushScreen(path = "/path") {
+                screen(path = "/path") {
                     TestScreen(value = "push test")
                 }
 
-                replaceAllScreen(path = "/path") {
-                    TestScreen(value = "replace all test")
+                screen(path = "/path2") {
+                    TestScreen(value = "replace all test").also {
+                        result = it
+                        event = call.routeMethod
+                    }
                 }
-            }
-
-            val events = mutableListOf<VoyagerRouteEvent>()
-            backgroundScope.launch(UnconfinedTestDispatcher()) {
-                router.application.voyagerEventManager.navigation.toList(events)
             }
 
             composition.setContent {
@@ -172,23 +163,21 @@ class VoyagerIntegrationTest {
             // WHEN
             router.push(path = "/path")
             advanceTimeBy(99)
-            router.replaceAll(path = "/path")
+            router.replaceAll(path = "/path2")
             advanceTimeBy(99)
 
             // THEN
-            assertEquals(events.size, 3)
-            assertIs<VoyagerRouteEvent.Idle>(events.first())
-            assertIs<VoyagerRouteEvent.Push>(events[1])
-            assertIs<VoyagerRouteEvent.Replace>(events.last())
-            val event = events.last() as VoyagerRouteEvent.Replace
-            assertIs<TestScreen>(event.screen)
-            assertEquals(event.screen.value, "replace all test")
-            assertTrue { event.replaceAll }
+            assertNotNull(result)
+            assertEquals("replace all test", result?.value)
+            assertEquals(StackRouteMethod.ReplaceAll, event)
         }
     }
 
     @Test
     fun shouldPopAScreen() {
+        var event: RouteMethod? = null
+        val sequence = mutableListOf<String>()
+
         executeBody { coroutineContext, composition ->
             val job = Job(parent = coroutineContext[Job])
             // GIVEN
@@ -197,18 +186,18 @@ class VoyagerIntegrationTest {
                     initialUri("")
                 }
 
-                pushScreen(path = "/path") {
-                    TestScreen(value = "push test")
+                screen(path = "/path") {
+                    TestScreen(value = "pop test").also {
+                        sequence += "pushed screen"
+                        event = call.routeMethod
+                    }
                 }
 
                 pop(path = "/path") {
+                    sequence += "popped screen"
+                    event = call.routeMethod
                     job.complete() // A hack to wait receive pop event from Hook
                 }
-            }
-
-            val events = mutableListOf<VoyagerRouteEvent>()
-            backgroundScope.launch(UnconfinedTestDispatcher()) {
-                router.application.voyagerEventManager.navigation.toList(events)
             }
 
             composition.setContent {
@@ -222,10 +211,8 @@ class VoyagerIntegrationTest {
             advanceTimeBy(99)
 
             // THEN
-            assertEquals(events.size, 3)
-            assertIs<VoyagerRouteEvent.Idle>(events.first())
-            assertIs<VoyagerRouteEvent.Push>(events[1])
-            assertIs<VoyagerRouteEvent.Pop>(events.last())
+            assertEquals(listOf("pushed screen", "popped screen"), sequence)
+            assertEquals(StackRouteMethod.Pop, event)
         }
     }
 
