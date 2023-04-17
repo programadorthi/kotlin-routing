@@ -2,35 +2,56 @@
     Kotlin Routing
 </h1>
 
-A multiplatform, extensible, and independent "navigation" routing library powered by Ktor.
+A multiplatform, extensible, and independent routing library powered by Ktor.
 Create routing independently and extend it to what you need.
+
+## Core module
+
+The core module is the Ktor routing engine modified to be "server" and "client".
+It is abstract and ready to extend.
+Using core module you can:
 
 ```kotlin
 val router = routing {
     route(path = "/login") {
         handle {
-          // ready to go to any screen in any platform that you want
+          // Handle the call to the routing "/login"
         }
     }
 }
 
-router.push(path = "/login")
+// And to call login routing...
+router.execute(
+    call = MyCustomApplicationCall(
+        routeMethod = MyCustomRouteMethod(),
+        uri = "/login"
+    )
+)
 ```
+
+## Core-stack module
+
+This module is a core extension providing Stack based behaviors (push, pop, replace, ...)
+So, if you need stack behaviors and avoid creating your custom ApplicationCall? It is for you.
+
+> Keep reading to see how use stack routing
 
 ## Defining routes
 > Based on [Ktor Routing](https://ktor.io/docs/routing-in-ktor.html)
 
 ```kotlin
 val router = routing {
-    route(path = "/path") {     
+    route(path = "/path") {
+        // ...
+    }
 }
 
 ```
 It's also possible to define a name to navigate instead of using the path value.
 ```Kotlin
 route(path = "/path", name = "path") {
+    // ...
 }
-router.push("path")
 ```
 
 [Type-safe](https://github.com/programadorthi/kotlin-routing/edit/main/README.md#type-safe-routing) navigation is also supported.
@@ -41,13 +62,14 @@ Since you defined your routes, it's time to handle them. Use the `handle` block 
 val router = routing {
     route(path = "/path") {
         handle {
+            // Handle any call to the "/path" route
         }
     }
 }  
 ```
-It's possible to define an action for each RouteMethod available
+Using core-stack module, it's possible to define an action for each StackRouteMethod available
 ```Kotlin
-(RouteMethod.Pop, RouteMethod.Push, RouteMethod.Replace, RouteMethod.ReplaceAll)
+(StackRouteMethod.Pop, StackRouteMethod.Push, StackRouteMethod.Replace, StackRouteMethod.ReplaceAll)
 
 route(path = "/path2") {
     push { }   // handle push to this route only
@@ -78,14 +100,14 @@ pop(path = "/path7") {
 }
 ```
 ### Getting route detail 
-Use `call` inside of handle block or any `RouteMethod`  to get all details available of a route that was called
+Use `call` inside of handle block or any `StackRouteMethod` (core-stack) to get all details available of a route that was called
 
 ```Kotlin
 val application = call.application
 val routeMethod = call.routeMethod
 val uri = call.uri
 val attributes = call.attributes
-val parameters = call.parameters
+val parameters = call.parameters // routing parameters (see Routing routes) plus query parameters when provided
 ```
 
 ### Redirecting route
@@ -99,9 +121,10 @@ route|handle|push|replace|replaceAll|pop(...) {
 }
 ```
 ### Regex route
-You can also create a route using regex
+You can also create a route using regex.
+
 ```Kotlin
-route|handle|push|replace|replaceAll|pop(path = Regex()) {
+route|handle|push|replace|replaceAll|pop(path = Regex(...)) {
     // ...
 }
 ```
@@ -129,8 +152,7 @@ router.pushNamed(name = "name", parameters = parametersOf("number", "123"))
 // Pushing a name with parameters and path parameters ("/path/{id}")
 router.pushNamed(
     name = "name",
-    pathParameters = parametersOf("id", "456"), // It will be used to do a replace in the path
-    parameters = parametersOf("number", "123"),
+    parameters = parametersOf("id", "456"), // It will be used to replace {id} path parameter
 )
 
 // Replacing or replacing all works the same as push but 'replace' instead push :D
@@ -149,6 +171,7 @@ router.pop(parameters = parametersOf("number", "123"))
 > Based on [Ktor Type-safe routing](https://ktor.io/docs/type-safe-routing.html)
 >
 > First you have to put module `resources` as a dependency
+> There is a `resources-stack` module with stack behaviors
 
 ```kotlin
 
@@ -169,32 +192,13 @@ class Articles {
 val router = routing {
     install(Resources)
 
-    push<Articles.New> {
-        // handle push to this route only
+    handle<Articles> {
+        // handle any call to Articles
     }
-
-    replace<Articles> {
-        // handle replace to this route only
-    }
-
-    replaceAll<Articles> {
-        // handle replaceAll to this route only
-    }
-
-    // There is no use case for type-safe pop handler. Maybe in the future?
 }
 
-// Pushing a typed route
-router.push(Articles.New())
-
-// Replacing a typed route
-router.replace(Articles())
-
-// Pushing or Replacing a typed route with parameters
-router.push|replace|replaceAll(Articles.Id(id = 123))
-
-// Popping the last pushed or replaced route
-router.pop()
+// And do:
+router.execute(Articles())
 ```
 
 ## Exception routing handler
@@ -208,25 +212,35 @@ val router = routing {
     install(StatusPages) {
         // Catch any exception (change to be specific if you need)
         exception<Throwable> { call, cause ->
-            // exception handled during push, replace or pop routing
+            // exception handled
         }
     }
-    
-    push(path = "/path") {
+
+    handle(path = "/path") {
         throw IllegalArgumentException("simulating an exception thrown on routing")
     }
 }
 
 // Pushing to simulate
-router.push(path = "/path")
+router.execute(
+    call = MyCustomApplicationCall(
+        routeMethod = MyCustomRouteMethod(),
+        uri = "/path"
+    )
+)
 ```
+
+## Voyager module
+
+A [Voyager](https://github.com/adrielcafe/voyager/) extension to do navigation using routes.
+See unit tests for more details.
 
 ## Next steps
 
-[ ] - Helper functions for each platform (Android, iOS, Web, Desktop, ...)
+[ ] - Helper modules for native platform navigation (Android, iOS, Web, Desktop, ...)
 
 [ ] - Deep Link support by platform
 
 [ ] - More plugins like Session, CallLogging, etc
 
-[ ] - More samples
+[ ] - Status-pages redirect support
