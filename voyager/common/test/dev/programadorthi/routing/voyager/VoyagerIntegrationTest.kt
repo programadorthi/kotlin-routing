@@ -66,9 +66,7 @@ class VoyagerIntegrationTest {
         executeBody { coroutineContext, composition ->
             // GIVEN
             val router = routing(parentCoroutineContext = coroutineContext) {
-                install(VoyagerNavigator) {
-                    initialUri("")
-                }
+                install(VoyagerNavigator)
 
                 screen(path = "/path") {
                     TestScreen(value = "push test").also {
@@ -99,9 +97,7 @@ class VoyagerIntegrationTest {
         executeBody { coroutineContext, composition ->
             // GIVEN
             val router = routing(parentCoroutineContext = coroutineContext) {
-                install(VoyagerNavigator) {
-                    initialUri("")
-                }
+                install(VoyagerNavigator)
 
                 screen(path = "/path") {
                     TestScreen(value = "push test")
@@ -140,9 +136,7 @@ class VoyagerIntegrationTest {
         executeBody { coroutineContext, composition ->
             // GIVEN
             val router = routing(parentCoroutineContext = coroutineContext) {
-                install(VoyagerNavigator) {
-                    initialUri("")
-                }
+                install(VoyagerNavigator)
 
                 screen(path = "/path") {
                     TestScreen(value = "push test")
@@ -182,9 +176,7 @@ class VoyagerIntegrationTest {
             val job = Job(parent = coroutineContext[Job])
             // GIVEN
             val router = routing(parentCoroutineContext = coroutineContext) {
-                install(VoyagerNavigator) {
-                    initialUri("")
-                }
+                install(VoyagerNavigator)
 
                 screen(path = "/path") {
                     TestScreen(value = "pop test").also {

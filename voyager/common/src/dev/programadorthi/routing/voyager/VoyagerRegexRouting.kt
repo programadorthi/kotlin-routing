@@ -7,4 +7,4 @@ import dev.programadorthi.routing.core.route
 public fun Route.screen(
     path: Regex,
     body: VoyagerPipelineInterceptor<Unit, ApplicationCall>,
-): Route = route(path) { handle(body) }
+): Route = route(path) { screen(body) }

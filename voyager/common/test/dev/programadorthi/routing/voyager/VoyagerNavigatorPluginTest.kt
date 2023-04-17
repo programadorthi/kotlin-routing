@@ -35,18 +35,4 @@ class VoyagerNavigatorPluginTest {
         // THEN
         assertNotNull(result)
     }
-
-    @Test
-    fun shouldHaveInitialUriWhenProvided() {
-        // GIVEN
-        val router = routing {
-            install(VoyagerNavigator) {
-                initialUri(uri = "/uri")
-            }
-        }
-        // WHEN
-        val result = router.application.voyagerNavigatorManager
-        // THEN
-        assertEquals(result.initialUri, "/uri")
-    }
 }

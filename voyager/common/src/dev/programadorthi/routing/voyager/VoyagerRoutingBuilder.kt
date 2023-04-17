@@ -17,9 +17,10 @@ public fun Route.screen(
     path: String,
     name: String? = null,
     body: VoyagerPipelineInterceptor<Unit, ApplicationCall>,
-): Route = route(path, name) { handle(body) }
+): Route = route(path, name) { screen(body) }
 
-internal fun Route.handle(
+@KtorDsl
+public fun Route.screen(
     body: VoyagerPipelineInterceptor<Unit, ApplicationCall>,
 ): Route {
     checkPluginInstalled()

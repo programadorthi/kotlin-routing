@@ -8,7 +8,6 @@ import kotlin.coroutines.CoroutineContext
 
 internal class VoyagerNavigatorManager(
     private val application: Application,
-    val initialUri: String,
 ) : CoroutineScope {
 
     override val coroutineContext: CoroutineContext

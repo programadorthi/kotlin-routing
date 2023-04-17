@@ -29,3 +29,4 @@ include(":status-pages")
 include(":voyager")
 
 include(":samples:android-sample")
+include(":samples:multiplatform-voyager")
