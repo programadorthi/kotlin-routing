@@ -20,8 +20,8 @@ internal var Application.voyagerNavigatorManager: VoyagerNavigatorManager
         attributes.voyagerNavigatorManager = value
     }
 
-internal var ApplicationCall.voyagerNavigatorManager: VoyagerNavigatorManager
+public var ApplicationCall.voyagerNavigatorManager: VoyagerNavigatorManager
     get() = application.voyagerNavigatorManager
-    set(value) {
+    internal set(value) {
         application.voyagerNavigatorManager = value
     }

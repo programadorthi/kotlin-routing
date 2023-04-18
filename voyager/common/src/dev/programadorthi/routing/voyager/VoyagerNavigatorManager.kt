@@ -6,7 +6,7 @@ import dev.programadorthi.routing.core.application.Application
 import kotlinx.coroutines.CoroutineScope
 import kotlin.coroutines.CoroutineContext
 
-internal class VoyagerNavigatorManager(
+public class VoyagerNavigatorManager(
     private val application: Application,
 ) : CoroutineScope {
 
@@ -15,22 +15,22 @@ internal class VoyagerNavigatorManager(
 
     internal var navigator: Navigator? = null
 
-    fun pop() {
+    public fun pop() {
         val nav = navigator ?: navigator?.parent ?: return
         nav.pop()
     }
 
-    fun popUntil(predicate: (Screen) -> Boolean) {
+    public fun popUntil(predicate: (Screen) -> Boolean) {
         val nav = navigator ?: navigator?.parent ?: return
         nav.popUntil(predicate)
     }
 
-    fun push(screen: Screen) {
+    public fun push(screen: Screen) {
         val nav = navigator ?: navigator?.parent ?: return
         nav.push(screen)
     }
 
-    fun replace(screen: Screen, replaceAll: Boolean) {
+    public fun replace(screen: Screen, replaceAll: Boolean) {
         val nav = navigator ?: navigator?.parent ?: return
         when {
             replaceAll -> nav.replaceAll(screen)

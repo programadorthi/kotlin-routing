@@ -47,7 +47,7 @@ public fun Route.screen(
     return this
 }
 
-private fun Route.checkPluginInstalled() {
+public fun Route.checkPluginInstalled() {
     checkNotNull(application.pluginOrNull(VoyagerNavigator)) {
         "VoyagerNavigator plugin not installed"
     }

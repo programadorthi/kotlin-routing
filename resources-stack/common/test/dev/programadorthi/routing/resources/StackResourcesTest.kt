@@ -1,9 +1,11 @@
 package dev.programadorthi.routing.resources
 
 import dev.programadorthi.routing.core.StackRouteMethod
+import dev.programadorthi.routing.core.StackRouting
 import dev.programadorthi.routing.core.application.ApplicationCall
 import dev.programadorthi.routing.core.application.call
 import dev.programadorthi.routing.core.install
+import dev.programadorthi.routing.core.pop
 import dev.programadorthi.routing.core.routing
 import io.ktor.http.Parameters
 import io.ktor.http.parametersOf
@@ -34,6 +36,7 @@ class StackResourcesTest {
 
         val routing = routing(parentCoroutineContext = coroutineContext + job) {
             install(Resources)
+            install(StackRouting)
 
             push<Path> {
                 result = call
@@ -64,6 +67,7 @@ class StackResourcesTest {
 
         val routing = routing(parentCoroutineContext = coroutineContext + job) {
             install(Resources)
+            install(StackRouting)
 
             replace<Path> {
                 result = call
@@ -94,6 +98,7 @@ class StackResourcesTest {
 
         val routing = routing(parentCoroutineContext = coroutineContext + job) {
             install(Resources)
+            install(StackRouting)
 
             replaceAll<Path> {
                 result = call
@@ -124,6 +129,7 @@ class StackResourcesTest {
 
         val routing = routing(parentCoroutineContext = coroutineContext + job) {
             install(Resources)
+            install(StackRouting)
 
             push<Path.Id> {
                 result = call
@@ -154,6 +160,7 @@ class StackResourcesTest {
 
         val routing = routing(parentCoroutineContext = coroutineContext + job) {
             install(Resources)
+            install(StackRouting)
 
             replace<Path.Id> {
                 result = call
@@ -184,6 +191,7 @@ class StackResourcesTest {
 
         val routing = routing(parentCoroutineContext = coroutineContext + job) {
             install(Resources)
+            install(StackRouting)
 
             replaceAll<Path.Id> {
                 result = call
@@ -203,5 +211,51 @@ class StackResourcesTest {
         assertEquals("", "${result?.name}")
         assertEquals(StackRouteMethod.ReplaceAll, result?.routeMethod)
         assertEquals(parametersOf("id", "123"), result?.parameters)
+    }
+
+    @Test
+    fun shouldPopAPushedType() = runTest {
+        // GIVEN
+        val job = Job()
+        var result: ApplicationCall? = null
+        val ids = mutableListOf<Path.Id>()
+
+        val routing = routing(parentCoroutineContext = coroutineContext + job) {
+            install(Resources)
+            install(StackRouting)
+
+            push<Path.Id> {
+            }
+
+            pop<Path.Id> {
+                result = call
+                ids += it
+                if (ids.size >= 3) {
+                    job.complete()
+                }
+            }
+        }
+
+        // WHEN
+        routing.push(Path.Id(id = 1))
+        advanceTimeBy(99)
+        routing.push(Path.Id(id = 2))
+        advanceTimeBy(99)
+        routing.push(Path.Id(id = 3))
+        advanceTimeBy(99)
+        routing.pop()
+        advanceTimeBy(99)
+        routing.pop()
+        advanceTimeBy(99)
+        routing.pop()
+        advanceTimeBy(99)
+
+        // THEN
+        assertNotNull(result)
+        assertEquals("/path/1", "${result?.uri}")
+        assertEquals("", "${result?.name}")
+        assertEquals(StackRouteMethod.Pop, result?.routeMethod)
+        assertEquals(parametersOf("id", "1"), result?.parameters)
+        assertEquals(listOf(3, 2, 1), ids.map { it.id })
     }
 }

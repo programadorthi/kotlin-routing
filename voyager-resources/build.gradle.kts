@@ -1,5 +1,6 @@
 plugins {
     kotlin("multiplatform")
+    kotlin("plugin.serialization")
     id("com.android.library")
     id("org.jetbrains.compose")
     id("org.jlleitschuh.gradle.ktlint")
@@ -41,10 +42,10 @@ kotlin {
     sourceSets {
         commonMain {
             dependencies {
-                api(projects.coreStack)
+                api(projects.resourcesStack)
+                api(projects.voyager)
                 compileOnly(libs.compose.runtime)
                 compileOnly(libs.compose.runtime.saveable)
-                api(libs.voyager.navigator)
             }
         }
 

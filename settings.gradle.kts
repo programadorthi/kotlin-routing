@@ -27,6 +27,7 @@ include(":resources")
 include(":resources-stack")
 include(":status-pages")
 include(":voyager")
+include(":voyager-resources")
 
 // Avoiding include samples on CI workflow
 if (System.getenv("CI").isNullOrBlank()) {

@@ -60,9 +60,12 @@ internal class StackManager {
                     pathStack.clear()
                     pathStack += call.uri
                 }
-                // We are popping here instead of before call to pop when success only
+
                 StackRouteMethod.Pop -> {
-                    pathStack.removeLastOrNull()
+                    // Pop in a valid state only
+                    if (call.uri == pathStack.lastOrNull()) {
+                        pathStack.removeLastOrNull()
+                    }
                 }
 
                 else -> Unit
