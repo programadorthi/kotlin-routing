@@ -1,6 +1,7 @@
 plugins {
     kotlin("multiplatform")
     id("org.jlleitschuh.gradle.ktlint")
+    id("org.jetbrains.kotlinx.kover")
     id("maven-publish")
 }
 

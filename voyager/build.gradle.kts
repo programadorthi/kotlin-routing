@@ -3,6 +3,7 @@ plugins {
     id("com.android.library")
     id("org.jetbrains.compose")
     id("org.jlleitschuh.gradle.ktlint")
+    id("org.jetbrains.kotlinx.kover")
     id("maven-publish")
 }
 
@@ -22,7 +23,7 @@ kotlin {
     jvm("desktop")
 
     android {
-        publishAllLibraryVariants()
+        publishLibraryVariants("release")
     }
 
     js(IR) {
@@ -120,4 +121,12 @@ android {
     packagingOptions {
         exclude("META-INF/kotlinx-coroutines-core.kotlin_module")
     }
+}
+
+// Workaround until voyager use jvm instead desktop in the jvm target
+tasks.register("jvmTest") {
+    group = "verification"
+    description = "Run tests in the JVM"
+
+    dependsOn(tasks.named("desktopTest"))
 }

@@ -1,0 +1,37 @@
+name: Release
+on:
+  release:
+    types: [prereleased, released]
+
+jobs:
+
+  release:
+    name: Publish Routing
+    runs-on: macOS-latest
+    timeout-minutes: 60
+    steps:
+
+      - name: Fetch Sources
+        uses: actions/checkout@v3
+        with:
+          ref: ${{ github.event.release.tag_name }}
+
+      - name: Copy CI gradle.properties
+        run: mkdir -p ~/.gradle ; cp .github/ci-gradle.properties ~/.gradle/gradle.properties
+
+      - name: Setup Java
+        uses: actions/setup-java@v3
+        with:
+          java-version: 11
+          distribution: 'temurin'
+
+      - name: Deploy to Sonatype
+        run: |
+          NEW_VERSION=$(echo "${GITHUB_REF}" | cut -d "/" -f3)
+          echo "New version: ${NEW_VERSION}"
+          ./gradlew -Pversion=${NEW_VERSION} publish --stacktrace
+        env:
+          ORG_GRADLE_PROJECT_mavenCentralUsername: ${{ secrets.ORG_GRADLE_PROJECT_mavenCentralUsername }}
+          ORG_GRADLE_PROJECT_mavenCentralPassword: ${{ secrets.ORG_GRADLE_PROJECT_mavenCentralPassword }}
+          ORG_GRADLE_PROJECT_signingInMemoryKey: ${{ secrets.ORG_GRADLE_PROJECT_signingInMemoryKey }}
+          ORG_GRADLE_PROJECT_signingInMemoryKeyPassword: ${{ secrets.ORG_GRADLE_PROJECT_signingInMemoryKeyPassword }}

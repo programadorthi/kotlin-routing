@@ -28,5 +28,8 @@ include(":resources-stack")
 include(":status-pages")
 include(":voyager")
 
-include(":samples:android-sample")
-include(":samples:multiplatform-voyager")
+// Avoiding include samples on CI workflow
+if (System.getenv("CI").isNullOrBlank()) {
+    include(":samples:android-sample")
+    include(":samples:multiplatform-voyager")
+}
