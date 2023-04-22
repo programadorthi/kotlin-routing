@@ -5,12 +5,8 @@
 package dev.programadorthi.routing.core
 
 import dev.programadorthi.routing.core.application.ApplicationCall
-import dev.programadorthi.routing.core.application.call
-import io.ktor.http.Parameters
 import io.ktor.util.KtorDsl
 import io.ktor.util.pipeline.PipelineInterceptor
-import io.ktor.util.pipeline.execute
-import kotlinx.coroutines.launch
 
 /**
  * Builds a route to match the specified [path].
@@ -51,22 +47,6 @@ public fun Route.handle(
     name: String? = null,
     body: PipelineInterceptor<Unit, ApplicationCall>,
 ): Route = route(path, name) { handle(body) }
-
-@KtorDsl
-public fun Route.redirectToName(name: String, parameters: Parameters = Parameters.Empty) {
-    check(this !is Routing) {
-        "Redirect root is not allowed. You can do this changing rootPath on initialization"
-    }
-    redirect(path = "", name = name, parameters = parameters)
-}
-
-@KtorDsl
-public fun Route.redirectToPath(path: String) {
-    check(this !is Routing) {
-        "Redirect root is not allowed. You can do this changing rootPath on initialization"
-    }
-    redirect(path = path, name = "")
-}
 
 /**
  * Creates a routing entry for the specified path.
@@ -146,32 +126,6 @@ internal object PathSegmentSelectorBuilder {
             signature.endsWith("?") -> signature.dropLast(1)
             signature.endsWith("...") -> signature.dropLast(3)
             else -> signature
-        }
-    }
-}
-
-private fun Route.redirect(
-    path: String,
-    name: String,
-    parameters: Parameters = Parameters.Empty
-) {
-    check(this !is Routing) {
-        "Redirect root is not allowed. You can do this changing rootPath on initialization"
-    }
-    handle {
-        val called = call
-        with(called.application) {
-            launch {
-                execute(
-                    RedirectApplicationCall(
-                        previousCall = called,
-                        name = name,
-                        uri = path,
-                        coroutineContext = this@with.coroutineContext,
-                        parameters = parameters,
-                    )
-                )
-            }
         }
     }
 }

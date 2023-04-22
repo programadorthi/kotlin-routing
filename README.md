@@ -111,13 +111,13 @@ val parameters = call.parameters // routing parameters (see Routing routes) plus
 ```
 
 ### Redirecting route
-Using handle, any RouteMethod or short version you can redirect one route to another
+You can redirect from anywhere with an `ApplicationCall`:
 
 ```Kotlin
 route|handle|push|replace|replaceAll|pop(...) {
-    redirectToPath(path = "/path-destination")
+    call.redirectToPath(path = "/path-destination")
     // or
-    redirectToName(name = "destination-name")
+    call.redirectToName(name = "destination-name")
 }
 ```
 ### Regex route
@@ -213,6 +213,7 @@ val router = routing {
         // Catch any exception (change to be specific if you need)
         exception<Throwable> { call, cause ->
             // exception handled
+            // You can redirect from here. See redirecting route above or unit tests
         }
     }
 
@@ -242,5 +243,3 @@ See unit tests for more details.
 [ ] - Deep Link support by platform
 
 [ ] - More plugins like Session, CallLogging, etc
-
-[ ] - Status-pages redirect support

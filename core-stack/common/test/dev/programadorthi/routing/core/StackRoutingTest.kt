@@ -2,6 +2,8 @@ package dev.programadorthi.routing.core
 
 import dev.programadorthi.routing.core.application.ApplicationCall
 import dev.programadorthi.routing.core.application.call
+import dev.programadorthi.routing.core.application.redirectToName
+import dev.programadorthi.routing.core.application.redirectToPath
 import io.ktor.http.Parameters
 import io.ktor.http.parametersOf
 import kotlinx.coroutines.ExperimentalCoroutinesApi
@@ -358,7 +360,9 @@ class StackRoutingTest {
             install(StackRouting)
 
             route(path = "/path") {
-                redirectToPath(path = "/path2")
+                handle {
+                    call.redirectToPath(path = "/path2")
+                }
             }
 
             route(path = "/path2") {
@@ -392,7 +396,9 @@ class StackRoutingTest {
             install(StackRouting)
 
             route(path = "/path", name = "path") {
-                redirectToName(name = "path2")
+                handle {
+                    call.redirectToName(name = "path2")
+                }
             }
 
             route(path = "/path2", name = "path2") {

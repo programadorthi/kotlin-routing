@@ -3,6 +3,8 @@ package dev.programadorthi.routing.core
 import dev.programadorthi.routing.core.application.Application
 import dev.programadorthi.routing.core.application.ApplicationCall
 import dev.programadorthi.routing.core.application.call
+import dev.programadorthi.routing.core.application.redirectToName
+import dev.programadorthi.routing.core.application.redirectToPath
 import io.ktor.http.Parameters
 import io.ktor.http.parametersOf
 import io.ktor.util.Attributes
@@ -296,7 +298,9 @@ class RoutingTest {
 
         val routing = routing(parentCoroutineContext = coroutineContext + job) {
             route(path = "/path1") {
-                redirectToPath(path = "/path2")
+                handle {
+                    call.redirectToPath(path = "/path2")
+                }
             }
             handle(path = "/path2") {
                 result = call
@@ -329,7 +333,9 @@ class RoutingTest {
 
         val routing = routing(parentCoroutineContext = coroutineContext + job) {
             route(path = "/path1", name = "path1") {
-                redirectToName(name = "path2")
+                handle {
+                    call.redirectToName(name = "path2")
+                }
             }
             handle(path = "/path2", name = "path2") {
                 result = call
@@ -362,7 +368,9 @@ class RoutingTest {
 
         val routing = routing(parentCoroutineContext = coroutineContext + job) {
             route(path = "/path1", name = "path1") {
-                redirectToName(name = "path2", parameters = parametersOf("key", "value"))
+                handle {
+                    call.redirectToName(name = "path2", parameters = parametersOf("key", "value"))
+                }
             }
             handle(path = "/path2", name = "path2") {
                 result = call
@@ -395,13 +403,15 @@ class RoutingTest {
 
         val routing = routing(parentCoroutineContext = coroutineContext + job) {
             route(path = "/path1", name = "path1") {
-                redirectToName(
-                    name = "path2",
-                    parameters = parametersOf(
-                        "id" to listOf("123"),
-                        "key" to listOf("value"),
+                handle {
+                    call.redirectToName(
+                        name = "path2",
+                        parameters = parametersOf(
+                            "id" to listOf("123"),
+                            "key" to listOf("value"),
+                        )
                     )
-                )
+                }
             }
             handle(path = "/path2/{id}", name = "path2") {
                 result = call

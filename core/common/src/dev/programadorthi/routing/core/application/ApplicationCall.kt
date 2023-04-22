@@ -4,11 +4,14 @@
 
 package dev.programadorthi.routing.core.application
 
+import dev.programadorthi.routing.core.RedirectApplicationCall
 import dev.programadorthi.routing.core.RouteMethod
 import io.ktor.http.Parameters
 import io.ktor.util.AttributeKey
 import io.ktor.util.Attributes
+import io.ktor.util.pipeline.execute
 import io.ktor.util.reflect.TypeInfo
+import kotlinx.coroutines.launch
 
 private val RECEIVE_TYPE_KEY: AttributeKey<TypeInfo> = AttributeKey("ReceiveType")
 
@@ -61,3 +64,27 @@ public var ApplicationCall.receiveType: TypeInfo
     internal set(value) {
         attributes.put(RECEIVE_TYPE_KEY, value)
     }
+
+public fun ApplicationCall.redirectToName(name: String, parameters: Parameters = Parameters.Empty) {
+    redirect(path = "", name = name, parameters = parameters)
+}
+
+public fun ApplicationCall.redirectToPath(path: String, parameters: Parameters = Parameters.Empty) {
+    redirect(path = path, name = "", parameters = parameters)
+}
+
+private fun ApplicationCall.redirect(path: String, name: String, parameters: Parameters) {
+    with(application) {
+        launch {
+            execute(
+                RedirectApplicationCall(
+                    previousCall = this@redirect,
+                    name = name,
+                    uri = path,
+                    coroutineContext = coroutineContext,
+                    parameters = parameters,
+                )
+            )
+        }
+    }
+}
