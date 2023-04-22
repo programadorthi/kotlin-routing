@@ -84,4 +84,38 @@ class ResourcesTest {
         assertEquals(RouteMethod.Empty, result?.routeMethod)
         assertEquals(parametersOf("id", "123"), result?.parameters)
     }
+
+    @Test
+    fun shouldRedirectToOtherResource() = runTest {
+        // GIVEN
+        val job = Job()
+        var result: ApplicationCall? = null
+        var id: Path.Id? = null
+
+        val routing = routing(parentCoroutineContext = coroutineContext + job) {
+            install(Resources)
+
+            handle<Path> {
+                call.redirectTo(resource = Path.Id(id = 456))
+            }
+
+            handle<Path.Id> {
+                result = call
+                id = it
+                job.complete()
+            }
+        }
+
+        // WHEN
+        routing.execute(Path())
+        advanceTimeBy(99)
+
+        // THEN'
+        assertNotNull(result)
+        assertEquals(456, id?.id)
+        assertEquals("/path/456", "${result?.uri}")
+        assertEquals("", "${result?.name}")
+        assertEquals(RouteMethod.Empty, result?.routeMethod)
+        assertEquals(parametersOf("id", "456"), result?.parameters)
+    }
 }

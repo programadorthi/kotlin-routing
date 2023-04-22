@@ -194,6 +194,7 @@ val router = routing {
 
     handle<Articles> {
         // handle any call to Articles
+        call.redirectTo(...) // If you need to redirect to another resource route
     }
 }
 
