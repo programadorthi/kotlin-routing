@@ -45,6 +45,7 @@ android {
 }
 
 dependencies {
+    implementation(projects.android)
     implementation(projects.resourcesStack)
     implementation(projects.statusPages)
 

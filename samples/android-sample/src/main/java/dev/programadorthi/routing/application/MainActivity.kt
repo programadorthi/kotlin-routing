@@ -1,7 +1,5 @@
 package dev.programadorthi.routing.application
 
-import android.content.Context
-import android.content.Intent
 import android.os.Bundle
 import androidx.activity.ComponentActivity
 import androidx.activity.compose.setContent
@@ -19,66 +17,25 @@ import androidx.compose.ui.Alignment
 import androidx.compose.ui.Modifier
 import androidx.compose.ui.platform.LocalContext
 import androidx.compose.ui.unit.dp
+import dev.programadorthi.routing.android.handle
+import dev.programadorthi.routing.android.unregisterActivityForAllMethod
 import dev.programadorthi.routing.application.activity.ComposableActivity
 import dev.programadorthi.routing.application.activity.HomeActivity
 import dev.programadorthi.routing.application.ui.theme.RoutingApplicationTheme
 import dev.programadorthi.routing.core.Route
-import dev.programadorthi.routing.core.application.call
-import dev.programadorthi.routing.core.pop
-import dev.programadorthi.routing.core.push
 import dev.programadorthi.routing.core.pushNamed
-import dev.programadorthi.routing.core.replace
 import dev.programadorthi.routing.core.route
 
 // Simulating loading routes on demand. Useful for things like Dynamic Feature
-private fun Route.loadHomeRoutes(context: Context) {
-    route(path = "/home", name = "home") {
-        push {
-            context.startActivity(Intent(context, HomeActivity::class.java))
-        }
-
-        replace {
-            context.currentActivity?.finish()
-            context.startActivity(Intent(context, HomeActivity::class.java))
-        }
-
-        pop {
-            // Will have a pop method when /home is the last path only
-            context.currentActivity?.finish()
-        }
-    }
+private fun Route.loadHomeRoutes() {
+    handle<HomeActivity>(path = "/home", name = "home")
 }
 
-private fun Route.loadReplaceRoutes(context: Context) {
+private fun Route.loadReplaceRoutes() {
     route(path = "/replace", name = "replace") {
-        push {
-            val intent = Intent(context, ComposableActivity::class.java)
-            call.parameters.forEach { key, values ->
-                if (values.size <= 1) {
-                    intent.putExtra(key, values.firstOrNull() ?: "")
-                } else {
-                    intent.putExtra(key, values.toTypedArray())
-                }
-            }
-            context.startActivity(intent)
-        }
-
-        replace {
-            context.currentActivity?.finish()
-            val intent = Intent(context, ComposableActivity::class.java)
-            call.parameters.forEach { key, values ->
-                if (values.size <= 1) {
-                    intent.putExtra(key, values.firstOrNull() ?: "")
-                } else {
-                    intent.putExtra(key, values.toTypedArray())
-                }
-            }
-            context.startActivity(intent)
-        }
-
-        pop {
-            // Will have a pop method when /home is the last path only
-            context.currentActivity?.finish()
+        handle<ComposableActivity> {
+            // No-op
+            // But to be a sub-route you need to provide a empty lambda :D
         }
     }
 }
@@ -90,9 +47,17 @@ class MainActivity : ComponentActivity() {
         // WARNING: putting routes with same name will throw an exception
         // You must be carefully about this and unregister them
         router.unregisterNamed(name = "home")
-        router.unregisterNamed(name = "replace")
-        router.loadHomeRoutes(this)
-        router.loadReplaceRoutes(this)
+
+        // WARNING: typed activity navigation is unique too
+        // So you must unregister the activity to each RouteMethod or unregister for all
+//        router.unregisterActivityForMethod(HomeActivity::class, StackRouteMethod.Push)
+        router.unregisterActivityForAllMethod(HomeActivity::class)
+
+        // Here you can unregister the type and the name in a unique function call
+        router.unregisterActivityForAllMethod(ComposableActivity::class, name = "replace")
+
+        router.loadHomeRoutes()
+        router.loadReplaceRoutes()
 
         setContent {
             RoutingApplicationTheme {

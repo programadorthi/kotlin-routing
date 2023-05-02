@@ -15,6 +15,7 @@ slf4j = "2.0.4"
 voyager = "1.0.0-rc04"
 
 junit = "4.13.2"
+robolectric = "4.10"
 
 # SAMPLE VERSIONS #
 core-ktx = "1.9.0"
@@ -43,6 +44,7 @@ test-coroutines = { module = "org.jetbrains.kotlinx:kotlinx-coroutines-test", ve
 test-coroutines-debug = { module = "org.jetbrains.kotlinx:kotlinx-coroutines-debug", version.ref = "coroutines" }
 test-junit = { module = "junit:junit", version.ref = "junit" }
 test-kotlin-test-junit = { module = "org.jetbrains.kotlin:kotlin-test-junit", version.ref = "kotlin" }
+test-robolectric = { module = "org.robolectric:robolectric", version.ref = "robolectric" }
 
 # SAMPLE LIBRARIES #
 core-ktx = { group = "androidx.core", name = "core-ktx", version.ref = "core-ktx" }

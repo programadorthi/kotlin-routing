@@ -231,7 +231,7 @@ public class Routing internal constructor(
         call = ResolveApplicationCall(
             coroutineContext = context.coroutineContext,
             previousCall = call,
-            parameters = call.parameters + queryParameters,
+            params = call.parameters + queryParameters,
             uri = uri,
         )
 

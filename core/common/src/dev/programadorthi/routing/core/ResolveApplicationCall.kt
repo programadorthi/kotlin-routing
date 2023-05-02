@@ -7,11 +7,11 @@ import io.ktor.util.Attributes
 import kotlinx.coroutines.CoroutineScope
 import kotlin.coroutines.CoroutineContext
 
-internal class ResolveApplicationCall(
+internal data class ResolveApplicationCall(
     override val coroutineContext: CoroutineContext,
     override val uri: String = "",
     private val previousCall: ApplicationCall,
-    parameters: Parameters,
+    private val params: Parameters,
 ) : ApplicationCall, CoroutineScope {
 
     override val application: Application get() = previousCall.application
@@ -25,9 +25,7 @@ internal class ResolveApplicationCall(
     override val parameters: Parameters by lazy(LazyThreadSafetyMode.NONE) {
         Parameters.build {
             appendAll(previousCall.parameters)
-            appendMissing(parameters)
+            appendMissing(params)
         }
     }
-
-    override fun toString(): String = "NamedApplicationCall(name=$name, uri=$uri)"
 }

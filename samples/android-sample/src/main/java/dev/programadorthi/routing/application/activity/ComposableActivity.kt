@@ -25,7 +25,9 @@ import androidx.compose.ui.Alignment
 import androidx.compose.ui.Modifier
 import androidx.compose.ui.platform.LocalContext
 import androidx.compose.ui.unit.dp
-import dev.programadorthi.routing.application.currentActivity
+import dev.programadorthi.routing.android.popActivity
+import dev.programadorthi.routing.android.replaceAllActivity
+import dev.programadorthi.routing.application.MainActivity
 import dev.programadorthi.routing.application.router
 import dev.programadorthi.routing.application.ui.theme.RoutingApplicationTheme
 import dev.programadorthi.routing.core.Route
@@ -34,16 +36,16 @@ import dev.programadorthi.routing.core.pop
 import dev.programadorthi.routing.core.push
 import dev.programadorthi.routing.core.pushNamed
 import dev.programadorthi.routing.core.replace
-import dev.programadorthi.routing.core.replaceAllNamed
 import dev.programadorthi.routing.core.replaceNamed
 import dev.programadorthi.routing.core.route
+import dev.programadorthi.routing.core.routing
 import io.ktor.http.parametersOf
 
 // Simulating a stack based navigation as:
 // Jetpack Navigation, Voyager, UINavigationController (ios), any desktop stack, any web stack, etc
 private val stack = mutableStateListOf<@Composable () -> Unit>()
 
-// Simulating compose navigation without having to crate another router
+// Simulating compose navigation without having to create another router
 private fun Route.loadComposableRoutes(context: Context) {
     route(path = "/replace/list", name = "list") {
         push {
@@ -57,7 +59,7 @@ private fun Route.loadComposableRoutes(context: Context) {
 
         pop {
             if (stack.size <= 1) {
-                context.currentActivity?.finish()
+                this@route.routing().popActivity()
             } else {
                 stack.removeLastOrNull()
             }
@@ -76,7 +78,7 @@ private fun Route.loadComposableRoutes(context: Context) {
 
         pop {
             if (stack.size <= 1) {
-                context.currentActivity?.finish()
+                this@route.routing().popActivity()
             } else {
                 stack.removeLastOrNull()
             }
@@ -200,7 +202,7 @@ fun View(id: String?, modifier: Modifier = Modifier) {
         }
         Spacer(modifier = Modifier.height(10.dp))
         Button(onClick = {
-            context.router.replaceAllNamed(name = "main")
+            context.router.replaceAllActivity<MainActivity>()
         }) {
             Text(text = "REPLACE COMPOSABLE NAVIGATION WITH MAIN ACTIVITY")
         }
