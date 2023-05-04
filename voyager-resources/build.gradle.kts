@@ -5,11 +5,8 @@ plugins {
     id("org.jetbrains.compose")
     id("org.jlleitschuh.gradle.ktlint")
     id("org.jetbrains.kotlinx.kover")
-    id("maven-publish")
+    alias(libs.plugins.maven.publish)
 }
-
-group = "dev.programadorthi.routing"
-version = "0.0.1"
 
 configureCommon()
 

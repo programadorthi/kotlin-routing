@@ -3,7 +3,7 @@ plugins {
     kotlin("plugin.serialization")
     id("org.jlleitschuh.gradle.ktlint")
     id("org.jetbrains.kotlinx.kover")
-    id("maven-publish")
+    alias(libs.plugins.maven.publish)
 }
 
 applyBasicSetup()

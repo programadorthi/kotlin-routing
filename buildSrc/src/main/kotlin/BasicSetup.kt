@@ -8,9 +8,6 @@ import org.jetbrains.kotlin.gradle.plugin.KotlinPlatformType
 import org.jetbrains.kotlin.gradle.targets.js.KotlinJsTarget
 
 fun Project.applyBasicSetup() {
-    group = "dev.programadorthi.routing"
-    version = "0.0.1"
-
     configureTargets()
 
     kotlin {
