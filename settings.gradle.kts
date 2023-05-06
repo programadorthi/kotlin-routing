@@ -34,4 +34,5 @@ include(":voyager-resources")
 if (System.getenv("CI").isNullOrBlank()) {
     include(":samples:android-sample")
     include(":samples:multiplatform-voyager")
+    include(":samples:win32-sample")
 }
