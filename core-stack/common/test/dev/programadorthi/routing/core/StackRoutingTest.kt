@@ -450,4 +450,60 @@ class StackRoutingTest {
         assertEquals(StackRouteMethod.Push, result?.routeMethod)
         assertEquals(parametersOf("number", "123"), result?.parameters)
     }
+
+    @Test
+    fun shouldNeglectARouteWhenFlagged() = runTest {
+        // GIVEN
+        val job = Job()
+        var result: ApplicationCall? = null
+
+        val routing = routing(parentCoroutineContext = coroutineContext + job) {
+            install(StackRouting)
+
+            push(path = "/path") {
+                result = call
+                job.complete()
+            }
+        }
+
+        // WHEN
+        routing.push(path = "/path", neglect = true)
+        advanceTimeBy(99)
+
+        // THEN
+        assertNotNull(result)
+        assertEquals("/path", "${result?.uri}")
+        assertEquals("", "${result?.name}")
+        assertEquals(StackRouteMethod.Push, result?.routeMethod)
+        assertEquals(parametersOf(), result?.parameters)
+        assertEquals("", result?.stackManager?.last())
+    }
+
+    @Test
+    fun shouldNotNeglectARouteWhenNotFlagged() = runTest {
+        // GIVEN
+        val job = Job()
+        var result: ApplicationCall? = null
+
+        val routing = routing(parentCoroutineContext = coroutineContext + job) {
+            install(StackRouting)
+
+            push(path = "/path") {
+                result = call
+                job.complete()
+            }
+        }
+
+        // WHEN
+        routing.push(path = "/path")
+        advanceTimeBy(99)
+
+        // THEN
+        assertNotNull(result)
+        assertEquals("/path", "${result?.uri}")
+        assertEquals("", "${result?.name}")
+        assertEquals(StackRouteMethod.Push, result?.routeMethod)
+        assertEquals(parametersOf(), result?.parameters)
+        assertEquals("/path", result?.stackManager?.last())
+    }
 }

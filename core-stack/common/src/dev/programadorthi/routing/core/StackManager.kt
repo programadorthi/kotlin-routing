@@ -46,6 +46,11 @@ internal class StackManager {
 
     suspend fun update(call: ApplicationCall) {
         mutex.withLock {
+            // Check if route should be out of the stack
+            if (call.stackNeglect) {
+                return@withLock
+            }
+
             when (call.routeMethod) {
                 StackRouteMethod.Push -> {
                     pathStack += call.uri
