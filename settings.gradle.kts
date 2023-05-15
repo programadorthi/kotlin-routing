@@ -31,9 +31,8 @@ include(":status-pages")
 include(":voyager")
 include(":voyager-resources")
 
-// Avoiding include samples on CI workflow
-if (System.getenv("CI").isNullOrBlank()) {
-    include(":samples:android-sample")
-    include(":samples:multiplatform-voyager")
-    include(":samples:win32-sample")
-}
+// Samples are disabled by default to avoid sync their.
+//include(":samples:android-sample")
+//include(":samples:multiplatform-voyager")
+//include(":samples:kotlin-js-sample")
+//include(":samples:win32-sample")
