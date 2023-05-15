@@ -15,7 +15,7 @@ public fun Route.event(
         "An event must be in a top-level route declaration. It cannot be a sub-route"
     }
     return route(
-        path = name.checkForSlash().normalizedEvent(),
+        path = name.checkForSlash(),
         name = null,
         method = EventRouteMethod,
     ) {

@@ -41,8 +41,7 @@ class EventRoutingTest {
 
         // THEN
         assertNotNull(result)
-        assertEquals("event_redirected", "${result?.eventName()}")
-        assertEquals("/event_redirected", "${result?.uri}")
+        assertEquals("event_redirected", "${result?.uri}")
         assertEquals("", "${result?.name}")
         assertEquals(EventRouteMethod, result?.routeMethod)
         assertEquals(Parameters.Empty, result?.parameters)
@@ -67,8 +66,7 @@ class EventRoutingTest {
 
         // THEN
         assertNotNull(result)
-        assertEquals("event_name", "${result?.eventName()}")
-        assertEquals("/event_name", "${result?.uri}")
+        assertEquals("event_name", "${result?.uri}")
         assertEquals("", "${result?.name}")
         assertEquals(EventRouteMethod, result?.routeMethod)
         assertEquals(Parameters.Empty, result?.parameters)
@@ -96,8 +94,7 @@ class EventRoutingTest {
 
         // THEN
         assertNotNull(result)
-        assertEquals("event_name", "${result?.eventName()}")
-        assertEquals("/event_name", "${result?.uri}")
+        assertEquals("event_name", "${result?.uri}")
         assertEquals("", "${result?.name}")
         assertEquals(EventRouteMethod, result?.routeMethod)
         assertEquals(parametersOf("id", "123"), result?.parameters)
