@@ -24,6 +24,7 @@ rootProject.name = "kotlin-routing"
 include(":android")
 include(":core")
 include(":core-stack")
+include(":events")
 include(":resources")
 include(":resources-stack")
 include(":status-pages")

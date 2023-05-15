@@ -166,6 +166,14 @@ router.pop()
 router.pop(parameters = parametersOf("number", "123"))
 ```
 
+## Route Neglect
+
+In case you need to call a route without put it in the Stack, you can tell to avoid it by calling:
+
+```kotlin
+router.push|replace|replaceAll|pop(..., neglect = true)
+```
+
 ## Type-safe routing
 
 > Based on [Ktor Type-safe routing](https://ktor.io/docs/type-safe-routing.html)
@@ -236,6 +244,26 @@ router.execute(
 
 A [Voyager](https://github.com/adrielcafe/voyager/) extension to do navigation using routes.
 See unit tests for more details.
+
+## Events module
+
+An extension module to help working with events, using name instead of paths.
+You can use it to sent or connect your event based system: Analytics, MVI, etc.
+
+```kotlin
+val router = routing {
+    event(name = "event_name") {
+        // Handle your event here
+        call.redirectToEvent(name = "other_event_name") // If you need redirect from one to another
+    }
+}
+
+// To emit events call:
+router.emitEvent(
+    name = "event_name",
+    parameters = parametersOf(...),
+)
+```
 
 ## Next steps
 
