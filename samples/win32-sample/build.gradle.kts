@@ -14,7 +14,7 @@ kotlin {
     sourceSets {
         val nativeMain by getting {
             dependencies {
-                implementation(projects.coreStack)
+                implementation("dev.programadorthi.routing:core-stack:0.0.3")
             }
         }
 

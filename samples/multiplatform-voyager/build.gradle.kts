@@ -56,7 +56,7 @@ kotlin {
                 implementation(compose.material)
                 implementation(compose.runtime)
 
-                implementation(projects.voyager)
+                implementation("dev.programadorthi.routing:voyager:0.0.3")
             }
         }
 

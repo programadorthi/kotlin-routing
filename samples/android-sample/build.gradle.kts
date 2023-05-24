@@ -45,9 +45,9 @@ android {
 }
 
 dependencies {
-    implementation(projects.android)
-    implementation(projects.resourcesStack)
-    implementation(projects.statusPages)
+    implementation("dev.programadorthi.routing:android:0.0.3")
+    implementation("dev.programadorthi.routing:resources-stack:0.0.3")
+    implementation("dev.programadorthi.routing:status-pages:0.0.3")
 
     implementation(libs.core.ktx)
     implementation(libs.lifecycle.runtime.ktx)

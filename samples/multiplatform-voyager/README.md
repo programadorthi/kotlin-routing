@@ -6,7 +6,7 @@
 
 ### Running MacOS Native app (Desktop using Kotlin Native)
 ```shell
-./gradlew :samples:multiplatform-voyager:runNativeDebug
+./gradlew :samples:multiplatform-voyager:runDebugExecutableMacosArm64
 ```
 
 ### Running JVM Native app (Desktop)
