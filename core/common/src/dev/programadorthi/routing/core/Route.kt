@@ -29,11 +29,13 @@ public open class Route(
      */
     public val children: List<Route> get() = childList
 
-    private val childList: MutableList<Route> = mutableListOf()
+    internal val childList: MutableList<Route> = mutableListOf()
 
     private var cachedPipeline: ApplicationCallPipeline? = null
 
     internal val handlers = mutableListOf<PipelineInterceptor<Unit, ApplicationCall>>()
+
+    internal var routingRef: Routing? = null
 
     /**
      * Creates a child node in this node with a given [selector] or returns an existing one with the same selector.
@@ -121,17 +123,6 @@ public fun Route.getAllRoutes(): List<Route> {
     val endpoints = mutableListOf<Route>()
     getAllRoutes(endpoints)
     return endpoints
-}
-
-public fun Route.routing(): Routing {
-    var parent: Route? = this
-    while (parent != null) {
-        if (parent is Routing) {
-            return parent
-        }
-        parent = parent.parent
-    }
-    error("Route not attached to a parent VoyagerRouting: $this")
 }
 
 internal fun Route.allSelectors(): List<RouteSelector> {

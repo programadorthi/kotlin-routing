@@ -37,20 +37,26 @@ import kotlin.coroutines.EmptyCoroutineContext
 public class Routing internal constructor(
     internal val application: Application,
 ) : Route(
-    parent = null,
-    selector = RootRouteSelector(""),
+    parent = application.environment.parentRouting,
+    selector = RootRouteSelector(application.environment.rootPath),
     application.environment.developmentMode,
     application.environment
 ) {
     private val tracers = mutableListOf<(RoutingResolveTrace) -> Unit>()
     private val namedRoutes = mutableMapOf<String, Route>()
+    private var disposed = false
 
     init {
         addDefaultTracing()
     }
 
     public fun execute(call: ApplicationCall) {
-        with(application) {
+        var current: Routing? = this
+        while (current?.disposed == true && current.parent != null) {
+            current = current.parent?.routing
+        }
+        val scope = current?.application ?: return
+        with(scope) {
             launch {
                 execute(call)
             }
@@ -58,7 +64,13 @@ public class Routing internal constructor(
     }
 
     public fun unregisterNamed(name: String) {
-        namedRoutes.remove(name)
+        val route = namedRoutes.remove(name) ?: return
+        removeChild(route)
+    }
+
+    public fun unregisterPath(path: String) {
+        val route = createRouteFromPath(path)
+        removeChild(route)
     }
 
     /**
@@ -71,7 +83,13 @@ public class Routing internal constructor(
     }
 
     public fun dispose() {
+        actionOnParent { parent, _, path ->
+            parent.unregisterPath(path)
+        }
+        childList.clear()
+        namedRoutes.clear()
         application.dispose()
+        disposed = true
     }
 
     internal fun registerNamed(name: String, route: Route) {
@@ -79,6 +97,41 @@ public class Routing internal constructor(
             "Duplicated named route. Found '$name' to ${namedRoutes[name]} and $route"
         }
         namedRoutes[name] = route
+    }
+
+    private fun removeChild(child: Route) {
+        val childParent = child.parent ?: return
+        val parentChildren = childParent.childList
+        parentChildren.remove(child)
+        if (parentChildren.isEmpty()) {
+            val toRemove = childParent.parent ?: return
+            removeChild(toRemove)
+        }
+    }
+
+    private fun connectWithParents(configure: Route.() -> Unit) {
+        actionOnParent { parent, child, path ->
+            val newChild = parent.route(
+                path = path,
+                name = null,
+                build = configure
+            )
+            newChild.routingRef = child.routing
+        }
+    }
+
+    private fun actionOnParent(action: (Routing, Routing, String) -> Unit) {
+        var child: Routing = this
+        var childParent: Route? = child.parent ?: return
+        var path = child.selector.toString()
+        while (childParent is Routing) {
+            action(childParent, child, path)
+
+            child = childParent
+            childParent = child.parent ?: return
+
+            path = child.selector.toString() + '/' + path
+        }
     }
 
     private fun mapNameToPath(name: String, pathParameters: Parameters): String {
@@ -237,7 +290,10 @@ public class Routing internal constructor(
 
         val resolveContext = RoutingResolveContext(this, call, tracers)
         when (val resolveResult = resolveContext.resolve()) {
-            is RoutingResolveResult.Failure -> throw RouteNotFoundException(message = resolveResult.reason)
+            is RoutingResolveResult.Failure -> {
+                val routing = parent?.routing ?: throw RouteNotFoundException(message = resolveResult.reason)
+                routing.execute(context.call)
+            }
 
             is RoutingResolveResult.Success -> {
                 val routingCallPipeline = resolveResult.route.buildPipeline()
@@ -257,12 +313,13 @@ public class Routing internal constructor(
      * An installation object of the [Routing] plugin.
      */
     @Suppress("PublicApiImplicitType")
-    public companion object Plugin : BaseApplicationPlugin<Application, Routing, Routing> {
+    public companion object Plugin : BaseApplicationPlugin<Application, Route, Routing> {
 
         override val key: AttributeKey<Routing> = AttributeKey("Routing")
 
-        override fun install(pipeline: Application, configure: Routing.() -> Unit): Routing {
+        override fun install(pipeline: Application, configure: Route.() -> Unit): Routing {
             val routing = Routing(pipeline).apply(configure)
+            routing.connectWithParents(configure)
             pipeline.intercept(Call) {
                 routing.interceptor(this)
             }
@@ -282,6 +339,12 @@ public val Route.application: Application
         )
     }
 
+public val Route.routing: Routing?
+    get() = when (this) {
+        is Routing -> this
+        else -> routingRef ?: parent?.routing
+    }
+
 public fun <B : Any, F : Any> Route.install(
     plugin: Plugin<Application, B, F>,
     configure: B.() -> Unit = {}
@@ -289,15 +352,22 @@ public fun <B : Any, F : Any> Route.install(
 
 @KtorDsl
 public fun routing(
+    rootPath: String = "/",
+    parent: Routing? = null,
     parentCoroutineContext: CoroutineContext = EmptyCoroutineContext,
     log: Logger = KtorSimpleLogger("kotlin-routing"),
     developmentMode: Boolean = false,
-    configuration: Routing.() -> Unit
+    configuration: Route.() -> Unit
 ): Routing {
+    check(parent == null || rootPath != "/") {
+        "Child routing cannot have root path with '/' only. Please, provide a path to your child routing"
+    }
     val environment = ApplicationEnvironment(
         parentCoroutineContext = parentCoroutineContext,
-        log = log,
         developmentMode = developmentMode,
+        rootPath = rootPath,
+        parentRouting = parent,
+        log = log,
     )
     return with(Application(environment)) {
         install(Routing, configuration)

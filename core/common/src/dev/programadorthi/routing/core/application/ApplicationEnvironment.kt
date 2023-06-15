@@ -4,6 +4,7 @@
 
 package dev.programadorthi.routing.core.application
 
+import dev.programadorthi.routing.core.Routing
 import io.ktor.util.logging.Logger
 import kotlin.coroutines.CoroutineContext
 
@@ -25,4 +26,14 @@ public data class ApplicationEnvironment(
      * Indicates if development mode is enabled.
      */
     public val developmentMode: Boolean,
+
+    /**
+     * Application's root path (prefix, context path in servlet container).
+     */
+    public val rootPath: String,
+
+    /**
+     * Application's current [Routing] used to nested routing
+     */
+    public val parentRouting: Routing?
 )

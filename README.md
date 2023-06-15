@@ -265,6 +265,21 @@ router.emitEvent(
 )
 ```
 
+## Nested Routing
+
+With nested routing you can connect one `Routing`. It is good for projects that demand loading routes on demand 
+as Android Dynamic Feature that each module has your own navigation and are load at runtime.
+Checkout `RoutingTest` for more usages.
+
+```kotlin
+val parent = routing { }
+
+val router = routing(
+    rootPath = "/child",
+    parent = parent,
+) { }
+```
+
 ## Next steps
 
 [ ] - Helper modules for native platform navigation (Android, iOS, Web, Desktop, ...)

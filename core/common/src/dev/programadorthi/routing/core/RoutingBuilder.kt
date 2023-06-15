@@ -49,9 +49,24 @@ public fun Route.handle(
 ): Route = route(path, name) { handle(body) }
 
 /**
- * Creates a routing entry for the specified path.
+ * Creates a routing entry for the specified path and name
  */
 public fun Route.createRouteFromPath(path: String, name: String?): Route {
+    val route = createRouteFromPath(path)
+    // Registering named route
+    if (!name.isNullOrBlank()) {
+        val validRouting = requireNotNull(routing) {
+            "Named route '$name' must be a Routing child."
+        }
+        validRouting.registerNamed(name = name, route = route)
+    }
+    return route
+}
+
+/**
+ * Creates a routing entry for the specified path.
+ */
+internal fun Route.createRouteFromPath(path: String): Route {
     val parts = RoutingPath.parse(path).parts
     var current: Route = this
     for (index in parts.indices) {
@@ -65,10 +80,6 @@ public fun Route.createRouteFromPath(path: String, name: String?): Route {
     }
     if (path.endsWith("/")) {
         current = current.createChild(TrailingSlashRouteSelector)
-    }
-    // Registering named route
-    if (!name.isNullOrBlank()) {
-        routing().registerNamed(name = name, route = current)
     }
     return current
 }
