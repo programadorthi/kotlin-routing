@@ -1,5 +1,6 @@
 import org.gradle.api.Project
 import org.gradle.jvm.toolchain.JavaLanguageVersion
+import org.gradle.jvm.toolchain.JvmVendorSpec
 import org.gradle.kotlin.dsl.invoke
 import org.jetbrains.kotlin.gradle.dsl.KotlinCommonOptions
 import org.jetbrains.kotlin.gradle.dsl.KotlinMultiplatformExtension
@@ -67,10 +68,9 @@ fun KotlinMultiplatformExtension.configureSourceSets() {
     }
 }
 
-fun Project.setupJvmToolchain() {
-    kotlin {
-        jvmToolchain {
-            languageVersion.set(JavaLanguageVersion.of(11))
-        }
+fun KotlinMultiplatformExtension.setupJvmToolchain() {
+    jvmToolchain {
+        languageVersion.set(JavaLanguageVersion.of(11))
+        vendor.set(JvmVendorSpec.ADOPTIUM)
     }
 }
