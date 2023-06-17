@@ -240,11 +240,6 @@ router.execute(
 )
 ```
 
-## Voyager module
-
-A [Voyager](https://github.com/adrielcafe/voyager/) extension to do navigation using routes.
-See unit tests for more details.
-
 ## Events module
 
 An extension module to help working with events, using name instead of paths.
@@ -279,11 +274,3 @@ val router = routing(
     parent = parent,
 ) { }
 ```
-
-## Next steps
-
-[ ] - Helper modules for native platform navigation (Android, iOS, Web, Desktop, ...)
-
-[ ] - Deep Link support by platform
-
-[ ] - More plugins like Session, CallLogging, etc

@@ -21,7 +21,6 @@ dependencyResolutionManagement {
 
 rootProject.name = "kotlin-routing"
 
-include(":android")
 include(":core")
 include(":core-stack")
 include(":events")
@@ -29,8 +28,6 @@ include(":events-resources")
 include(":resources")
 include(":resources-stack")
 include(":status-pages")
-include(":voyager")
-include(":voyager-resources")
 
 // Samples are disabled by default to avoid sync their.
 //include(":samples:android-sample")
