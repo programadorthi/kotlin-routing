@@ -1,6 +1,5 @@
 package dev.programadorthi.routing.events.resources.serialization
 
-import dev.programadorthi.routing.events.checkForSlash
 import dev.programadorthi.routing.events.resources.Event
 import io.ktor.http.Parameters
 import kotlinx.serialization.ExperimentalSerializationApi
@@ -32,8 +31,7 @@ public class EventResourcesFormat(
      * Builds a path pattern for a given [serializer]
      */
     public fun <T> encodeToPathPattern(serializer: KSerializer<T>): String {
-        val name = serializer.descriptor.annotations.filterIsInstance<Event>().first().name
-        return name.checkForSlash()
+        return serializer.descriptor.annotations.filterIsInstance<Event>().first().name
     }
 
     /**

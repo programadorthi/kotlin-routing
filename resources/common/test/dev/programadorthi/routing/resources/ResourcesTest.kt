@@ -1,6 +1,8 @@
 package dev.programadorthi.routing.resources
 
 import dev.programadorthi.routing.core.RouteMethod
+import dev.programadorthi.routing.core.application
+import dev.programadorthi.routing.core.application.Application
 import dev.programadorthi.routing.core.application.ApplicationCall
 import dev.programadorthi.routing.core.application.call
 import dev.programadorthi.routing.core.install
@@ -8,6 +10,7 @@ import dev.programadorthi.routing.core.routing
 import io.ktor.http.Parameters
 import io.ktor.http.parametersOf
 import io.ktor.resources.Resource
+import io.ktor.util.Attributes
 import kotlinx.coroutines.ExperimentalCoroutinesApi
 import kotlinx.coroutines.Job
 import kotlinx.coroutines.test.advanceTimeBy
@@ -110,12 +113,151 @@ class ResourcesTest {
         routing.execute(Path())
         advanceTimeBy(99)
 
-        // THEN'
+        // THEN
         assertNotNull(result)
         assertEquals(456, id?.id)
         assertEquals("/path/456", "${result?.uri}")
         assertEquals("", "${result?.name}")
         assertEquals(RouteMethod.Empty, result?.routeMethod)
         assertEquals(parametersOf("id", "456"), result?.parameters)
+    }
+
+    @Test
+    fun shouldNavigateWhenSettingACustomRootPath() = runTest {
+        // GIVEN
+        val job = Job()
+        var result: ApplicationCall? = null
+        var id: Path.Id? = null
+
+        val routing = routing(
+            rootPath = "/resources",
+            parentCoroutineContext = coroutineContext + job
+        ) {
+            install(Resources)
+
+            handle<Path> {
+                call.redirectTo(resource = Path.Id(id = 456))
+            }
+
+            handle<Path.Id> {
+                result = call
+                id = it
+                job.complete()
+            }
+        }
+
+        // WHEN
+        routing.execute(Path())
+        advanceTimeBy(99)
+
+        // THEN
+        assertNotNull(result)
+        assertEquals(456, id?.id)
+        assertEquals("/path/456", "${result?.uri}")
+        assertEquals("", "${result?.name}")
+        assertEquals(RouteMethod.Empty, result?.routeMethod)
+        assertEquals(parametersOf("id", "456"), result?.parameters)
+    }
+
+    @Test
+    fun shouldHandleParentEventWhenCallingFromChild() = runTest {
+        // GIVEN
+        val job = Job()
+        var result: ApplicationCall? = null
+        var id: Path.Id? = null
+
+        val parent = routing(
+            rootPath = "/parent",
+            parentCoroutineContext = coroutineContext + job
+        ) {
+            install(Resources)
+
+            handle<Path.Id> {
+                result = call
+                id = it
+                job.complete()
+            }
+        }
+
+        val routing = routing(
+            rootPath = "/resources",
+            parentCoroutineContext = coroutineContext + job,
+            parent = parent
+        ) {
+            install(Resources)
+
+            handle<Path> {
+            }
+        }
+
+        // WHEN
+        routing.execute(Path.Id(id = 456))
+        advanceTimeBy(99)
+
+        // THEN
+        assertNotNull(result)
+        assertEquals(456, id?.id)
+        assertEquals("/path/456", "${result?.uri}")
+        assertEquals("", "${result?.name}")
+        assertEquals(RouteMethod.Empty, result?.routeMethod)
+        assertEquals(parametersOf("id", "456"), result?.parameters)
+    }
+
+    @Test
+    fun shouldHandleChildEventWhenCallingFromParent() = runTest {
+        // GIVEN
+        class BasicApplicationCall(
+            override val application: Application,
+            override val name: String = "",
+            override val uri: String = "",
+            override val parameters: Parameters = Parameters.Empty,
+        ) : ApplicationCall {
+            override val attributes: Attributes = Attributes()
+
+            override val routeMethod: RouteMethod get() = RouteMethod.Empty
+        }
+
+        val job = Job()
+        var result: ApplicationCall? = null
+
+        val parent = routing(
+            rootPath = "/parent",
+            parentCoroutineContext = coroutineContext + job
+        ) {
+            install(Resources)
+
+            handle<Path.Id> {
+            }
+        }
+
+        routing(
+            rootPath = "/resources",
+            parentCoroutineContext = coroutineContext + job,
+            parent = parent
+        ) {
+            install(Resources)
+
+            handle<Path> {
+                result = call
+                job.complete()
+            }
+        }
+
+        // WHEN
+        // TODO: For now, parent looking for child is not supported using the type. We need to use path based
+        parent.execute(
+            BasicApplicationCall(
+                application = parent.application,
+                uri = "/resources/path"
+            )
+        )
+        advanceTimeBy(99)
+
+        // THEN
+        assertNotNull(result)
+        assertEquals("/resources/path", "${result?.uri}")
+        assertEquals("", "${result?.name}")
+        assertEquals(RouteMethod.Empty, result?.routeMethod)
+        assertEquals(Parameters.Empty, result?.parameters)
     }
 }

@@ -13,7 +13,7 @@ public fun Routing.emitEvent(
     execute(
         EventApplicationCall(
             application = application,
-            uri = name.checkForSlash(),
+            uri = name,
             parameters = parameters,
         )
     )
@@ -24,7 +24,7 @@ public fun ApplicationCall.redirectToEvent(
     parameters: Parameters = Parameters.Empty,
 ) {
     redirectToPath(
-        path = name.checkForSlash(),
+        path = name,
         parameters = parameters,
     )
 }

@@ -16,7 +16,7 @@ public fun Route.route(
     path: String,
     name: String? = null,
     build: Route.() -> Unit
-): Route = createRouteFromPath(path, name).apply(build)
+): Route = createRouteFromPath(path, name).apply(build).registerToParents(null, build)
 
 /**
  * Builds a route to match the specified [RouteMethod] and [path].
@@ -29,7 +29,7 @@ public fun Route.route(
     build: Route.() -> Unit,
 ): Route {
     val selector = RouteMethodRouteSelector(method)
-    return createRouteFromPath(path, name).createChild(selector).apply(build)
+    return createRouteFromPath(path, name).createChild(selector).apply(build).registerToParents(selector, build)
 }
 
 /**
@@ -38,7 +38,7 @@ public fun Route.route(
 @KtorDsl
 public fun Route.method(method: RouteMethod, body: Route.() -> Unit): Route {
     val selector = RouteMethodRouteSelector(method)
-    return createChild(selector).apply(body)
+    return createChild(selector).apply(body).registerToParents(selector, body)
 }
 
 @KtorDsl
@@ -55,7 +55,7 @@ public fun Route.createRouteFromPath(path: String, name: String?): Route {
     val route = createRouteFromPath(path)
     // Registering named route
     if (!name.isNullOrBlank()) {
-        val validRouting = requireNotNull(routing) {
+        val validRouting = requireNotNull(asRouting) {
             "Named route '$name' must be a Routing child."
         }
         validRouting.registerNamed(name = name, route = route)
@@ -82,6 +82,36 @@ internal fun Route.createRouteFromPath(path: String): Route {
         current = current.createChild(TrailingSlashRouteSelector)
     }
     return current
+}
+
+/**
+ * Look for parents [Routing] and connect them to current [Route] creating a routing
+ * from top most parent until current: /topmostparent/moreparents/child
+ */
+private fun Route.registerToParents(
+    selector: RouteMethodRouteSelector?,
+    build: Route.() -> Unit
+): Route {
+    val parentRouting = asRouting?.parent as? Routing ?: return this
+    val validPath = when (val parentPath = parentRouting.toString()) {
+        "/" -> toString()
+        else -> toString().substringAfter(parentPath)
+    }
+    if (selector == null) {
+        parentRouting.route(path = validPath, name = null, build = build)
+    } else {
+        var path = validPath.substringBefore(selector.toString())
+        if (path.endsWith('/')) {
+            path = path.substring(0, path.length - 1)
+        }
+        parentRouting.route(
+            path = path,
+            method = selector.method,
+            name = null,
+            build = build
+        )
+    }
+    return this
 }
 
 /**

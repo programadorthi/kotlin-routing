@@ -53,7 +53,7 @@ public class Routing internal constructor(
     public fun execute(call: ApplicationCall) {
         var current: Routing? = this
         while (current?.disposed == true && current.parent != null) {
-            current = current.parent?.routing
+            current = current.parent?.asRouting
         }
         val scope = current?.application ?: return
         with(scope) {
@@ -66,11 +66,13 @@ public class Routing internal constructor(
     public fun unregisterNamed(name: String) {
         val route = namedRoutes.remove(name) ?: return
         removeChild(route)
+        unregisterFromParents(route)
     }
 
     public fun unregisterPath(path: String) {
         val route = createRouteFromPath(path)
         removeChild(route)
+        unregisterFromParents(route)
     }
 
     /**
@@ -83,9 +85,7 @@ public class Routing internal constructor(
     }
 
     public fun dispose() {
-        actionOnParent { parent, _, path ->
-            parent.unregisterPath(path)
-        }
+        unregisterFromParents(this)
         childList.clear()
         namedRoutes.clear()
         application.dispose()
@@ -99,38 +99,21 @@ public class Routing internal constructor(
         namedRoutes[name] = route
     }
 
-    private fun removeChild(child: Route) {
-        val childParent = child.parent ?: return
-        val parentChildren = childParent.childList
-        parentChildren.remove(child)
-        if (parentChildren.isEmpty()) {
-            val toRemove = childParent.parent ?: return
+    private fun removeChild(route: Route) {
+        val parentRoute = route.parent ?: return
+        parentRoute.childList.remove(route)
+        if (parentRoute.childList.isEmpty()) {
+            removeChild(parentRoute)
+        }
+    }
+
+    private fun unregisterFromParents(route: Route) {
+        val parentRouting = route.asRouting?.parent
+        if (parentRouting is Routing) {
+            val validPath = route.toString().substringAfter(parentRouting.toString())
+            val toRemove = parentRouting.createRouteFromPath(validPath)
             removeChild(toRemove)
-        }
-    }
-
-    private fun connectWithParents(configure: Route.() -> Unit) {
-        actionOnParent { parent, child, path ->
-            val newChild = parent.route(
-                path = path,
-                name = null,
-                build = configure
-            )
-            newChild.routingRef = child.routing
-        }
-    }
-
-    private fun actionOnParent(action: (Routing, Routing, String) -> Unit) {
-        var child: Routing = this
-        var childParent: Route? = child.parent ?: return
-        var path = child.selector.toString()
-        while (childParent is Routing) {
-            action(childParent, child, path)
-
-            child = childParent
-            childParent = child.parent ?: return
-
-            path = child.selector.toString() + '/' + path
+            unregisterFromParents(toRemove)
         }
     }
 
@@ -291,7 +274,7 @@ public class Routing internal constructor(
         val resolveContext = RoutingResolveContext(this, call, tracers)
         when (val resolveResult = resolveContext.resolve()) {
             is RoutingResolveResult.Failure -> {
-                val routing = parent?.routing ?: throw RouteNotFoundException(message = resolveResult.reason)
+                val routing = parent?.asRouting ?: throw RouteNotFoundException(message = resolveResult.reason)
                 routing.execute(context.call)
             }
 
@@ -319,7 +302,6 @@ public class Routing internal constructor(
 
         override fun install(pipeline: Application, configure: Route.() -> Unit): Routing {
             val routing = Routing(pipeline).apply(configure)
-            routing.connectWithParents(configure)
             pipeline.intercept(Call) {
                 routing.interceptor(this)
             }
@@ -339,10 +321,10 @@ public val Route.application: Application
         )
     }
 
-public val Route.routing: Routing?
+public val Route.asRouting: Routing?
     get() = when (this) {
         is Routing -> this
-        else -> routingRef ?: parent?.routing
+        else -> parent?.asRouting
     }
 
 public fun <B : Any, F : Any> Route.install(

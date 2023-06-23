@@ -21,7 +21,7 @@ private const val MIN_QUALITY = -Double.MAX_VALUE
  * @param call instance of [ApplicationCall] to use during resolution
  */
 public class RoutingResolveContext(
-    public val routing: Route,
+    public val routing: Routing,
     public val call: ApplicationCall,
     private val tracers: List<(RoutingResolveTrace) -> Unit>
 ) {
@@ -51,8 +51,14 @@ public class RoutingResolveContext(
         }
     }
 
-    private fun parse(path: String): List<String> {
-        if (path.isEmpty() || path == "/") return emptyList()
+    private fun parse(pathValue: String): List<String> {
+        if (pathValue.isEmpty() || pathValue == "/") return emptyList()
+        val routingPath = "/${routing.selector}"
+        val path = when {
+            pathValue.startsWith(routingPath) -> pathValue
+            pathValue.startsWith('/') -> "$routingPath$pathValue"
+            else -> "$routingPath/$pathValue"
+        }
         val length = path.length
         var beginSegment = 0
         var nextSegment = 0
@@ -175,7 +181,7 @@ public class RoutingResolveContext(
         if (finalResolve.isEmpty()) {
             return RoutingResolveResult.Failure(
                 routing,
-                "No matched subtrees found",
+                "No matched subtrees found for: ${call.path()}",
             )
         }
 

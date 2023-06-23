@@ -35,8 +35,6 @@ public open class Route(
 
     internal val handlers = mutableListOf<PipelineInterceptor<Unit, ApplicationCall>>()
 
-    internal var routingRef: Routing? = null
-
     /**
      * Creates a child node in this node with a given [selector] or returns an existing one with the same selector.
      */

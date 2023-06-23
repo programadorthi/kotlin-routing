@@ -506,4 +506,96 @@ class StackRoutingTest {
         assertEquals(parametersOf(), result?.parameters)
         assertEquals("/path", result?.stackManager?.last())
     }
+
+    @Test
+    fun shouldPushParentPathWhenRoutingFromChild() = runTest {
+        // GIVEN
+        val job = Job()
+        var result: ApplicationCall? = null
+
+        val parent = routing(
+            parentCoroutineContext = coroutineContext + job
+        ) {
+            install(StackRouting)
+
+            route(path = "/pathParent") {
+                push {
+                    result = call
+                    job.complete()
+                }
+            }
+        }
+
+        val routing = routing(
+            rootPath = "/child",
+            parent = parent,
+            parentCoroutineContext = coroutineContext + job
+        ) {
+            install(StackRouting)
+
+            route(path = "/pathChild") {
+                push {
+                    result = call
+                    job.complete()
+                }
+            }
+        }
+
+        // WHEN
+        routing.push(path = "/pathParent")
+        advanceTimeBy(99)
+
+        // THEN
+        assertNotNull(result)
+        assertEquals("/pathParent", "${result?.uri}")
+        assertEquals("", "${result?.name}")
+        assertEquals(StackRouteMethod.Push, result?.routeMethod)
+        assertEquals(Parameters.Empty, result?.parameters)
+    }
+
+    @Test
+    fun shouldPushChildPathWhenRoutingFromParent() = runTest {
+        // GIVEN
+        val job = Job()
+        var result: ApplicationCall? = null
+
+        val parent = routing(
+            parentCoroutineContext = coroutineContext + job
+        ) {
+            install(StackRouting)
+
+            route(path = "/pathParent") {
+                push {
+                    result = call
+                    job.complete()
+                }
+            }
+        }
+
+        routing(
+            rootPath = "/child",
+            parent = parent,
+            parentCoroutineContext = coroutineContext + job
+        ) {
+            install(StackRouting)
+
+            route(path = "/pathChild") {
+                push {
+                    result = call
+                    job.complete()
+                }
+            }
+        }
+
+        // WHEN
+        parent.push(path = "/child/pathChild")
+        advanceTimeBy(99)
+
+        // THEN
+        assertNotNull(result)
+        assertEquals("/child/pathChild", "${result?.uri}")
+        assertEquals("", "${result?.name}")
+        assertEquals(StackRouteMethod.Push, result?.routeMethod)
+        assertEquals(Parameters.Empty, result?.parameters)
+    }
 }

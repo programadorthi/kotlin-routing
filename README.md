@@ -274,3 +274,31 @@ val router = routing(
     parent = parent,
 ) { }
 ```
+
+## Limitations
+
+- Nested routing with type-safe not support navigation from parent to child using the Type. You have to use path routing.
+```kotlin
+@Resource("/endpoint")
+class Endpoint
+
+val parent = routing { }
+
+val router = routing(
+    rootPath = "/child",
+    parent = parent,
+) {
+    handle<Endpoint> {
+        // ...
+    }
+}
+
+// IT WORKS
+router.execute(Endpoint())
+
+// IT DOES NOT WORK
+parent.execute(Endpoint())
+
+// IT WORKS
+parent.execute(YourCustomCall(uri = "/child/endpoint"))
+```

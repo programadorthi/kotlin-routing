@@ -568,7 +568,7 @@ class RoutingTest {
     }
 
     @Test
-    fun shouldChangeRootPathWhenDeclaringAnInitialPath() = runTest {
+    fun shouldChangeRootPathWhenDeclaringARootPath() = runTest {
         // GIVEN
         val job = Job()
         var result: ApplicationCall? = null
@@ -648,6 +648,50 @@ class RoutingTest {
     }
 
     @Test
+    fun shouldNestedRoutingHaveYourOwnRoutingWhenParentHasDefaultRootPath() = runTest {
+        // GIVEN
+        val job = Job()
+        var result: ApplicationCall? = null
+
+        val parent = routing(
+            parentCoroutineContext = coroutineContext + job
+        ) {
+            route(path = "/default") {
+                handle { }
+            }
+        }
+
+        val routing = routing(
+            rootPath = "/middle",
+            parent = parent,
+            parentCoroutineContext = coroutineContext + job
+        ) {
+            route(path = "/inner") {
+                handle {
+                    result = call
+                    job.complete()
+                }
+            }
+        }
+
+        // WHEN
+        routing.execute(
+            BasicApplicationCall(
+                application = routing.application,
+                uri = "/middle/inner"
+            )
+        )
+        advanceTimeBy(99)
+
+        // THEN
+        assertNotNull(result)
+        assertEquals("/middle/inner", "${result?.uri}")
+        assertEquals("", "${result?.name}")
+        assertEquals(RouteMethod.Empty, result?.routeMethod)
+        assertEquals(Parameters.Empty, result?.parameters)
+    }
+
+    @Test
     fun shouldNestedRoutingLookForParentRouteWhenNotFound() = runTest {
         // GIVEN
         val job = Job()
@@ -687,6 +731,50 @@ class RoutingTest {
         // THEN
         assertNotNull(result)
         assertEquals("/initial/default", "${result?.uri}")
+        assertEquals("", "${result?.name}")
+        assertEquals(RouteMethod.Empty, result?.routeMethod)
+        assertEquals(Parameters.Empty, result?.parameters)
+    }
+
+    @Test
+    fun shouldNestedRoutingLookForParentRouteWhenNotFoundAndParentHasDefaultRootPath() = runTest {
+        // GIVEN
+        val job = Job()
+        var result: ApplicationCall? = null
+
+        val parent = routing(
+            parentCoroutineContext = coroutineContext + job
+        ) {
+            route(path = "/default") {
+                handle {
+                    result = call
+                    job.complete()
+                }
+            }
+        }
+
+        val routing = routing(
+            rootPath = "/middle",
+            parent = parent,
+            parentCoroutineContext = coroutineContext + job
+        ) {
+            route(path = "/inner") {
+                handle { }
+            }
+        }
+
+        // WHEN
+        routing.execute(
+            BasicApplicationCall(
+                application = routing.application,
+                uri = "/default"
+            )
+        )
+        advanceTimeBy(99)
+
+        // THEN
+        assertNotNull(result)
+        assertEquals("/default", "${result?.uri}")
         assertEquals("", "${result?.name}")
         assertEquals(RouteMethod.Empty, result?.routeMethod)
         assertEquals(Parameters.Empty, result?.parameters)
@@ -777,6 +865,50 @@ class RoutingTest {
         // THEN
         assertNotNull(result)
         assertEquals("/initial/middle/inner", "${result?.uri}")
+        assertEquals("", "${result?.name}")
+        assertEquals(RouteMethod.Empty, result?.routeMethod)
+        assertEquals(Parameters.Empty, result?.parameters)
+    }
+
+    @Test
+    fun shouldFromParentRoutingWithDefaultRootPathNavigateDirectlyToNestedRoutingRoute() = runTest {
+        // GIVEN
+        val job = Job()
+        var result: ApplicationCall? = null
+
+        val routing = routing(
+            parentCoroutineContext = coroutineContext + job
+        ) {
+            route(path = "/default") {
+                handle { }
+            }
+        }
+
+        routing(
+            rootPath = "/middle",
+            parent = routing,
+            parentCoroutineContext = coroutineContext + job
+        ) {
+            route(path = "/inner") {
+                handle {
+                    result = call
+                    job.complete()
+                }
+            }
+        }
+
+        // WHEN
+        routing.execute(
+            BasicApplicationCall(
+                application = routing.application,
+                uri = "/middle/inner"
+            )
+        )
+        advanceTimeBy(99)
+
+        // THEN
+        assertNotNull(result)
+        assertEquals("/middle/inner", "${result?.uri}")
         assertEquals("", "${result?.name}")
         assertEquals(RouteMethod.Empty, result?.routeMethod)
         assertEquals(Parameters.Empty, result?.parameters)
@@ -889,7 +1021,59 @@ class RoutingTest {
     }
 
     @Test
-    fun shouldDisposeARoutingCleanAllRoutes() = runTest {
+    fun shouldSupportDeepNestedRoutingAndLookFromParentWithDefaultRootPathForARoute() = runTest {
+        // GIVEN
+        val job = Job()
+        var result: ApplicationCall? = null
+
+        val firstRouting = routing(
+            parentCoroutineContext = coroutineContext + job
+        ) {
+            route(path = "/default") {
+            }
+        }
+
+        val secondRouting = routing(
+            rootPath = "/middle",
+            parent = firstRouting,
+            parentCoroutineContext = coroutineContext + job
+        ) {
+            route(path = "/inner") {
+            }
+        }
+
+        val routing = routing(
+            rootPath = "/end",
+            parent = secondRouting,
+            parentCoroutineContext = coroutineContext + job
+        ) {
+            route(path = "/content") {
+                handle {
+                    result = call
+                    job.complete()
+                }
+            }
+        }
+
+        // WHEN
+        routing.execute(
+            BasicApplicationCall(
+                application = routing.application,
+                uri = "/middle/end/content"
+            )
+        )
+        advanceTimeBy(99)
+
+        // THEN
+        assertNotNull(result)
+        assertEquals("/middle/end/content", "${result?.uri}")
+        assertEquals("", "${result?.name}")
+        assertEquals(RouteMethod.Empty, result?.routeMethod)
+        assertEquals(Parameters.Empty, result?.parameters)
+    }
+
+    @Test
+    fun shouldDisposeARoutingCleanItChildrenRoutes() = runTest {
         // GIVEN
         val job = Job()
         var result: ApplicationCall? = null
@@ -907,6 +1091,8 @@ class RoutingTest {
             rootPath = "/initial",
             parentCoroutineContext = coroutineContext + job
         ) {
+            install(statusPages)
+
             route(path = "/default") {
             }
         }
@@ -916,7 +1102,6 @@ class RoutingTest {
             parent = firstRouting,
             parentCoroutineContext = coroutineContext + job
         ) {
-            // Installing here because next routing will be disposed
             install(statusPages)
 
             route(path = "/inner") {
@@ -952,6 +1137,179 @@ class RoutingTest {
         assertEquals(RouteMethod.Empty, result?.routeMethod)
         assertEquals(Parameters.Empty, result?.parameters)
         assertIs<RouteNotFoundException>(exception)
-        assertEquals("No matched subtrees found", exception?.message)
+        assertEquals("No matched subtrees found for: /initial/middle/end/content", exception?.message)
+    }
+
+    @Test
+    fun shouldRoutingWhenExecuteWithoutRootPathInTheURI() = runTest {
+        // GIVEN
+        val job = Job()
+        var result: ApplicationCall? = null
+
+        val routing = routing(
+            rootPath = "/initial",
+            parentCoroutineContext = coroutineContext + job
+        ) {
+            handle(path = "/default") {
+                result = call
+                job.complete()
+            }
+        }
+
+        // WHEN
+        routing.execute(
+            BasicApplicationCall(
+                application = routing.application,
+                uri = "/default"
+            )
+        )
+        advanceTimeBy(99)
+
+        // THEN
+        assertNotNull(result)
+        assertEquals("/default", "${result?.uri}")
+        assertEquals("", "${result?.name}")
+        assertEquals(RouteMethod.Empty, result?.routeMethod)
+        assertEquals(Parameters.Empty, result?.parameters)
+    }
+
+    @Test
+    fun shouldRoutingWithDefaultRootPathWhenExecuteWithoutRootPathInTheURI() = runTest {
+        // GIVEN
+        val job = Job()
+        var result: ApplicationCall? = null
+
+        val routing = routing(
+            parentCoroutineContext = coroutineContext + job
+        ) {
+            handle(path = "/default") {
+                result = call
+                job.complete()
+            }
+        }
+
+        // WHEN
+        routing.execute(
+            BasicApplicationCall(
+                application = routing.application,
+                uri = "/default"
+            )
+        )
+        advanceTimeBy(99)
+
+        // THEN
+        assertNotNull(result)
+        assertEquals("/default", "${result?.uri}")
+        assertEquals("", "${result?.name}")
+        assertEquals(RouteMethod.Empty, result?.routeMethod)
+        assertEquals(Parameters.Empty, result?.parameters)
+    }
+
+    @Test
+    fun shouldRoutingWithParentWhenCallWithoutRootPathOnChild() = runTest {
+        // GIVEN
+        val job = Job()
+        var result: ApplicationCall? = null
+
+        val firstRouting = routing(
+            rootPath = "/initial",
+            parentCoroutineContext = coroutineContext + job
+        ) {
+            route(path = "/default") {
+            }
+        }
+
+        val secondRouting = routing(
+            rootPath = "/middle",
+            parent = firstRouting,
+            parentCoroutineContext = coroutineContext + job
+        ) {
+            route(path = "/inner") {
+                handle {
+                    result = call
+                    job.complete()
+                }
+            }
+        }
+
+        val routing = routing(
+            rootPath = "/end",
+            parent = secondRouting,
+            parentCoroutineContext = coroutineContext + job
+        ) {
+            route(path = "/content") {
+            }
+        }
+
+        // WHEN
+        routing.execute(
+            BasicApplicationCall(
+                application = routing.application,
+                uri = "/inner"
+            )
+        )
+        advanceTimeBy(99)
+
+        // THEN
+        assertNotNull(result)
+        assertEquals("/inner", "${result?.uri}")
+        assertEquals("", "${result?.name}")
+        assertEquals(RouteMethod.Empty, result?.routeMethod)
+        assertEquals(Parameters.Empty, result?.parameters)
+    }
+
+    @Test
+    fun shouldConnectNestedRoutingWhenCreatingRouteOnDemand() = runTest {
+        // GIVEN
+        val job = Job()
+        var result: ApplicationCall? = null
+
+        val firstRouting = routing(
+            rootPath = "/initial",
+            parentCoroutineContext = coroutineContext + job
+        ) {
+            route(path = "/default") {
+            }
+        }
+
+        val secondRouting = routing(
+            rootPath = "/middle",
+            parent = firstRouting,
+            parentCoroutineContext = coroutineContext + job
+        ) {
+        }
+
+        val routing = routing(
+            rootPath = "/end",
+            parent = secondRouting,
+            parentCoroutineContext = coroutineContext + job
+        ) {
+            route(path = "/content") {
+            }
+        }
+
+        secondRouting.route(path = "/inner") {
+            handle {
+                result = call
+                job.complete()
+            }
+        }
+
+        // WHEN
+        routing.dispose()
+        firstRouting.execute(
+            BasicApplicationCall(
+                application = routing.application,
+                uri = "/middle/inner"
+            )
+        )
+        advanceTimeBy(99)
+
+        // THEN
+        assertNotNull(result)
+        assertEquals("/middle/inner", "${result?.uri}")
+        assertEquals("", "${result?.name}")
+        assertEquals(RouteMethod.Empty, result?.routeMethod)
+        assertEquals(Parameters.Empty, result?.parameters)
     }
 }

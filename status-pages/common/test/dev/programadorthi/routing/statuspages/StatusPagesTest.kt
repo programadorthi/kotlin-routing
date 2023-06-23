@@ -5,6 +5,7 @@ import dev.programadorthi.routing.core.application
 import dev.programadorthi.routing.core.application.Application
 import dev.programadorthi.routing.core.application.ApplicationCall
 import dev.programadorthi.routing.core.application.call
+import dev.programadorthi.routing.core.application.path
 import dev.programadorthi.routing.core.application.redirectToPath
 import dev.programadorthi.routing.core.errors.RouteNotFoundException
 import dev.programadorthi.routing.core.handle
@@ -97,7 +98,7 @@ class StatusPagesTest {
 
         // THEN
         assertIs<RouteNotFoundException>(result)
-        assertEquals("No matched subtrees found", result?.message)
+        assertEquals("No matched subtrees found for: /not-registered-path", result?.message)
     }
 
     @Test
@@ -136,7 +137,7 @@ class StatusPagesTest {
 
         // THEN
         assertIs<RouteNotFoundException>(result)
-        assertEquals("No matched subtrees found", result?.message)
+        assertEquals("No matched subtrees found for: /not-registered-path", result?.message)
         assertEquals("/redirected", "${aCall?.uri}")
         assertEquals("", "${aCall?.name}")
         assertEquals(RouteMethod.Empty, aCall?.routeMethod)
