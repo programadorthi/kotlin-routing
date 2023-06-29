@@ -53,12 +53,7 @@ public class RoutingResolveContext(
 
     private fun parse(pathValue: String): List<String> {
         if (pathValue.isEmpty() || pathValue == "/") return emptyList()
-        val routingPath = "/${routing.selector}"
-        val path = when {
-            pathValue.startsWith(routingPath) -> pathValue
-            pathValue.startsWith('/') -> "$routingPath$pathValue"
-            else -> "$routingPath/$pathValue"
-        }
+        val path = sanitizePath(pathValue)
         val length = path.length
         var beginSegment = 0
         var nextSegment = 0
@@ -248,4 +243,28 @@ public class RoutingResolveContext(
             failedEvaluationDepth = trait.size
         }
     }
+
+    private fun sanitizePath(pathValue: String): String {
+        val routingParts = (routing.selector as RootRouteSelector).parts
+        if (routingParts.isEmpty()) {
+            return pathValue
+        }
+
+        val pathParts = RoutingPath.parse(pathValue).parts.map { it.value }
+
+        if (pathParts.size < routingParts.size) {
+            return mergeParts(first = routingParts, second = pathParts)
+        }
+
+        for (index in routingParts.indices) {
+            if (routingParts[index] != pathParts[index]) {
+                return mergeParts(first = routingParts, second = pathParts)
+            }
+        }
+
+        return pathValue
+    }
+
+    private fun mergeParts(first: List<String>, second: List<String>): String =
+        (first + second).joinToString(separator = "/")
 }

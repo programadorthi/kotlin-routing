@@ -173,7 +173,7 @@ public abstract class RouteSelector {
  */
 public class RootRouteSelector(rootPath: String = "") : RouteSelector() {
 
-    private val parts = RoutingPath.parse(rootPath).parts.map {
+    internal val parts = RoutingPath.parse(rootPath).parts.map {
         require(it.kind == RoutingPathSegmentKind.Constant) {
             "rootPath should be constant, no wildcards supported."
         }

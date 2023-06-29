@@ -1312,4 +1312,222 @@ class RoutingTest {
         assertEquals(RouteMethod.Empty, result?.routeMethod)
         assertEquals(Parameters.Empty, result?.parameters)
     }
+
+    @Test
+    fun shouldRecognizeChildRouteWhenItPathStartEqualsToParentRouting() = runTest {
+        // GIVEN
+        val job = Job()
+        var result: ApplicationCall? = null
+
+        val routing = routing(
+            rootPath = "/initial",
+            parentCoroutineContext = coroutineContext + job
+        ) {
+            handle(path = "/initial-default") {
+                result = call
+                job.complete()
+            }
+        }
+
+        // WHEN
+        routing.execute(
+            BasicApplicationCall(
+                application = routing.application,
+                uri = "/initial-default"
+            )
+        )
+        advanceTimeBy(99)
+
+        // THEN
+        assertNotNull(result)
+        assertEquals("/initial-default", "${result?.uri}")
+        assertEquals("", "${result?.name}")
+        assertEquals(RouteMethod.Empty, result?.routeMethod)
+        assertEquals(Parameters.Empty, result?.parameters)
+    }
+
+    @Test
+    fun shouldSupportLargeRootPathWhenRootPathHasMoreSlashLevels() = runTest {
+        // GIVEN
+        val job = Job()
+        var result: ApplicationCall? = null
+
+        val routing = routing(
+            rootPath = "/initial/middle/end",
+            parentCoroutineContext = coroutineContext + job
+        ) {
+            handle(path = "/end-default") {
+                result = call
+                job.complete()
+            }
+        }
+
+        // WHEN
+        routing.execute(
+            BasicApplicationCall(
+                application = routing.application,
+                uri = "/end-default"
+            )
+        )
+        advanceTimeBy(99)
+
+        // THEN
+        assertNotNull(result)
+        assertEquals("/end-default", "${result?.uri}")
+        assertEquals("", "${result?.name}")
+        assertEquals(RouteMethod.Empty, result?.routeMethod)
+        assertEquals(Parameters.Empty, result?.parameters)
+    }
+
+    @Test
+    fun shouldRecognizeChildRouteWhenHavingInnerRoutingAndItPathStartEqualsToParentRouting() = runTest {
+        // GIVEN
+        val job = Job()
+        var result: ApplicationCall? = null
+
+        val parent = routing(
+            rootPath = "/parent",
+            parentCoroutineContext = coroutineContext + job
+        ) {
+            handle(path = "/parent-default") {}
+        }
+
+        val routing = routing(
+            rootPath = "child",
+            parent = parent,
+            parentCoroutineContext = coroutineContext + job
+        ) {
+            handle(path = "/child-default") {
+                result = call
+                job.complete()
+            }
+        }
+
+        // WHEN
+        routing.execute(
+            BasicApplicationCall(
+                application = routing.application,
+                uri = "/child-default"
+            )
+        )
+        advanceTimeBy(99)
+
+        // THEN
+        assertNotNull(result)
+        assertEquals("/child-default", "${result?.uri}")
+        assertEquals("", "${result?.name}")
+        assertEquals(RouteMethod.Empty, result?.routeMethod)
+        assertEquals(Parameters.Empty, result?.parameters)
+    }
+
+    @Test
+    fun shouldSupportLargeRootPathWhenHavingInnerRoutingAndRootPathHasMoreSlashLevels() = runTest {
+        // GIVEN
+        val job = Job()
+        var result: ApplicationCall? = null
+
+        val parent = routing(
+            rootPath = "/initial/middle",
+            parentCoroutineContext = coroutineContext + job
+        ) {
+            handle(path = "/initial") {
+                result = call
+                job.complete()
+            }
+        }
+
+        val routing = routing(
+            rootPath = "/end",
+            parent = parent,
+            parentCoroutineContext = coroutineContext + job
+        ) {
+            handle(path = "/end-default") {}
+        }
+
+        // WHEN
+        routing.execute(
+            BasicApplicationCall(
+                application = routing.application,
+                uri = "/initial"
+            )
+        )
+        advanceTimeBy(99)
+
+        // THEN
+        assertNotNull(result)
+        assertEquals("/initial", "${result?.uri}")
+        assertEquals("", "${result?.name}")
+        assertEquals(RouteMethod.Empty, result?.routeMethod)
+        assertEquals(Parameters.Empty, result?.parameters)
+    }
+
+    @Test
+    fun shouldSupportRoutingWhenRootPathAndInnerRouteHaveSamePath() = runTest {
+        // GIVEN
+        val job = Job()
+        var result: ApplicationCall? = null
+
+        val routing = routing(
+            rootPath = "/path",
+            parentCoroutineContext = coroutineContext + job
+        ) {
+            handle(path = "/path") {
+                result = call
+                job.complete()
+            }
+        }
+
+        // WHEN
+        routing.execute(
+            BasicApplicationCall(
+                application = routing.application,
+                uri = "/path/path" // Having rootPath and a route with same value your must provide rootPath on the URI
+            )
+        )
+        advanceTimeBy(99)
+
+        // THEN
+        assertNotNull(result)
+        assertEquals("/path/path", "${result?.uri}")
+        assertEquals("", "${result?.name}")
+        assertEquals(RouteMethod.Empty, result?.routeMethod)
+        assertEquals(Parameters.Empty, result?.parameters)
+    }
+
+    @Test
+    fun shouldSupportDeepRoutingWhenRootPathAndInnerRoutesHaveSamePath() = runTest {
+        // GIVEN
+        val job = Job()
+        var result: ApplicationCall? = null
+
+        val routing = routing(
+            rootPath = "/path",
+            parentCoroutineContext = coroutineContext + job
+        ) {
+            route(path = "/path") {
+                route(path = "/path") {
+                    handle(path = "/path") {
+                        result = call
+                        job.complete()
+                    }
+                }
+            }
+        }
+
+        // WHEN
+        routing.execute(
+            BasicApplicationCall(
+                application = routing.application,
+                uri = "/path/path/path/path" // Having rootPath and a route with same value your must provide rootPath on the URI
+            )
+        )
+        advanceTimeBy(99)
+
+        // THEN
+        assertNotNull(result)
+        assertEquals("/path/path/path/path", "${result?.uri}")
+        assertEquals("", "${result?.name}")
+        assertEquals(RouteMethod.Empty, result?.routeMethod)
+        assertEquals(Parameters.Empty, result?.parameters)
+    }
 }
