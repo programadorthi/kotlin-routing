@@ -75,5 +75,5 @@ public class CallLoggingConfig {
     }
 
     private fun defaultFormat(call: ApplicationCall): String =
-        """${call.routeMethod} -> name: ${call.name}, uri: ${call.uri}"""
+        """${call.routeMethod} -> name: ${call.name.ifBlank { "NOT-FOUND" }}, uri: ${call.uri}"""
 }

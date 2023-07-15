@@ -7,6 +7,10 @@ package dev.programadorthi.routing.core
 import dev.programadorthi.routing.core.application.Application
 import dev.programadorthi.routing.core.application.ApplicationCall
 import dev.programadorthi.routing.core.application.ApplicationEnvironment
+import dev.programadorthi.routing.core.application.ApplicationStarted
+import dev.programadorthi.routing.core.application.ApplicationStarting
+import dev.programadorthi.routing.core.application.ApplicationStopped
+import dev.programadorthi.routing.core.application.ApplicationStopping
 import dev.programadorthi.routing.core.application.BaseApplicationPlugin
 import dev.programadorthi.routing.core.application.Plugin
 import dev.programadorthi.routing.core.application.call
@@ -87,11 +91,13 @@ public class Routing internal constructor(
     }
 
     public fun dispose() {
+        environment.safeRiseEvent(ApplicationStopping, application)
         unregisterFromParents(this)
         childList.clear()
         namedRoutes.clear()
         application.dispose()
         disposed = true
+        environment.safeRiseEvent(ApplicationStopped, application)
     }
 
     internal fun registerNamed(name: String, route: Route) {
@@ -369,7 +375,18 @@ public fun routing(
         log = log,
         monitor = Events()
     )
-    return with(Application(environment)) {
-        install(Routing, configuration)
+    val application = Application(environment)
+    environment.safeRiseEvent(ApplicationStarting, application)
+    val instance = application.install(Routing, configuration)
+    environment.safeRiseEvent(ApplicationStarted, application)
+    return instance
+}
+
+private fun ApplicationEnvironment?.safeRiseEvent(event: EventDefinition<Application>, application: Application) {
+    val instance = this ?: return
+    runCatching {
+        instance.monitor.raise(event, application)
+    }.onFailure { cause ->
+        instance.log.error("One or more of the handlers thrown an exception", cause)
     }
 }

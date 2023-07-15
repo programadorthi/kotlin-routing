@@ -14,7 +14,8 @@ internal suspend inline fun withMDC(
     call: ApplicationCall,
     crossinline block: suspend () -> Unit
 ) {
-
+    mdcEntries.setup(call)
+    block()
     /*withContext(MDCContext(mdcEntries.setup(call))) {
         try {
             block()

@@ -28,6 +28,7 @@ fun Project.configureJvm() {
                     implementation(libs.findLibrary("test-junit").get())
                     implementation(libs.findLibrary("test-coroutines-debug").get())
                     implementation(libs.findLibrary("test-kotlin-test-junit").get())
+                    implementation(libs.findLibrary("slf4j-simple").get())
                 }
             }
         }
