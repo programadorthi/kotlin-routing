@@ -15,6 +15,7 @@ import dev.programadorthi.routing.core.application.log
 import dev.programadorthi.routing.core.errors.BadRequestException
 import dev.programadorthi.routing.core.errors.MissingRequestParameterException
 import dev.programadorthi.routing.core.errors.RouteNotFoundException
+import io.ktor.events.Events
 import io.ktor.http.Parameters
 import io.ktor.http.Url
 import io.ktor.http.plus
@@ -350,6 +351,7 @@ public fun routing(
         rootPath = rootPath,
         parentRouting = parent,
         log = log,
+        monitor = Events()
     )
     return with(Application(environment)) {
         install(Routing, configuration)

@@ -11,8 +11,7 @@ kotlin {
     sourceSets {
         commonMain {
             dependencies {
-                api(libs.ktor.events)
-                api(libs.ktor.http)
+                api(projects.core)
             }
         }
     }

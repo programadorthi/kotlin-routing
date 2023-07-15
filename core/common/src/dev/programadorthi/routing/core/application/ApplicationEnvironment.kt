@@ -5,6 +5,7 @@
 package dev.programadorthi.routing.core.application
 
 import dev.programadorthi.routing.core.Routing
+import io.ktor.events.Events
 import io.ktor.util.logging.Logger
 import kotlin.coroutines.CoroutineContext
 
@@ -35,5 +36,10 @@ public data class ApplicationEnvironment(
     /**
      * Application's current [Routing] used to nested routing
      */
-    public val parentRouting: Routing?
+    public val parentRouting: Routing?,
+
+    /**
+     * Provides events on Application lifecycle
+     */
+    public val monitor: Events
 )

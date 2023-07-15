@@ -45,3 +45,19 @@ public object CallFailed : Hook<suspend (call: ApplicationCall, cause: Throwable
         }
     }
 }
+
+/**
+ * A hook that is invoked when response was successfully sent to a client.
+ * Useful for cleaning up opened resources or finishing measurements.
+ */
+public object ResponseSent : Hook<(ApplicationCall) -> Unit> {
+
+    private val phase = PipelinePhase("AfterCall")
+    override fun install(pipeline: ApplicationCallPipeline, handler: (ApplicationCall) -> Unit) {
+        pipeline.insertPhaseAfter(ApplicationCallPipeline.Call, phase)
+        pipeline.intercept(phase) {
+            proceed()
+            handler(call)
+        }
+    }
+}

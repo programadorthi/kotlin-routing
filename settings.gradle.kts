@@ -21,6 +21,7 @@ dependencyResolutionManagement {
 
 rootProject.name = "kotlin-routing"
 
+include(":call-logging")
 include(":core")
 include(":core-stack")
 include(":events")
