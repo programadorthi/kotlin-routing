@@ -8,6 +8,7 @@ import dev.programadorthi.routing.core.application.ApplicationCall
 import dev.programadorthi.routing.core.application.ApplicationCallPipeline
 import dev.programadorthi.routing.core.application.Hook
 import dev.programadorthi.routing.core.application.call
+import io.ktor.events.EventDefinition
 import io.ktor.util.pipeline.PipelinePhase
 import kotlinx.coroutines.coroutineScope
 
@@ -58,6 +59,19 @@ public object ResponseSent : Hook<(ApplicationCall) -> Unit> {
         pipeline.intercept(phase) {
             proceed()
             handler(call)
+        }
+    }
+}
+
+/**
+ * A shortcut hook for [ApplicationEnvironment.monitor] subscription.
+ */
+public class MonitoringEvent<Param : Any, Event : EventDefinition<Param>>(
+    private val event: Event
+) : Hook<(Param) -> Unit> {
+    override fun install(pipeline: ApplicationCallPipeline, handler: (Param) -> Unit) {
+        pipeline.environment!!.monitor.subscribe(event) {
+            handler(it)
         }
     }
 }

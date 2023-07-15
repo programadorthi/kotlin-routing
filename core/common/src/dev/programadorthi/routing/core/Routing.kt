@@ -15,6 +15,7 @@ import dev.programadorthi.routing.core.application.log
 import dev.programadorthi.routing.core.errors.BadRequestException
 import dev.programadorthi.routing.core.errors.MissingRequestParameterException
 import dev.programadorthi.routing.core.errors.RouteNotFoundException
+import io.ktor.events.EventDefinition
 import io.ktor.events.Events
 import io.ktor.http.Parameters
 import io.ktor.http.Url
@@ -288,7 +289,12 @@ public class Routing internal constructor(
                     route = resolveResult.route,
                     parameters = resolveResult.parameters,
                 )
-                routingCallPipeline.execute(routingCall)
+                application.environment.monitor.raise(RoutingCallStarted, routingCall)
+                try {
+                    routingCallPipeline.execute(routingCall)
+                } finally {
+                    application.environment.monitor.raise(RoutingCallFinished, routingCall)
+                }
             }
         }
     }
@@ -298,6 +304,16 @@ public class Routing internal constructor(
      */
     @Suppress("PublicApiImplicitType")
     public companion object Plugin : BaseApplicationPlugin<Application, Route, Routing> {
+
+        /**
+         * A definition for an event that is fired when routing-based call processing starts.
+         */
+        internal val RoutingCallStarted: EventDefinition<RoutingApplicationCall> = EventDefinition()
+
+        /**
+         * A definition for an event that is fired when routing-based call processing is finished.
+         */
+        internal val RoutingCallFinished: EventDefinition<RoutingApplicationCall> = EventDefinition()
 
         override val key: AttributeKey<Routing> = AttributeKey("Routing")
 
