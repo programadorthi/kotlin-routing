@@ -5,24 +5,22 @@
 package dev.programadorthi.routing.callloging
 
 import dev.programadorthi.routing.core.application.ApplicationCall
+import kotlinx.coroutines.withContext
 
 internal class MDCEntry(val name: String, val provider: (ApplicationCall) -> String?)
 
-// TODO: MDC multiplatform support
 internal suspend inline fun withMDC(
     mdcEntries: List<MDCEntry>,
     call: ApplicationCall,
     crossinline block: suspend () -> Unit
 ) {
-    mdcEntries.setup(call)
-    block()
-    /*withContext(MDCContext(mdcEntries.setup(call))) {
+    withContext(MDCContext(mdcEntries.setup(call))) {
         try {
             block()
         } finally {
             mdcEntries.cleanup()
         }
-    }*/
+    }
 }
 
 internal fun List<MDCEntry>.setup(call: ApplicationCall): Map<String, String> {
@@ -38,9 +36,8 @@ internal fun List<MDCEntry>.setup(call: ApplicationCall): Map<String, String> {
     return result
 }
 
-// TODO: MDC multiplatform support
-/*internal fun List<MDCEntry>.cleanup() {
+internal fun List<MDCEntry>.cleanup() {
     forEach {
         MDC.remove(it.name)
     }
-}*/
+}
