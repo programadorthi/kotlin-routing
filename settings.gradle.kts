@@ -28,6 +28,7 @@ include(":events")
 include(":events-resources")
 include(":resources")
 include(":resources-stack")
+include(":sessions")
 include(":status-pages")
 
 // Samples are disabled by default to avoid sync their.
