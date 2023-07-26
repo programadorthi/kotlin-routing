@@ -41,7 +41,7 @@ fun Project.configureCommon() {
         verify {
             rule {
                 bound {
-                    minValue = 40 // TODO: increase value
+                    minValue = 55 // TODO: increase value
                 }
             }
         }

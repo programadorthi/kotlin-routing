@@ -4,6 +4,7 @@
 
 package dev.programadorthi.routing.sessions
 
+import dev.programadorthi.routing.core.application
 import dev.programadorthi.routing.core.application.RouteScopedPlugin
 import dev.programadorthi.routing.core.application.createRouteScopedPlugin
 import dev.programadorthi.routing.core.application.hooks.ResponseSent
@@ -24,7 +25,16 @@ internal val SessionProvidersKey = AttributeKey<List<SessionProvider<*>>>("Sessi
  * @property providers list of session providers
  */
 public val Sessions: RouteScopedPlugin<SessionsConfig> = createRouteScopedPlugin("Sessions", ::SessionsConfig) {
-    val providers = pluginConfig.providers.toList()
+    val parentProviders = mutableListOf<SessionProvider<*>>()
+    val parent = environment?.parentRouting
+    if (parent != null) {
+        val others = parent.application.attributes.getOrNull(SessionProvidersKey)
+        if (others != null) {
+            parentProviders.addAll(others)
+        }
+    }
+
+    val providers = pluginConfig.providers.toList() + parentProviders
     val logger = application.log
 
     application.attributes.put(SessionProvidersKey, providers)

@@ -17,6 +17,7 @@ import kotlinx.coroutines.test.advanceTimeBy
 import kotlinx.coroutines.test.runTest
 import kotlin.test.Test
 import kotlin.test.assertEquals
+import kotlin.test.assertIs
 import kotlin.test.assertNull
 
 @OptIn(ExperimentalCoroutinesApi::class)
@@ -51,6 +52,7 @@ class SessionTest {
 
             handle(path = "/user") {
                 userSession = call.sessions.get<UserSession>()
+                job.complete()
             }
         }
 
@@ -91,6 +93,7 @@ class SessionTest {
 
             handle(path = "/user") {
                 userSession = call.sessions.get<UserSession>()
+                job.complete()
             }
         }
 
@@ -135,6 +138,7 @@ class SessionTest {
 
             handle(path = "/done") {
                 userSession = call.sessions.get<UserSession>()
+                job.complete()
             }
         }
 
@@ -151,5 +155,97 @@ class SessionTest {
         assertNull(userSession)
     }
 
-    // TODO: Test support to nested routing sessions
+    @Test
+    fun shouldNestedRoutingGetParentSessionWhenHavingNestedRouting() = runTest {
+        // GIVEN
+        val job = Job()
+        var userSession: UserSession? = null
+
+        val parent = routing(parentCoroutineContext = coroutineContext + job) {
+            install(Sessions) {
+                session<UserSession>()
+            }
+
+            handle(path = "/login") {
+                call.sessions.set(UserSession(id = "123abc", count = 0))
+                call.redirectToPath(path = "/child/user")
+            }
+        }
+
+        routing(
+            rootPath = "/child",
+            parent = parent,
+            parentCoroutineContext = coroutineContext + job
+        ) {
+            install(Sessions)
+
+            handle(path = "/user") {
+                userSession = call.sessions.get<UserSession>()
+                job.complete()
+            }
+        }
+
+        // WHEN
+        parent.execute(
+            BasicApplicationCall(
+                application = parent.application,
+                uri = "/login"
+            )
+        )
+        advanceTimeBy(99)
+
+        // THEN
+        assertEquals(UserSession(id = "123abc", count = 0), userSession)
+    }
+
+    @Test
+    fun shouldScopedSessionNotBeSharedWithParentWhenHavingNestedRouting() = runTest {
+        // GIVEN
+        val job = Job()
+        var exception: Throwable? = null
+
+        val parent = routing(parentCoroutineContext = coroutineContext + job) {
+            install(Sessions)
+
+            handle(path = "/logout") {
+                runCatching {
+                    call.sessions.get<UserSession>()
+                }.onFailure { ex ->
+                    exception = ex
+                }
+                job.complete()
+            }
+        }
+
+        val routing = routing(
+            rootPath = "/child",
+            parent = parent,
+            parentCoroutineContext = coroutineContext + job
+        ) {
+            install(Sessions) {
+                session<UserSession>()
+            }
+
+            handle(path = "/login") {
+                call.sessions.set(UserSession(id = "123abc", count = 0))
+                call.redirectToPath(path = "/logout")
+            }
+        }
+
+        // WHEN
+        routing.execute(
+            BasicApplicationCall(
+                application = routing.application,
+                uri = "/login"
+            )
+        )
+        advanceTimeBy(99)
+
+        // THEN
+        assertIs<IllegalArgumentException>(exception)
+        assertEquals(
+            "Session data for type `class dev.programadorthi.routing.sessions.UserSession (Kotlin reflection is not available)` was not registered",
+            exception?.message
+        )
+    }
 }
