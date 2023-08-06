@@ -10,7 +10,7 @@ public class SessionTrackerImpl<S : Any>(
     private val storage: SessionStorage,
     private val serializer: SessionSerializer<S>?,
 ) : SessionTracker<S> {
-    private val sessionIdKey: AttributeKey<String> = AttributeKey("${type.qualifiedName}")
+    private val sessionIdKey: AttributeKey<String> = AttributeKey("$type")
 
     @Suppress("UNCHECKED_CAST")
     override suspend fun load(call: ApplicationCall, transport: String?): S? {
@@ -56,7 +56,7 @@ public class SessionTrackerImpl<S : Any>(
             "To persist a session you must use InMemory SessionStorage or provide a custom SessionSerializer"
         }
 
-        val sessionId = call.attributes.computeIfAbsent(sessionIdKey) { "${type.qualifiedName}" }
+        val sessionId = call.attributes.computeIfAbsent(sessionIdKey) { "$type" }
         if (storage is SessionStorageMemory || serializer == null) {
             storage.write(sessionId, value)
         } else {

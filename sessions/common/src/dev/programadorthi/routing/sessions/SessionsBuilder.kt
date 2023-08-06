@@ -42,9 +42,9 @@ internal fun <S : Any> SessionsConfig.session(
     storage: SessionStorage?,
     builder: HeaderSessionBuilder<S>
 ) {
-    val transport = SessionTransportImpl("${sessionType.qualifiedName}", builder.transformers)
+    val transport = SessionTransportImpl("$sessionType", builder.transformers)
     val tracker = SessionTrackerImpl(sessionType, storage ?: SessionStorageMemory(), builder.serializer)
-    val provider = SessionProvider("${sessionType.qualifiedName}", sessionType, transport, tracker)
+    val provider = SessionProvider("$sessionType", sessionType, transport, tracker)
     register(provider)
 }
 
