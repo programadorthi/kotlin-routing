@@ -8,6 +8,7 @@ import dev.programadorthi.routing.core.Route
 import dev.programadorthi.routing.core.RouteSelector
 import dev.programadorthi.routing.core.RouteSelectorEvaluation
 import dev.programadorthi.routing.core.RoutingResolveContext
+import dev.programadorthi.routing.core.application
 import dev.programadorthi.routing.core.application.ApplicationCall
 import dev.programadorthi.routing.core.application.ApplicationCallPipeline
 import dev.programadorthi.routing.core.application.Hook
@@ -17,6 +18,8 @@ import dev.programadorthi.routing.core.application.createRouteScopedPlugin
 import dev.programadorthi.routing.core.application.install
 import dev.programadorthi.routing.core.application.log
 import dev.programadorthi.routing.core.application.plugin
+import dev.programadorthi.routing.core.application.pluginOrNull
+import dev.programadorthi.routing.core.asRouting
 import io.ktor.util.AttributeKey
 import io.ktor.util.KtorDsl
 import io.ktor.util.pipeline.PipelinePhase
@@ -58,8 +61,19 @@ public val AuthenticationInterceptors: RouteScopedPlugin<RouteAuthenticationConf
     "AuthenticationInterceptors",
     ::RouteAuthenticationConfig
 ) {
+    val parentConfigs = generateSequence(seed = environment?.parentRouting) { it.parent?.asRouting }
+        .mapNotNull { it.application.pluginOrNull(Authentication)?.config }
+        .toList()
+        .reversed()
+
+    val allConfigs = parentConfigs + application.plugin(Authentication).config
+    val configProviders = mutableMapOf<String?, AuthenticationProvider>()
+    allConfigs.forEach { config ->
+        configProviders.putAll(config.providers)
+    }
+
     val providers = pluginConfig.providers
-    val authConfig = application.plugin(Authentication).config
+    val authConfig = AuthenticationConfig(providers = configProviders)
 
     val requiredProviders = authConfig
         .findProviders(providers) { it == AuthenticationStrategy.Required }
@@ -88,8 +102,11 @@ public val AuthenticationInterceptors: RouteScopedPlugin<RouteAuthenticationConf
             count++
             if (authenticationContext._principal.principals.size < count) {
                 logger.trace("Authentication failed for ${call.uri} with provider $provider")
-                authenticationContext.checkForChallengeStatus()
-                return@on
+                authenticationContext.checkForChallengeStatus(provider)
+                // Checking if any challenge has provided a principal to current session
+                if (authenticationContext._principal.principals.size >= count) {
+                    return@on
+                }
             }
             logger.trace("Authentication succeeded for ${call.uri} with provider $provider")
         }
@@ -129,40 +146,40 @@ public val AuthenticationInterceptors: RouteScopedPlugin<RouteAuthenticationConf
     }
 }
 
-private suspend fun AuthenticationContext.checkForChallengeStatus() {
+private suspend fun AuthenticationContext.checkForChallengeStatus(
+    provider: AuthenticationProvider? = null,
+) {
     when (val status = executeChallenges(call)) {
-        is ChallengeStatus.Denied,
-        is ChallengeStatus.NotSolved -> call.throwNotAuthorized()
+        is ChallengeStatus.Denied -> call.throwNotAuthorized()
 
         // TODO: To stop current flow we need throw an exception. Is there a better way?
         is ChallengeStatus.Redirected -> throw RoutingRedirectToAuthenticateException(
             message = "Redirecting ${call.uri} to authentication route ${status.destination}"
         )
 
-        is ChallengeStatus.Approved -> Unit
+        is ChallengeStatus.Approved<*> -> principal(provider?.name, status.principal)
     }
 }
 
 private suspend fun AuthenticationContext.executeChallenges(call: ApplicationCall): ChallengeStatus {
     val challenges = challenge.challenges
 
-    var status = this.executeChallenges(challenges, call)
+    var challengeStatus = this.executeChallenges(challenges, call)
 
-    if (status is ChallengeStatus.NotSolved) {
-        status = this.executeChallenges(challenge.errorChallenges, call)
+    if (challengeStatus !is ChallengeStatus.Denied) {
+        return challengeStatus
     }
 
-    if (status is ChallengeStatus.NotSolved) {
+    challengeStatus = this.executeChallenges(challenge.errorChallenges, call)
+
+    if (challengeStatus is ChallengeStatus.Denied) {
         for (error in allErrors) {
-            if (!challenge.completed) {
-                call.application.log.trace("Authentication failed for ${call.uri} with error ${error.message}")
-                challenge.complete()
-                return ChallengeStatus.NotSolved
-            }
+            call.application.log.trace("Authentication failed for ${call.uri} with error ${error.message}")
+            // TODO: Should report this error in some way?
         }
     }
 
-    return status
+    return challengeStatus
 }
 
 private suspend fun AuthenticationContext.executeChallenges(
@@ -171,12 +188,12 @@ private suspend fun AuthenticationContext.executeChallenges(
 ): ChallengeStatus {
     for (challengeFunction in challenges) {
         val challengeStatus = challengeFunction(challenge, call)
-        if (challenge.completed) {
+        if (challengeStatus !is ChallengeStatus.Denied) {
             return challengeStatus
         }
-        call.application.log.trace("Responding unauthorized because call ${call.uri} is not handled.")
     }
-    return ChallengeStatus.NotSolved
+    call.application.log.trace("Responding unauthorized because call ${call.uri} is not handled.")
+    return ChallengeStatus.Denied
 }
 
 private fun AuthenticationConfig.findProviders(

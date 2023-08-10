@@ -22,6 +22,7 @@ import kotlinx.coroutines.test.advanceTimeBy
 import kotlinx.coroutines.test.runTest
 import kotlin.test.Test
 import kotlin.test.assertEquals
+import kotlin.test.assertFails
 import kotlin.test.assertIs
 import kotlin.test.assertNotNull
 import kotlin.test.assertNull
@@ -173,8 +174,6 @@ class AuthTest {
     @Test
     fun shouldAskForChallengeAndBeAuthorizedWhenChallengeHasApprovedStatus() = runTest {
         val job = Job()
-        var message = ""
-        var challengeCalled = false
         var principal: UserIdPrincipal? = UserIdPrincipal(name = "default value")
 
         // GIVEN
@@ -187,17 +186,15 @@ class AuthTest {
                 session<UserIdPrincipal>(name = UserIdPrincipal.NAME) {
                     validate { session -> session }
 
-                    challenge { session ->
-                        principal = session
-                        challengeCalled = true
-                        ChallengeStatus.Approved
+                    challenge {
+                        ChallengeStatus.Approved(UserIdPrincipal(name = "Authenticated"))
                     }
                 }
             }
 
             authenticate(UserIdPrincipal.NAME) {
                 handle(path = "/user") {
-                    message = "Hey, I was called because challenge had Approved status"
+                    principal = call.principal()
                 }
             }
         }
@@ -212,16 +209,13 @@ class AuthTest {
         advanceTimeBy(99)
 
         // THEN
-        assertTrue(challengeCalled)
-        assertNull(principal)
-        assertEquals("Hey, I was called because challenge had Approved status", message)
+        assertEquals(UserIdPrincipal(name = "Authenticated"), principal)
     }
 
     @Test
     fun shouldAskForChallengeAndBeNotAuthorizedWhenChallengeHasDeniedStatus() = runTest {
         val job = Job()
         var exception: Throwable? = null
-        var message = ""
         var challengeCalled = false
         var principal: UserIdPrincipal? = UserIdPrincipal(name = "default value")
 
@@ -242,8 +236,7 @@ class AuthTest {
                 session<UserIdPrincipal>(name = UserIdPrincipal.NAME) {
                     validate { session -> session }
 
-                    challenge { session ->
-                        principal = session
+                    challenge {
                         challengeCalled = true
                         ChallengeStatus.Denied
                     }
@@ -252,7 +245,7 @@ class AuthTest {
 
             authenticate(UserIdPrincipal.NAME) {
                 handle(path = "/user") {
-                    message = "Hey, I was not called because challenge had Denied status"
+                    principal = call.principal()
                 }
             }
         }
@@ -268,8 +261,7 @@ class AuthTest {
 
         // THEN
         assertTrue(challengeCalled)
-        assertNull(principal)
-        assertEquals("", message)
+        assertEquals(UserIdPrincipal(name = "default value"), principal)
         assertIs<RoutingUnauthorizedException>(exception)
         assertEquals("Unauthorized route access to /user", exception?.message)
     }
@@ -339,16 +331,16 @@ class AuthTest {
         val challengeStart = Channel<Unit>()
         val challengeBlocking = Channel<ChallengeStatus>()
 
-        var message = ""
-        var challengeAsked = false
-        var challengeCalled = false
+        var principal: UserIdPrincipal? = UserIdPrincipal(name = "default value")
 
         // Simulating an external challenge flow
         launch(coroutineContext + job) {
-            challengeStart.receive() // Waiting ask for challenge
-            challengeAsked = true
-            delay(500) // Simulating a long flow
-            challengeBlocking.send(ChallengeStatus.Approved)
+            // Waiting ask for challenge
+            challengeStart.receive()
+            // Simulating a long login flow
+            delay(500)
+
+            challengeBlocking.send(ChallengeStatus.Approved(UserIdPrincipal(name = "Authenticated")))
         }
 
         // GIVEN
@@ -363,7 +355,6 @@ class AuthTest {
 
                     challenge {
                         challengeStart.send(Unit) // Simulating starting external challenge flow
-                        challengeCalled = true
                         challengeBlocking.receive()
                     }
                 }
@@ -371,7 +362,7 @@ class AuthTest {
 
             authenticate(UserIdPrincipal.NAME) {
                 handle(path = "/user") {
-                    message = "Hey, I was called because challenge had Approved status"
+                    principal = call.principal()
                 }
             }
         }
@@ -387,10 +378,222 @@ class AuthTest {
         advanceTimeBy(500)
 
         // THEN
-        assertTrue(challengeAsked)
-        assertTrue(challengeCalled)
-        assertEquals("Hey, I was called because challenge had Approved status", message)
+        assertEquals(UserIdPrincipal(name = "Authenticated"), principal)
     }
 
-    // TODO: Add support and tests to Nested routes
+    @Test
+    fun shouldParentManagerAuthenticationWhenHavingNestedRouting() = runTest {
+        val job = Job()
+        var exception: Throwable? = null
+
+        // GIVEN
+        val parent = routing(parentCoroutineContext = coroutineContext + job) {
+            install(Sessions) {
+                session<UserIdPrincipal>()
+            }
+
+            install(Authentication) {
+                session<UserIdPrincipal>(name = UserIdPrincipal.NAME)
+            }
+        }
+
+        val routing = routing(
+            parent = parent,
+            rootPath = "/child",
+            parentCoroutineContext = coroutineContext + job
+        ) {
+            install(StatusPages) {
+                exception<Throwable> { _, cause ->
+                    exception = cause
+                    job.complete()
+                }
+            }
+
+            install(Sessions)
+            install(Authentication)
+
+            authenticate(UserIdPrincipal.NAME) {
+                handle(path = "/user") {
+                    error("Never reached code")
+                }
+            }
+        }
+
+        // WHEN
+        routing.execute(
+            BasicApplicationCall(
+                application = routing.application,
+                uri = "/user"
+            )
+        )
+        advanceTimeBy(99)
+
+        // THEN
+        assertIs<RoutingUnauthorizedException>(exception)
+        assertEquals("Unauthorized route access to /user", exception?.message)
+    }
+
+    @Test
+    fun shouldParentNeverUseChildAuthenticationWhenHavingNestedRouting() = runTest {
+        val job = Job()
+
+        // GIVEN
+        val exception = assertFails {
+            val parent = routing(parentCoroutineContext = coroutineContext + job) {
+                install(Authentication) {
+                    session<UserIdPrincipal>(name = UserIdPrincipal.NAME)
+                }
+
+                // WHEN
+                // profile-config is a provider configured in child routing
+                authenticate("profile-config") {
+                    handle(path = "/profile") {
+                        error("Never reached code")
+                    }
+                }
+            }
+
+            routing(
+                parent = parent,
+                rootPath = "/child",
+                parentCoroutineContext = coroutineContext + job
+            ) {
+                install(Authentication) {
+                    session<UserIdPrincipal>(name = "profile-config")
+                }
+            }
+        }
+
+        // THEN
+        assertIs<IllegalArgumentException>(exception)
+        assertEquals(
+            "Authentication configuration with the name profile-config was not found. Make sure that you install Authentication plugin before you use it in Routing",
+            exception.message
+        )
+    }
+
+    @Test
+    fun shouldChildHasHisOwnerAuthenticationWhenHavingNestedRouting() = runTest {
+        val job = Job()
+        var principal: UserIdPrincipal? = UserIdPrincipal(name = "default value")
+
+        // GIVEN
+        val parent = routing(parentCoroutineContext = coroutineContext + job) {
+            // No-op for this test
+        }
+
+        val routing = routing(
+            parent = parent,
+            rootPath = "/child",
+            parentCoroutineContext = coroutineContext + job
+        ) {
+            install(Sessions) {
+                session<UserIdPrincipal>()
+            }
+
+            install(Authentication) {
+                session<UserIdPrincipal>(name = UserIdPrincipal.NAME) {
+                    validate { session -> session }
+                    challenge {
+                        ChallengeStatus.Approved(UserIdPrincipal(name = "Kotlin Routing"))
+                    }
+                }
+            }
+
+            authenticate(UserIdPrincipal.NAME) {
+                handle(path = "/user") {
+                    principal = call.principal()
+                }
+            }
+        }
+
+        // WHEN
+        routing.execute(
+            BasicApplicationCall(
+                application = routing.application,
+                uri = "/user"
+            )
+        )
+        advanceTimeBy(99)
+
+        // THEN
+        assertEquals(UserIdPrincipal(name = "Kotlin Routing"), principal)
+    }
+
+    @Test
+    fun shouldParentAndChildHasHisOwnerAuthenticationWhenHavingNestedRouting() = runTest {
+        data class ParentPrincipal(val name: String) : Principal
+        data class ChildPrincipal(val name: String) : Principal
+
+        val job = Job()
+        var parentPrincipal: ParentPrincipal? = null
+        var childPrincipal: ChildPrincipal? = null
+
+        // GIVEN
+        val parent = routing(parentCoroutineContext = coroutineContext + job) {
+            install(Sessions) {
+                session<ParentPrincipal>()
+            }
+
+            install(Authentication) {
+                session<ParentPrincipal>(name = "parent-provider") {
+                    validate { session -> session }
+                    challenge {
+                        ChallengeStatus.Approved(ParentPrincipal(name = "Parent Routing"))
+                    }
+                }
+            }
+        }
+
+        val routing = routing(
+            parent = parent,
+            rootPath = "/nested",
+            parentCoroutineContext = coroutineContext + job
+        ) {
+            install(Sessions) {
+                session<ChildPrincipal>()
+            }
+
+            install(Authentication) {
+                session<ChildPrincipal>(name = "child-provider") {
+                    validate { session -> session }
+                    challenge {
+                        ChallengeStatus.Approved(ChildPrincipal(name = "Child Routing"))
+                    }
+                }
+            }
+
+            authenticate("parent-provider") {
+                handle(path = "/parent") {
+                    parentPrincipal = call.principal()
+                }
+            }
+
+            authenticate("child-provider") {
+                handle(path = "/child") {
+                    childPrincipal = call.principal()
+                }
+            }
+        }
+
+        // WHEN
+        routing.execute(
+            BasicApplicationCall(
+                application = routing.application,
+                uri = "/parent"
+            )
+        )
+        advanceTimeBy(99)
+        routing.execute(
+            BasicApplicationCall(
+                application = routing.application,
+                uri = "/child"
+            )
+        )
+        advanceTimeBy(99)
+
+        // THEN
+        assertEquals(ParentPrincipal(name = "Parent Routing"), parentPrincipal)
+        assertEquals(ChildPrincipal(name = "Child Routing"), childPrincipal)
+    }
 }

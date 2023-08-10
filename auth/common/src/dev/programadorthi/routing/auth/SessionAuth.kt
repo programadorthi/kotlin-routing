@@ -42,13 +42,8 @@ public class SessionAuthenticationProvider<T : Any> private constructor(
                 } else AuthenticationFailedCause.InvalidCredentials
 
             @Suppress("NAME_SHADOWING")
-            context.challenge(SessionAuthChallengeKey, cause) { challenge, call ->
-                challengeFunction(SessionChallengeContext(call), principal).also { challengeStatus ->
-                    // TODO: !challenge.completed && call.response.status() != null
-                    if (!challenge.completed && challengeStatus !is ChallengeStatus.NotSolved) {
-                        challenge.complete()
-                    }
-                }
+            context.challenge(SessionAuthChallengeKey, cause) { _, call ->
+                challengeFunction(SessionChallengeContext(call), principal)
             }
         }
     }
@@ -78,7 +73,7 @@ public class SessionAuthenticationProvider<T : Any> private constructor(
          */
         public fun challenge(redirectUrl: String) {
             challenge {
-                call.redirectToPath(redirectUrl)
+                call.redirectToPath(path = redirectUrl)
                 ChallengeStatus.Redirected(destination = redirectUrl)
             }
         }

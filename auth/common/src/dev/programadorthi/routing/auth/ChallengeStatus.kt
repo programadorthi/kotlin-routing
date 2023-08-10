@@ -1,9 +1,8 @@
 package dev.programadorthi.routing.auth
 
 public sealed class ChallengeStatus {
-    public object Approved : ChallengeStatus()
     public object Denied : ChallengeStatus()
-    public object NotSolved : ChallengeStatus()
+    public data class Approved<T : Principal>(val principal: T) : ChallengeStatus()
 
     internal data class Redirected(val destination: String) : ChallengeStatus()
 }

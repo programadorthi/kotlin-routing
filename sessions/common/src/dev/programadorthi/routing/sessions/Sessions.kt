@@ -9,6 +9,7 @@ import dev.programadorthi.routing.core.application.RouteScopedPlugin
 import dev.programadorthi.routing.core.application.createRouteScopedPlugin
 import dev.programadorthi.routing.core.application.hooks.ResponseSent
 import dev.programadorthi.routing.core.application.log
+import dev.programadorthi.routing.core.asRouting
 import io.ktor.util.AttributeKey
 
 internal val SessionProvidersKey = AttributeKey<List<SessionProvider<*>>>("SessionProvidersKey")
@@ -25,16 +26,13 @@ internal val SessionProvidersKey = AttributeKey<List<SessionProvider<*>>>("Sessi
  * @property providers list of session providers
  */
 public val Sessions: RouteScopedPlugin<SessionsConfig> = createRouteScopedPlugin("Sessions", ::SessionsConfig) {
-    val parentProviders = mutableListOf<SessionProvider<*>>()
-    val parent = environment?.parentRouting
-    if (parent != null) {
-        val others = parent.application.attributes.getOrNull(SessionProvidersKey)
-        if (others != null) {
-            parentProviders.addAll(others)
-        }
-    }
+    val parentProviders = generateSequence(seed = environment?.parentRouting) { it.parent?.asRouting }
+        .mapNotNull { it.application.attributes.getOrNull(SessionProvidersKey) }
+        .flatten()
+        .toList()
+        .reversed()
 
-    val providers = pluginConfig.providers.toList() + parentProviders
+    val providers = parentProviders + pluginConfig.providers.toList()
     val logger = application.log
 
     application.attributes.put(SessionProvidersKey, providers)
