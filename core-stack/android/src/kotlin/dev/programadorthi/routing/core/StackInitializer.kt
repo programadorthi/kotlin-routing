@@ -50,7 +50,7 @@ internal class StackInitializer :
     //region StackManagerNotifier
     override fun onRegistered(providerId: String, stackManager: StackManager) = synchronized(lock) {
         val registry = currentActivity.get()?.savedStateRegistry ?: return
-        processRegistration(
+        processRegistry(
             registry = registry,
             providerId = providerId,
             stackManager = stackManager,
@@ -73,38 +73,28 @@ internal class StackInitializer :
         }
         currentActivity = WeakReference(activity)
         val registry = activity.savedStateRegistry
-        if (registry.isRestored) {
-            processRestoration(registry)
-        } else {
-            StackManager.subscriptions().forEach { (providerId, stackManager) ->
-                processRegistration(
-                    registry = registry,
-                    providerId = providerId,
-                    stackManager = stackManager,
-                )
-            }
+        StackManager.subscriptions().forEach { (providerId, stackManager) ->
+            processRegistry(
+                registry = registry,
+                providerId = providerId,
+                stackManager = stackManager,
+            )
         }
     }
 
-    private fun processRegistration(
+    private fun processRegistry(
         registry: SavedStateRegistry,
         providerId: String,
-        stackManager: StackManager
+        stackManager: StackManager,
     ) {
-        registry.unregisterSavedStateProvider(providerId)
-        registry.registerSavedStateProvider(
-            key = providerId,
-            provider = StackSavedStateProvider(providerId, stackManager),
-        )
-    }
-
-    private fun processRestoration(registry: SavedStateRegistry) {
-        StackManager.subscriptions().forEach { (providerId, stackManager) ->
+        val provider = StackSavedStateProvider(providerId, stackManager)
+        if (registry.isRestored) {
             val previousState = registry.consumeRestoredStateForKey(providerId)
             if (previousState?.isEmpty == false) {
-                val saver = StackSavedStateProvider(providerId, stackManager)
-                saver.restoreState(previousState)
+                provider.restoreState(previousState)
             }
         }
+        registry.unregisterSavedStateProvider(providerId)
+        registry.registerSavedStateProvider(key = providerId, provider = provider)
     }
 }

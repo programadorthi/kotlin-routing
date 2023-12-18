@@ -10,6 +10,7 @@ import kotlinx.coroutines.ExperimentalCoroutinesApi
 import kotlinx.coroutines.Job
 import kotlinx.coroutines.test.advanceTimeBy
 import kotlinx.coroutines.test.runTest
+import kotlin.test.BeforeTest
 import kotlin.test.Test
 import kotlin.test.assertEquals
 import kotlin.test.assertFails
@@ -19,6 +20,11 @@ import kotlin.test.assertNull
 
 @OptIn(ExperimentalCoroutinesApi::class)
 class StackRoutingTest {
+
+    @BeforeTest
+    fun beforeEachTest() {
+        StackManager.stackManagerNotifier = null
+    }
 
     @Test
     fun shouldFailWhenMissingStackPlugin() = runTest {
@@ -779,5 +785,48 @@ class StackRoutingTest {
         assertEquals(StackRouteMethod.Pop, result[6].routeMethod)
         assertEquals("path", result[6].name)
         assertEquals(parametersOf("key", "value"), result[6].parameters)
+    }
+
+    @Test
+    fun shouldEmitLastCallAfterRestoration() = runTest {
+        // GIVEN
+        val job = Job()
+        val stackManagerNotifier = FakeStackManagerNotifier()
+        var result: ApplicationCall? = null
+
+        StackManager.stackManagerNotifier = stackManagerNotifier
+
+        routing(parentCoroutineContext = coroutineContext + job) {
+            install(StackRouting)
+
+            push(path = "/path01", name = "path01") {
+                result = call
+            }
+
+            push(path = "/path02", name = "path02") {
+                result = call
+                job.complete()
+            }
+
+            // WHEN (Android restored calls)
+            stackManagerNotifier.callsToRestore += StackApplicationCall.Push(
+                application = application,
+                uri = "/path01",
+            )
+
+            stackManagerNotifier.callsToRestore += StackApplicationCall.Push(
+                application = application,
+                uri = "/path02",
+                parameters = parametersOf("key" to listOf("value")),
+            )
+        }
+        advanceTimeBy(99)
+
+        // THEN
+        assertNotNull(result)
+        assertEquals("/path02", "${result?.uri}")
+        assertEquals("", "${result?.name}")
+        assertEquals(StackRouteMethod.Push, result?.routeMethod)
+        assertEquals(parametersOf("key" to listOf("value")), result?.parameters)
     }
 }

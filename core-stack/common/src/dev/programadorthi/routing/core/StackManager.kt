@@ -3,9 +3,12 @@ package dev.programadorthi.routing.core
 import dev.programadorthi.routing.core.application.Application
 import dev.programadorthi.routing.core.application.ApplicationCall
 import dev.programadorthi.routing.core.application.ApplicationPlugin
+import dev.programadorthi.routing.core.application.ApplicationStarted
 import dev.programadorthi.routing.core.application.ApplicationStopped
 import dev.programadorthi.routing.core.application.createApplicationPlugin
+import dev.programadorthi.routing.core.application.pluginOrNull
 import io.ktor.util.AttributeKey
+import io.ktor.util.KtorDsl
 
 private val StackManagerAttributeKey: AttributeKey<StackManager> =
     AttributeKey("StackManagerAttributeKey")
@@ -28,23 +31,43 @@ public val ApplicationCall.previous: StackApplicationCall?
 /**
  * A plugin that provides a stack manager on each call
  */
-public val StackRouting: ApplicationPlugin<Unit> = createApplicationPlugin("StackRouting") {
-    val stackManager = StackManager(application)
+public val StackRouting: ApplicationPlugin<StackRoutingConfig> = createApplicationPlugin(
+    name = "StackRouting",
+    createConfiguration = ::StackRoutingConfig,
+) {
+    val stackManager = StackManager(application, pluginConfig)
 
     onCall { call ->
         call.stackManager = stackManager
     }
 }
 
-internal class StackManager(val application: Application) {
+@KtorDsl
+public class StackRoutingConfig {
+    /**
+     * Used for Android or other that have process death restoration
+     */
+    public var emitAfterRestoration: Boolean = true
+}
+
+internal class StackManager(
+    val application: Application,
+    private val config: StackRoutingConfig,
+) {
     private val stack = mutableListOf<StackApplicationCall>()
 
     init {
         val environment = application.environment
         val providerId = "${environment.parentRouting}#${environment.rootPath}"
-        register(providerId = providerId, stackManager = this)
-        application.environment.monitor.subscribe(ApplicationStopped) {
-            unregister(providerId)
+        environment.monitor.apply {
+
+            subscribe(ApplicationStarted) {
+                register(providerId = providerId, stackManager = this@StackManager)
+            }
+
+            subscribe(ApplicationStopped) {
+                unregister(providerId)
+            }
         }
     }
 
@@ -101,6 +124,7 @@ internal class StackManager(val application: Application) {
     fun toRestore(previous: List<StackApplicationCall>) {
         stack.clear()
         stack.addAll(previous)
+        tryEmitLastItem()
     }
 
     private fun ApplicationCall.toReplace(): StackApplicationCall = when {
@@ -117,6 +141,16 @@ internal class StackManager(val application: Application) {
             name = name,
             parameters = parameters,
         )
+    }
+
+    // On Android after restoration we need to emit again the last item to notify
+    // We need neglect to avoid put again on the stack
+    private fun tryEmitLastItem() {
+        val item = stack.removeLastOrNull()
+
+        if (!config.emitAfterRestoration || item == null) return
+
+        application.pluginOrNull(Routing)?.execute(item)
     }
 
     internal companion object {
