@@ -65,6 +65,24 @@ public fun Route.pop(
     return method(StackRouteMethod.Pop) { handleInternal(body) }
 }
 
+@KtorDsl
+public fun Route.handleStacked(
+    path: String,
+    name: String? = null,
+    body: PipelineInterceptor<Unit, ApplicationCall>,
+): Route = route(path = path, name = name) { handleStacked(body) }
+
+@KtorDsl
+public fun Route.handleStacked(
+    body: PipelineInterceptor<Unit, ApplicationCall>,
+): Route {
+    push(body)
+    replace(body)
+    replaceAll(body)
+    pop(body)
+    return this
+}
+
 private fun Route.handleInternal(
     body: PipelineInterceptor<Unit, ApplicationCall>,
 ) {

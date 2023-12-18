@@ -16,12 +16,11 @@ public sealed class StackApplicationCall : ApplicationCall, CoroutineScope {
 
     public data class Pop(
         override val application: Application,
+        override val name: String,
         override val uri: String,
         override val parameters: Parameters = Parameters.Empty,
     ) : StackApplicationCall() {
         override val routeMethod: RouteMethod get() = StackRouteMethod.Pop
-
-        override val name: String get() = ""
     }
 
     public data class Push(

@@ -15,6 +15,7 @@ import kotlin.test.assertEquals
 import kotlin.test.assertFails
 import kotlin.test.assertIs
 import kotlin.test.assertNotNull
+import kotlin.test.assertNull
 
 @OptIn(ExperimentalCoroutinesApi::class)
 class StackRoutingTest {
@@ -209,6 +210,39 @@ class StackRoutingTest {
         assertNotNull(result)
         assertEquals("/path", "${result?.uri}")
         assertEquals("", "${result?.name}")
+        assertEquals(StackRouteMethod.Pop, result?.routeMethod)
+        assertEquals(parametersOf("key", "value"), result?.parameters)
+    }
+
+    @Test
+    fun shouldPopNamedRoutes() = runTest {
+        // GIVEN
+        val job = Job()
+        var result: ApplicationCall? = null
+
+        val routing = routing(parentCoroutineContext = coroutineContext + job) {
+            install(StackRouting)
+
+            route(path = "/path", name = "path") {
+                push {}
+                pop {
+                    result = call
+                    job.complete()
+                }
+            }
+        }
+
+        // WHEN
+        // A route must exist to pop
+        routing.pushNamed(name = "path")
+        advanceTimeBy(99)
+        routing.pop(parameters = parametersOf("key", "value"))
+        advanceTimeBy(99)
+
+        // THEN
+        assertNotNull(result)
+        assertEquals("/path", "${result?.uri}")
+        assertEquals("path", "${result?.name}")
         assertEquals(StackRouteMethod.Pop, result?.routeMethod)
         assertEquals(parametersOf("key", "value"), result?.parameters)
     }
@@ -476,7 +510,7 @@ class StackRoutingTest {
         assertEquals("", "${result?.name}")
         assertEquals(StackRouteMethod.Push, result?.routeMethod)
         assertEquals(parametersOf(), result?.parameters)
-        assertEquals("", result?.stackManager?.last())
+        assertNull(result?.previous)
     }
 
     @Test
@@ -504,7 +538,7 @@ class StackRoutingTest {
         assertEquals("", "${result?.name}")
         assertEquals(StackRouteMethod.Push, result?.routeMethod)
         assertEquals(parametersOf(), result?.parameters)
-        assertEquals("/path", result?.stackManager?.last())
+        assertNotNull(result?.previous)
     }
 
     @Test
@@ -597,5 +631,153 @@ class StackRoutingTest {
         assertEquals("", "${result?.name}")
         assertEquals(StackRouteMethod.Push, result?.routeMethod)
         assertEquals(Parameters.Empty, result?.parameters)
+    }
+
+    @Test
+    fun shouldPreviousCallBeNull() = runTest {
+        // GIVEN
+        val job = Job()
+        var result: StackApplicationCall? = null
+
+        val routing = routing(parentCoroutineContext = coroutineContext + job) {
+            install(StackRouting)
+
+            route(path = "/path", name = "path") {
+                push {
+                    result = call.previous
+                }
+            }
+        }
+
+        // WHEN
+        // A route must exist to pop
+        routing.push(path = "/path")
+        advanceTimeBy(99)
+
+        // THEN
+        assertNull(result)
+    }
+
+    @Test
+    fun shouldPreviousCallNotBeNull() = runTest {
+        // GIVEN
+        val job = Job()
+        var result: StackApplicationCall? = null
+
+        val routing = routing(parentCoroutineContext = coroutineContext + job) {
+            install(StackRouting)
+
+            route(path = "/path", name = "path") {
+                push {}
+                pop {
+                    result = call.previous
+                    job.complete()
+                }
+            }
+        }
+
+        // WHEN
+        // A route must exist to pop
+        routing.push(path = "/path")
+        advanceTimeBy(99)
+        routing.pop(parameters = parametersOf("key", "value"))
+        advanceTimeBy(99)
+
+        // THEN
+        assertNotNull(result)
+        assertEquals("/path", "${result?.uri}")
+        assertEquals("", "${result?.name}")
+        assertEquals(StackRouteMethod.Push, result?.routeMethod)
+        assertEquals(parametersOf(), result?.parameters)
+    }
+
+    @Test
+    fun shouldInstallStackManagerRegisterIt() = runTest {
+        // GIVEN
+        val stackManagerNotifier = FakeStackManagerNotifier()
+        StackManager.stackManagerNotifier = stackManagerNotifier
+
+        val routing = routing {
+            // WHEN
+            install(StackRouting)
+        }
+
+        // THEN
+        val environment = routing.environment
+        val providerId = "${environment?.parentRouting}#${environment?.rootPath}"
+        assertEquals(providerId, stackManagerNotifier.subscriptions.keys.first())
+    }
+
+    @Test
+    fun shouldDisposeRoutingUnRegisterStackManager() = runTest {
+        // GIVEN
+        val stackManagerNotifier = FakeStackManagerNotifier()
+        StackManager.stackManagerNotifier = stackManagerNotifier
+
+        val routing = routing {
+            // WHEN
+            install(StackRouting)
+        }
+        val registeredKey = stackManagerNotifier.subscriptions.keys.first()
+        routing.dispose()
+        advanceTimeBy(99)
+
+        // THEN
+        val environment = routing.environment
+        val providerId = "${environment?.parentRouting}#${environment?.rootPath}"
+        assertEquals(providerId, registeredKey)
+        assertEquals(null, stackManagerNotifier.subscriptions.keys.firstOrNull())
+    }
+
+    @Test
+    fun shouldHandleAnyStackAction() = runTest {
+        // GIVEN
+        val job = Job()
+        val result = mutableListOf<ApplicationCall>()
+
+        val routing = routing(parentCoroutineContext = coroutineContext + job) {
+            install(StackRouting)
+
+            handleStacked(path = "/path", name = "path") {
+                result += call
+                if (call.routeMethod == StackRouteMethod.Pop) {
+                    job.complete()
+                }
+            }
+        }
+
+        // WHEN
+        // A route must exist to pop
+        routing.push(path = "/path")
+        advanceTimeBy(99)
+        routing.pushNamed(name = "path")
+        advanceTimeBy(99)
+        routing.replace(path = "/path")
+        advanceTimeBy(99)
+        routing.replaceNamed(name = "path")
+        advanceTimeBy(99)
+        routing.replaceAll(path = "/path")
+        advanceTimeBy(99)
+        routing.replaceAllNamed(name = "path")
+        advanceTimeBy(99)
+        routing.pop(parameters = parametersOf("key", "value"))
+        advanceTimeBy(99)
+
+        // THEN
+        assertEquals(StackRouteMethod.Push, result[0].routeMethod)
+        assertEquals("", result[0].name)
+        assertEquals(StackRouteMethod.Push, result[1].routeMethod)
+        assertEquals("path", result[1].name)
+        assertEquals(StackRouteMethod.Replace, result[2].routeMethod)
+        assertEquals("", result[2].name)
+        assertEquals(StackRouteMethod.Replace, result[3].routeMethod)
+        assertEquals("path", result[3].name)
+        assertEquals(StackRouteMethod.ReplaceAll, result[4].routeMethod)
+        assertEquals("", result[4].name)
+        assertEquals(StackRouteMethod.ReplaceAll, result[5].routeMethod)
+        assertEquals("path", result[5].name)
+        assertEquals(StackRouteMethod.Pop, result[6].routeMethod)
+        assertEquals("path", result[6].name)
+        assertEquals(parametersOf("key", "value"), result[6].parameters)
     }
 }

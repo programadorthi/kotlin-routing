@@ -7,13 +7,14 @@ public fun Routing.pop(
     parameters: Parameters = Parameters.Empty,
     neglect: Boolean = false,
 ) {
+    val lastCall = application.stackManager.lastOrNull() ?: return
     application.launch {
-        val stackManager = application.stackManager
         execute(
             StackApplicationCall.Pop(
                 application = application,
+                name = lastCall.name,
+                uri = lastCall.uri,
                 parameters = parameters,
-                uri = stackManager.last(),
             ).tryNeglect(neglect)
         )
     }

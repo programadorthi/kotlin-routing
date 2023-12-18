@@ -96,21 +96,22 @@ public fun <P : Pipeline<*, ApplicationCall>, B : Any, F : Any> P.install(
     }
 
     val registry = pluginRegistry
+    val log = (this as? ApplicationCallPipeline)?.environment?.log
     return when (val installedPlugin = registry.getOrNull(plugin.key)) {
         null -> {
             try {
                 val installed = plugin.install(this, configure)
                 registry.put(plugin.key, installed)
-                // environment.log.trace("`${plugin.name}` plugin was installed successfully.")
+                log?.trace("`${plugin.key}` plugin was installed successfully.")
                 installed
             } catch (t: Throwable) {
-                // environment.log.error("`${plugin.name}` plugin failed to install.", t)
+                log?.error("`${plugin.key}` plugin failed to install.", t)
                 throw t
             }
         }
 
         plugin -> {
-            // environment.log.warning("`${plugin.name}` plugin is already installed")
+            log?.warn("`${plugin.key}` plugin is already installed")
             installedPlugin
         }
 

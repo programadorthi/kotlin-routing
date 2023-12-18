@@ -6,10 +6,10 @@
 import org.gradle.api.*
 import org.gradle.kotlin.dsl.*
 import org.jetbrains.kotlin.gradle.plugin.*
-import org.jetbrains.kotlin.gradle.targets.native.tasks.*
 import java.io.*
 
 val Project.files: Array<File> get() = project.projectDir.listFiles() ?: emptyArray()
+val Project.hasAndroid: Boolean get() = files.any { it.name == "android" }
 val Project.hasCommon: Boolean get() = files.any { it.name == "common" }
 val Project.hasJvmAndNix: Boolean get() = hasCommon || files.any { it.name == "jvmAndNix" }
 val Project.hasPosix: Boolean get() = hasCommon || files.any { it.name == "posix" }
@@ -24,6 +24,8 @@ val Project.hasNative: Boolean get() = hasCommon || hasNix || hasPosix || hasDar
 fun Project.configureTargets() {
     configureCommon()
     if (hasJvm) configureJvm()
+
+    if (hasAndroid) configureAndroid()
 
     kotlin {
         if (hasJs) {
