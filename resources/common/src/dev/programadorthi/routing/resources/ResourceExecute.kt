@@ -9,7 +9,7 @@ import kotlinx.coroutines.launch
 public inline fun <reified T : Any> Routing.execute(resource: T) {
     val destination = application.href(resource)
     execute(
-        ResourceApplicationCall(
+        ApplicationCall(
             application = application,
             uri = destination
         )
@@ -20,7 +20,7 @@ public inline fun <reified T : Any> ApplicationCall.redirectTo(resource: T) {
     with(application) {
         launch {
             execute(
-                ResourceApplicationCall(
+                ApplicationCall(
                     application = application,
                     uri = href(resource),
                 )

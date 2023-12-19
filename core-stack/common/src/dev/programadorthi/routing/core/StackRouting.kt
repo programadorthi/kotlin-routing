@@ -1,5 +1,6 @@
 package dev.programadorthi.routing.core
 
+import dev.programadorthi.routing.core.application.ApplicationCall
 import io.ktor.http.Parameters
 
 public fun Routing.pop(
@@ -8,11 +9,12 @@ public fun Routing.pop(
 ) {
     val lastCall = application.stackManager.lastOrNull() ?: return
     execute(
-        StackApplicationCall.Pop(
+        ApplicationCall(
             application = application,
             name = lastCall.name,
             uri = lastCall.uri,
             parameters = parameters,
+            routeMethod = StackRouteMethod.Pop,
         ).tryNeglect(neglect)
     )
 }
@@ -23,10 +25,11 @@ public fun Routing.push(
     neglect: Boolean = false,
 ) {
     execute(
-        StackApplicationCall.Push(
+        ApplicationCall(
             application = application,
             uri = path,
             parameters = parameters,
+            routeMethod = StackRouteMethod.Push,
         ).tryNeglect(neglect)
     )
 }
@@ -37,10 +40,11 @@ public fun Routing.pushNamed(
     neglect: Boolean = false,
 ) {
     execute(
-        StackApplicationCall.PushNamed(
+        ApplicationCall(
             application = application,
             name = name,
             parameters = parameters,
+            routeMethod = StackRouteMethod.Push,
         ).tryNeglect(neglect)
     )
 }
@@ -51,11 +55,11 @@ public fun Routing.replace(
     neglect: Boolean = false,
 ) {
     execute(
-        StackApplicationCall.Replace(
+        ApplicationCall(
             application = application,
             uri = path,
             parameters = parameters,
-            all = false,
+            routeMethod = StackRouteMethod.Replace,
         ).tryNeglect(neglect)
     )
 }
@@ -66,11 +70,11 @@ public fun Routing.replaceAll(
     neglect: Boolean = false,
 ) {
     execute(
-        StackApplicationCall.Replace(
+        ApplicationCall(
             application = application,
             uri = path,
             parameters = parameters,
-            all = true,
+            routeMethod = StackRouteMethod.ReplaceAll,
         ).tryNeglect(neglect)
     )
 }
@@ -81,11 +85,11 @@ public fun Routing.replaceNamed(
     neglect: Boolean = false,
 ) {
     execute(
-        StackApplicationCall.ReplaceNamed(
+        ApplicationCall(
             application = application,
             name = name,
             parameters = parameters,
-            all = false,
+            routeMethod = StackRouteMethod.Replace,
         ).tryNeglect(neglect)
     )
 }
@@ -96,16 +100,16 @@ public fun Routing.replaceAllNamed(
     neglect: Boolean = false,
 ) {
     execute(
-        StackApplicationCall.ReplaceNamed(
+        ApplicationCall(
             application = application,
             name = name,
             parameters = parameters,
-            all = true,
+            routeMethod = StackRouteMethod.ReplaceAll,
         ).tryNeglect(neglect)
     )
 }
 
-private fun StackApplicationCall.tryNeglect(neglect: Boolean): StackApplicationCall {
+private fun ApplicationCall.tryNeglect(neglect: Boolean): ApplicationCall {
     stackNeglect = neglect
     return this
 }

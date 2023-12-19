@@ -1,17 +1,14 @@
 package dev.programadorthi.routing.core
 
-import dev.programadorthi.routing.core.application.Application
 import dev.programadorthi.routing.core.application.ApplicationCall
 import dev.programadorthi.routing.core.application.call
 import dev.programadorthi.routing.core.application.createApplicationPlugin
 import dev.programadorthi.routing.core.application.hooks.CallFailed
-import dev.programadorthi.routing.core.application.install
 import dev.programadorthi.routing.core.application.redirectToName
 import dev.programadorthi.routing.core.application.redirectToPath
 import dev.programadorthi.routing.core.errors.RouteNotFoundException
 import io.ktor.http.Parameters
 import io.ktor.http.parametersOf
-import io.ktor.util.Attributes
 import kotlinx.coroutines.ExperimentalCoroutinesApi
 import kotlinx.coroutines.Job
 import kotlinx.coroutines.test.advanceTimeBy
@@ -24,17 +21,6 @@ import kotlin.test.assertNotNull
 
 @OptIn(ExperimentalCoroutinesApi::class)
 class RoutingTest {
-
-    class BasicApplicationCall(
-        override val application: Application,
-        override val name: String = "",
-        override val uri: String = "",
-        override val parameters: Parameters = Parameters.Empty,
-    ) : ApplicationCall {
-        override val attributes: Attributes = Attributes()
-
-        override val routeMethod: RouteMethod get() = RouteMethod.Empty
-    }
 
     @Test
     fun shouldCreateARouteAndHandleIt() = runTest {
@@ -53,7 +39,7 @@ class RoutingTest {
 
         // WHEN
         routing.execute(
-            BasicApplicationCall(
+            ApplicationCall(
                 application = routing.application,
                 uri = "/path",
             )
@@ -83,7 +69,7 @@ class RoutingTest {
 
         // WHEN
         routing.execute(
-            BasicApplicationCall(
+            ApplicationCall(
                 application = routing.application,
                 uri = "/path",
             )
@@ -113,7 +99,7 @@ class RoutingTest {
 
         // WHEN
         routing.execute(
-            BasicApplicationCall(
+            ApplicationCall(
                 application = routing.application,
                 uri = "/path",
                 parameters = parametersOf("key", "values"),
@@ -144,7 +130,7 @@ class RoutingTest {
 
         // WHEN
         routing.execute(
-            BasicApplicationCall(
+            ApplicationCall(
                 application = routing.application,
                 name = "named",
             )
@@ -174,7 +160,7 @@ class RoutingTest {
 
         // WHEN
         routing.execute(
-            BasicApplicationCall(
+            ApplicationCall(
                 application = routing.application,
                 name = "named",
                 parameters = parametersOf("key", "values"),
@@ -205,7 +191,7 @@ class RoutingTest {
 
         // WHEN
         routing.execute(
-            BasicApplicationCall(
+            ApplicationCall(
                 application = routing.application,
                 uri = "/path/123"
             )
@@ -235,7 +221,7 @@ class RoutingTest {
 
         // WHEN
         routing.execute(
-            BasicApplicationCall(
+            ApplicationCall(
                 application = routing.application,
                 name = "named",
                 parameters = parametersOf(
@@ -275,7 +261,7 @@ class RoutingTest {
 
         // WHEN
         routing.execute(
-            BasicApplicationCall(
+            ApplicationCall(
                 application = routing.application,
                 uri = "/path?q=routing&kind=multiplatform"
             )
@@ -316,7 +302,7 @@ class RoutingTest {
 
         // WHEN
         routing.execute(
-            BasicApplicationCall(
+            ApplicationCall(
                 application = routing.application,
                 uri = "/path1"
             )
@@ -351,7 +337,7 @@ class RoutingTest {
 
         // WHEN
         routing.execute(
-            BasicApplicationCall(
+            ApplicationCall(
                 application = routing.application,
                 name = "path1"
             )
@@ -386,7 +372,7 @@ class RoutingTest {
 
         // WHEN
         routing.execute(
-            BasicApplicationCall(
+            ApplicationCall(
                 application = routing.application,
                 name = "path1"
             )
@@ -427,7 +413,7 @@ class RoutingTest {
 
         // WHEN
         routing.execute(
-            BasicApplicationCall(
+            ApplicationCall(
                 application = routing.application,
                 name = "path1"
             )
@@ -465,7 +451,7 @@ class RoutingTest {
 
         // WHEN
         routing.execute(
-            BasicApplicationCall(
+            ApplicationCall(
                 application = routing.application,
                 uri = "/123/hello"
             )
@@ -497,7 +483,7 @@ class RoutingTest {
 
         // WHEN
         routing.execute(
-            BasicApplicationCall(
+            ApplicationCall(
                 application = routing.application,
                 uri = "/456/qwe/rty"
             )
@@ -538,7 +524,7 @@ class RoutingTest {
 
         // WHEN
         routing.execute(
-            BasicApplicationCall(
+            ApplicationCall(
                 application = routing.application,
                 uri = "/ondemand"
             )
@@ -564,7 +550,10 @@ class RoutingTest {
 
         // THEN
         assertIs<IllegalStateException>(result)
-        assertEquals("Child routing cannot have root path with '/' only. Please, provide a path to your child routing", result.message)
+        assertEquals(
+            "Child routing cannot have root path with '/' only. Please, provide a path to your child routing",
+            result.message
+        )
     }
 
     @Test
@@ -587,7 +576,7 @@ class RoutingTest {
 
         // WHEN
         routing.execute(
-            BasicApplicationCall(
+            ApplicationCall(
                 application = routing.application,
                 uri = "/initial/default"
             )
@@ -632,7 +621,7 @@ class RoutingTest {
 
         // WHEN
         routing.execute(
-            BasicApplicationCall(
+            ApplicationCall(
                 application = routing.application,
                 uri = "/middle/inner"
             )
@@ -676,7 +665,7 @@ class RoutingTest {
 
         // WHEN
         routing.execute(
-            BasicApplicationCall(
+            ApplicationCall(
                 application = routing.application,
                 uri = "/middle/inner"
             )
@@ -721,7 +710,7 @@ class RoutingTest {
 
         // WHEN
         routing.execute(
-            BasicApplicationCall(
+            ApplicationCall(
                 application = routing.application,
                 uri = "/initial/default"
             )
@@ -765,7 +754,7 @@ class RoutingTest {
 
         // WHEN
         routing.execute(
-            BasicApplicationCall(
+            ApplicationCall(
                 application = routing.application,
                 uri = "/default"
             )
@@ -810,7 +799,7 @@ class RoutingTest {
 
         // WHEN
         routing.execute(
-            BasicApplicationCall(
+            ApplicationCall(
                 application = routing.application,
                 uri = "/initial/middle/inner"
             )
@@ -855,7 +844,7 @@ class RoutingTest {
 
         // WHEN
         routing.execute(
-            BasicApplicationCall(
+            ApplicationCall(
                 application = routing.application,
                 uri = "/initial/middle/inner"
             )
@@ -899,7 +888,7 @@ class RoutingTest {
 
         // WHEN
         routing.execute(
-            BasicApplicationCall(
+            ApplicationCall(
                 application = routing.application,
                 uri = "/middle/inner"
             )
@@ -952,7 +941,7 @@ class RoutingTest {
 
         // WHEN
         routing.execute(
-            BasicApplicationCall(
+            ApplicationCall(
                 application = routing.application,
                 uri = "/end/content"
             )
@@ -1005,7 +994,7 @@ class RoutingTest {
 
         // WHEN
         routing.execute(
-            BasicApplicationCall(
+            ApplicationCall(
                 application = routing.application,
                 uri = "/initial/middle/end/content"
             )
@@ -1057,7 +1046,7 @@ class RoutingTest {
 
         // WHEN
         routing.execute(
-            BasicApplicationCall(
+            ApplicationCall(
                 application = routing.application,
                 uri = "/middle/end/content"
             )
@@ -1122,7 +1111,7 @@ class RoutingTest {
         // WHEN
         routing.dispose()
         routing.execute(
-            BasicApplicationCall(
+            ApplicationCall(
                 application = routing.application,
                 uri = "/initial/middle/end/content"
             )
@@ -1137,7 +1126,10 @@ class RoutingTest {
         assertEquals(RouteMethod.Empty, result?.routeMethod)
         assertEquals(Parameters.Empty, result?.parameters)
         assertIs<RouteNotFoundException>(exception)
-        assertEquals("No matched subtrees found for: /initial/middle/end/content", exception?.message)
+        assertEquals(
+            "No matched subtrees found for: /initial/middle/end/content",
+            exception?.message
+        )
     }
 
     @Test
@@ -1158,7 +1150,7 @@ class RoutingTest {
 
         // WHEN
         routing.execute(
-            BasicApplicationCall(
+            ApplicationCall(
                 application = routing.application,
                 uri = "/default"
             )
@@ -1190,7 +1182,7 @@ class RoutingTest {
 
         // WHEN
         routing.execute(
-            BasicApplicationCall(
+            ApplicationCall(
                 application = routing.application,
                 uri = "/default"
             )
@@ -1243,7 +1235,7 @@ class RoutingTest {
 
         // WHEN
         routing.execute(
-            BasicApplicationCall(
+            ApplicationCall(
                 application = routing.application,
                 uri = "/inner"
             )
@@ -1298,7 +1290,7 @@ class RoutingTest {
         // WHEN
         routing.dispose()
         firstRouting.execute(
-            BasicApplicationCall(
+            ApplicationCall(
                 application = routing.application,
                 uri = "/middle/inner"
             )
@@ -1331,7 +1323,7 @@ class RoutingTest {
 
         // WHEN
         routing.execute(
-            BasicApplicationCall(
+            ApplicationCall(
                 application = routing.application,
                 uri = "/initial-default"
             )
@@ -1364,7 +1356,7 @@ class RoutingTest {
 
         // WHEN
         routing.execute(
-            BasicApplicationCall(
+            ApplicationCall(
                 application = routing.application,
                 uri = "/end-default"
             )
@@ -1380,45 +1372,46 @@ class RoutingTest {
     }
 
     @Test
-    fun shouldRecognizeChildRouteWhenHavingInnerRoutingAndItPathStartEqualsToParentRouting() = runTest {
-        // GIVEN
-        val job = Job()
-        var result: ApplicationCall? = null
+    fun shouldRecognizeChildRouteWhenHavingInnerRoutingAndItPathStartEqualsToParentRouting() =
+        runTest {
+            // GIVEN
+            val job = Job()
+            var result: ApplicationCall? = null
 
-        val parent = routing(
-            rootPath = "/parent",
-            parentCoroutineContext = coroutineContext + job
-        ) {
-            handle(path = "/parent-default") {}
-        }
-
-        val routing = routing(
-            rootPath = "child",
-            parent = parent,
-            parentCoroutineContext = coroutineContext + job
-        ) {
-            handle(path = "/child-default") {
-                result = call
-                job.complete()
+            val parent = routing(
+                rootPath = "/parent",
+                parentCoroutineContext = coroutineContext + job
+            ) {
+                handle(path = "/parent-default") {}
             }
-        }
 
-        // WHEN
-        routing.execute(
-            BasicApplicationCall(
-                application = routing.application,
-                uri = "/child-default"
+            val routing = routing(
+                rootPath = "child",
+                parent = parent,
+                parentCoroutineContext = coroutineContext + job
+            ) {
+                handle(path = "/child-default") {
+                    result = call
+                    job.complete()
+                }
+            }
+
+            // WHEN
+            routing.execute(
+                ApplicationCall(
+                    application = routing.application,
+                    uri = "/child-default"
+                )
             )
-        )
-        advanceTimeBy(99)
+            advanceTimeBy(99)
 
-        // THEN
-        assertNotNull(result)
-        assertEquals("/child-default", "${result?.uri}")
-        assertEquals("", "${result?.name}")
-        assertEquals(RouteMethod.Empty, result?.routeMethod)
-        assertEquals(Parameters.Empty, result?.parameters)
-    }
+            // THEN
+            assertNotNull(result)
+            assertEquals("/child-default", "${result?.uri}")
+            assertEquals("", "${result?.name}")
+            assertEquals(RouteMethod.Empty, result?.routeMethod)
+            assertEquals(Parameters.Empty, result?.parameters)
+        }
 
     @Test
     fun shouldSupportLargeRootPathWhenHavingInnerRoutingAndRootPathHasMoreSlashLevels() = runTest {
@@ -1446,7 +1439,7 @@ class RoutingTest {
 
         // WHEN
         routing.execute(
-            BasicApplicationCall(
+            ApplicationCall(
                 application = routing.application,
                 uri = "/initial"
             )
@@ -1479,7 +1472,7 @@ class RoutingTest {
 
         // WHEN
         routing.execute(
-            BasicApplicationCall(
+            ApplicationCall(
                 application = routing.application,
                 uri = "/path/path" // Having rootPath and a route with same value your must provide rootPath on the URI
             )
@@ -1516,7 +1509,7 @@ class RoutingTest {
 
         // WHEN
         routing.execute(
-            BasicApplicationCall(
+            ApplicationCall(
                 application = routing.application,
                 uri = "/path/path/path/path" // Having rootPath and a route with same value your must provide rootPath on the URI
             )

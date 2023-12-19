@@ -25,7 +25,7 @@ internal var Application.stackManager: StackManager
         attributes.put(StackManagerAttributeKey, value)
     }
 
-public val ApplicationCall.previous: StackApplicationCall?
+public val ApplicationCall.previous: ApplicationCall?
     get() = stackManager.lastOrNull()
 
 /**
@@ -54,7 +54,7 @@ internal class StackManager(
     val application: Application,
     private val config: StackRoutingConfig,
 ) {
-    private val stack = mutableListOf<StackApplicationCall>()
+    private val stack = mutableListOf<ApplicationCall>()
 
     init {
         val environment = application.environment
@@ -71,7 +71,7 @@ internal class StackManager(
         }
     }
 
-    fun lastOrNull(): StackApplicationCall? = stack.lastOrNull()
+    fun lastOrNull(): ApplicationCall? = stack.lastOrNull()
 
     fun update(call: ApplicationCall) {
         // Check if route should be out of the stack
@@ -81,29 +81,17 @@ internal class StackManager(
 
         when (call.routeMethod) {
             StackRouteMethod.Push -> {
-                stack += when {
-                    call.name.isBlank() -> StackApplicationCall.Push(
-                        application = application,
-                        uri = call.uri,
-                        parameters = call.parameters,
-                    )
-
-                    else -> StackApplicationCall.PushNamed(
-                        application = application,
-                        name = call.name,
-                        parameters = call.parameters,
-                    )
-                }
+                stack += call
             }
 
             StackRouteMethod.Replace -> {
                 stack.removeLastOrNull()
-                stack += call.toReplace()
+                stack += call
             }
 
             StackRouteMethod.ReplaceAll -> {
                 stack.clear()
-                stack += call.toReplace()
+                stack += call
             }
 
             StackRouteMethod.Pop -> {
@@ -117,30 +105,14 @@ internal class StackManager(
         }
     }
 
-    fun toSave(): List<StackApplicationCall> = buildList {
+    fun toSave(): List<ApplicationCall> = buildList {
         addAll(stack)
     }
 
-    fun toRestore(previous: List<StackApplicationCall>) {
+    fun toRestore(previous: List<ApplicationCall>) {
         stack.clear()
         stack.addAll(previous)
         tryEmitLastItem()
-    }
-
-    private fun ApplicationCall.toReplace(): StackApplicationCall = when {
-        name.isBlank() -> StackApplicationCall.Replace(
-            all = routeMethod == StackRouteMethod.ReplaceAll,
-            application = application,
-            uri = uri,
-            parameters = parameters,
-        )
-
-        else -> StackApplicationCall.ReplaceNamed(
-            all = routeMethod == StackRouteMethod.ReplaceAll,
-            application = application,
-            name = name,
-            parameters = parameters,
-        )
     }
 
     // On Android after restoration we need to emit again the last item to notify

@@ -105,3 +105,13 @@ public inline fun <reified T : Any> Route.pop(
     }
     return builtRoute
 }
+
+public inline fun <reified T : Any> Route.handleStacked(
+    noinline body: suspend PipelineContext<Unit, ApplicationCall>.(T) -> Unit
+): Route {
+    push(body)
+    replace(body)
+    replaceAll(body)
+    pop(body)
+    return this
+}

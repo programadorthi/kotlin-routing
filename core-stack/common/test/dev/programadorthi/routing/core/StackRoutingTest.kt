@@ -643,7 +643,7 @@ class StackRoutingTest {
     fun shouldPreviousCallBeNull() = runTest {
         // GIVEN
         val job = Job()
-        var result: StackApplicationCall? = null
+        var result: ApplicationCall? = null
 
         val routing = routing(parentCoroutineContext = coroutineContext + job) {
             install(StackRouting)
@@ -668,7 +668,7 @@ class StackRoutingTest {
     fun shouldPreviousCallNotBeNull() = runTest {
         // GIVEN
         val job = Job()
-        var result: StackApplicationCall? = null
+        var result: ApplicationCall? = null
 
         val routing = routing(parentCoroutineContext = coroutineContext + job) {
             install(StackRouting)
@@ -809,14 +809,16 @@ class StackRoutingTest {
             }
 
             // WHEN (Android restored calls)
-            stackManagerNotifier.callsToRestore += StackApplicationCall.Push(
+            stackManagerNotifier.callsToRestore += ApplicationCall(
                 application = application,
                 uri = "/path01",
+                routeMethod = StackRouteMethod.Push,
             )
 
-            stackManagerNotifier.callsToRestore += StackApplicationCall.Push(
+            stackManagerNotifier.callsToRestore += ApplicationCall(
                 application = application,
                 uri = "/path02",
+                routeMethod = StackRouteMethod.Push,
                 parameters = parametersOf("key" to listOf("value")),
             )
         }

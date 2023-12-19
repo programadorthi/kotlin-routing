@@ -11,10 +11,11 @@ public fun Routing.emitEvent(
     parameters: Parameters = Parameters.Empty,
 ) {
     execute(
-        EventApplicationCall(
+        ApplicationCall(
             application = application,
             uri = name,
             parameters = parameters,
+            routeMethod = EventRouteMethod,
         )
     )
 }

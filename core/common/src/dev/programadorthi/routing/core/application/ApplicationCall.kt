@@ -65,6 +65,27 @@ public var ApplicationCall.receiveType: TypeInfo
         attributes.put(RECEIVE_TYPE_KEY, value)
     }
 
+public fun ApplicationCall(
+    application: Application,
+    name: String = "",
+    uri: String = "",
+    routeMethod: RouteMethod = RouteMethod.Empty,
+    attributes: Attributes = Attributes(),
+    parameters: Parameters = Parameters.Empty,
+): ApplicationCall {
+    check(name.isNotBlank() || uri.isNotBlank()) {
+        "No name or uri provided to create an ApplicationCall"
+    }
+    return ApplicationCallImpl(
+        application = application,
+        name = name,
+        routeMethod = routeMethod,
+        uri = uri,
+        attributes = attributes,
+        parameters = parameters,
+    )
+}
+
 public fun ApplicationCall.redirectToName(name: String, parameters: Parameters = Parameters.Empty) {
     redirect(path = "", name = name, parameters = parameters)
 }
@@ -88,3 +109,12 @@ private fun ApplicationCall.redirect(path: String, name: String, parameters: Par
         }
     }
 }
+
+private data class ApplicationCallImpl(
+    override val application: Application,
+    override val routeMethod: RouteMethod,
+    override val name: String,
+    override val uri: String,
+    override val attributes: Attributes,
+    override val parameters: Parameters,
+) : ApplicationCall

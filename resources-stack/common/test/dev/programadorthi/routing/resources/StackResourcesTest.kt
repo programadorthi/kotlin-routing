@@ -258,4 +258,47 @@ class StackResourcesTest {
         assertEquals(parametersOf("id", "1"), result?.parameters)
         assertEquals(listOf(3, 2, 1), ids.map { it.id })
     }
+
+    @Test
+    fun shouldHandleAnyStackAction() = runTest {
+        // GIVEN
+        val job = Job()
+        val result = mutableListOf<Pair<ApplicationCall, Path.Id>>()
+
+        val routing = routing(parentCoroutineContext = coroutineContext + job) {
+            install(Resources)
+            install(StackRouting)
+
+            handleStacked<Path.Id> { id ->
+                result += call to id
+                if (call.routeMethod == StackRouteMethod.Pop) {
+                    job.complete()
+                }
+            }
+        }
+
+        // WHEN
+        routing.push(Path.Id(id = 1))
+        advanceTimeBy(99)
+        routing.push(Path.Id(id = 2))
+        advanceTimeBy(99)
+        routing.replace(Path.Id(id = 3))
+        advanceTimeBy(99)
+        routing.replaceAll(Path.Id(id = 4))
+        advanceTimeBy(99)
+        routing.pop()
+        advanceTimeBy(99)
+
+        // THEN
+        assertEquals(StackRouteMethod.Push, result[0].first.routeMethod)
+        assertEquals(1, result[0].second.id)
+        assertEquals(StackRouteMethod.Push, result[1].first.routeMethod)
+        assertEquals(2, result[1].second.id)
+        assertEquals(StackRouteMethod.Replace, result[2].first.routeMethod)
+        assertEquals(3, result[2].second.id)
+        assertEquals(StackRouteMethod.ReplaceAll, result[3].first.routeMethod)
+        assertEquals(4, result[3].second.id)
+        assertEquals(StackRouteMethod.Pop, result[4].first.routeMethod)
+        assertEquals(4, result[4].second.id)
+    }
 }
