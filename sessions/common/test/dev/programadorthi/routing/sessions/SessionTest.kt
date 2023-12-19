@@ -1,16 +1,12 @@
 package dev.programadorthi.routing.sessions
 
-import dev.programadorthi.routing.core.RouteMethod
 import dev.programadorthi.routing.core.application
-import dev.programadorthi.routing.core.application.Application
 import dev.programadorthi.routing.core.application.ApplicationCall
 import dev.programadorthi.routing.core.application.call
 import dev.programadorthi.routing.core.application.redirectToPath
 import dev.programadorthi.routing.core.handle
 import dev.programadorthi.routing.core.install
 import dev.programadorthi.routing.core.routing
-import io.ktor.http.Parameters
-import io.ktor.util.Attributes
 import kotlinx.coroutines.ExperimentalCoroutinesApi
 import kotlinx.coroutines.Job
 import kotlinx.coroutines.test.advanceTimeBy
@@ -22,17 +18,6 @@ import kotlin.test.assertNull
 
 @OptIn(ExperimentalCoroutinesApi::class)
 class SessionTest {
-
-    class BasicApplicationCall(
-        override val application: Application,
-        override val name: String = "",
-        override val uri: String = "",
-        override val parameters: Parameters = Parameters.Empty,
-    ) : ApplicationCall {
-        override val attributes: Attributes = Attributes()
-
-        override val routeMethod: RouteMethod get() = RouteMethod.Empty
-    }
 
     @Test
     fun shouldHaveASessionWhenLoggedIn() = runTest {
@@ -58,7 +43,7 @@ class SessionTest {
 
         // WHEN
         routing.execute(
-            BasicApplicationCall(
+            ApplicationCall(
                 application = routing.application,
                 uri = "/login"
             )
@@ -99,7 +84,7 @@ class SessionTest {
 
         // WHEN
         routing.execute(
-            BasicApplicationCall(
+            ApplicationCall(
                 application = routing.application,
                 uri = "/login"
             )
@@ -144,7 +129,7 @@ class SessionTest {
 
         // WHEN
         routing.execute(
-            BasicApplicationCall(
+            ApplicationCall(
                 application = routing.application,
                 uri = "/login"
             )
@@ -187,7 +172,7 @@ class SessionTest {
 
         // WHEN
         parent.execute(
-            BasicApplicationCall(
+            ApplicationCall(
                 application = parent.application,
                 uri = "/login"
             )
@@ -234,7 +219,7 @@ class SessionTest {
 
         // WHEN
         routing.execute(
-            BasicApplicationCall(
+            ApplicationCall(
                 application = routing.application,
                 uri = "/login"
             )

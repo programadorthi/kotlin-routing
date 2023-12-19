@@ -22,8 +22,7 @@ val router = routing {
 
 // And to call login routing...
 router.execute(
-    call = MyCustomApplicationCall(
-        routeMethod = MyCustomRouteMethod(),
+    call = ApplicationCall(
         uri = "/login"
     )
 )
@@ -32,7 +31,7 @@ router.execute(
 ## Core-stack module
 
 This module is a core extension providing Stack based behaviors (push, pop, replace, ...)
-So, if you need stack behaviors and avoid creating your custom ApplicationCall? It is for you.
+So, if you need stack behaviors it is for you.
 
 > Keep reading to see how use stack routing
 
@@ -108,6 +107,7 @@ val routeMethod = call.routeMethod
 val uri = call.uri
 val attributes = call.attributes
 val parameters = call.parameters // routing parameters (see Routing routes) plus query parameters when provided
+val previous = call.previous // Available using core-stack to get the last emitted ApplicationCall
 ```
 
 ### Redirecting route
@@ -231,10 +231,9 @@ val router = routing {
     }
 }
 
-// Pushing to simulate
+// And to simulate
 router.execute(
-    call = MyCustomApplicationCall(
-        routeMethod = MyCustomRouteMethod(),
+    call = ApplicationCall(
         uri = "/path"
     )
 )
@@ -262,8 +261,8 @@ router.emitEvent(
 
 ## Nested Routing
 
-With nested routing you can connect one `Routing`. It is good for projects that demand loading routes on demand 
-as Android Dynamic Feature that each module has your own navigation and are load at runtime.
+With nested routing you can connect one `Routing` to another. It is good for projects that have routes on demand 
+as Android Dynamic Feature that each module has your own navigation and are loaded at runtime.
 Checkout `RoutingTest` for more usages.
 
 ```kotlin
@@ -277,7 +276,7 @@ val router = routing(
 
 ## Limitations
 
-- Nested routing with type-safe not support navigation from parent to child using the Type. You have to use path routing.
+- Any type-safe behavior combined with Nested routing does not support navigation from parent to child using the Type. You have to use path routing.
 ```kotlin
 @Resource("/endpoint")
 class Endpoint
@@ -300,5 +299,5 @@ router.execute(Endpoint())
 parent.execute(Endpoint())
 
 // IT WORKS
-parent.execute(YourCustomCall(uri = "/child/endpoint"))
+parent.execute(ApplicationCall(uri = "/child/endpoint"))
 ```

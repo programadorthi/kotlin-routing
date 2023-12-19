@@ -2,7 +2,6 @@ package dev.programadorthi.routing.auth
 
 import dev.programadorthi.routing.core.RouteMethod
 import dev.programadorthi.routing.core.application
-import dev.programadorthi.routing.core.application.Application
 import dev.programadorthi.routing.core.application.ApplicationCall
 import dev.programadorthi.routing.core.application.call
 import dev.programadorthi.routing.core.handle
@@ -12,7 +11,6 @@ import dev.programadorthi.routing.sessions.Sessions
 import dev.programadorthi.routing.sessions.session
 import dev.programadorthi.routing.statuspages.StatusPages
 import io.ktor.http.Parameters
-import io.ktor.util.Attributes
 import kotlinx.coroutines.ExperimentalCoroutinesApi
 import kotlinx.coroutines.Job
 import kotlinx.coroutines.channels.Channel
@@ -35,17 +33,6 @@ class AuthTest {
         companion object {
             const val NAME = "user-id-principal"
         }
-    }
-
-    class BasicApplicationCall(
-        override val application: Application,
-        override val name: String = "",
-        override val uri: String = "",
-        override val parameters: Parameters = Parameters.Empty,
-    ) : ApplicationCall {
-        override val attributes: Attributes = Attributes()
-
-        override val routeMethod: RouteMethod get() = RouteMethod.Empty
     }
 
     @Test
@@ -79,7 +66,7 @@ class AuthTest {
 
         // WHEN
         routing.execute(
-            BasicApplicationCall(
+            ApplicationCall(
                 application = routing.application,
                 uri = "/user"
             )
@@ -115,7 +102,7 @@ class AuthTest {
 
         // WHEN
         routing.execute(
-            BasicApplicationCall(
+            ApplicationCall(
                 application = routing.application,
                 uri = "/user"
             )
@@ -159,7 +146,7 @@ class AuthTest {
 
         // WHEN
         routing.execute(
-            BasicApplicationCall(
+            ApplicationCall(
                 application = routing.application,
                 uri = "/user"
             )
@@ -201,7 +188,7 @@ class AuthTest {
 
         // WHEN
         routing.execute(
-            BasicApplicationCall(
+            ApplicationCall(
                 application = routing.application,
                 uri = "/user"
             )
@@ -252,7 +239,7 @@ class AuthTest {
 
         // WHEN
         routing.execute(
-            BasicApplicationCall(
+            ApplicationCall(
                 application = routing.application,
                 uri = "/user"
             )
@@ -308,7 +295,7 @@ class AuthTest {
 
         // WHEN
         routing.execute(
-            BasicApplicationCall(
+            ApplicationCall(
                 application = routing.application,
                 uri = "/user"
             )
@@ -369,7 +356,7 @@ class AuthTest {
 
         // WHEN
         routing.execute(
-            BasicApplicationCall(
+            ApplicationCall(
                 application = routing.application,
                 uri = "/user"
             )
@@ -421,7 +408,7 @@ class AuthTest {
 
         // WHEN
         routing.execute(
-            BasicApplicationCall(
+            ApplicationCall(
                 application = routing.application,
                 uri = "/user"
             )
@@ -509,7 +496,7 @@ class AuthTest {
 
         // WHEN
         routing.execute(
-            BasicApplicationCall(
+            ApplicationCall(
                 application = routing.application,
                 uri = "/user"
             )
@@ -578,14 +565,14 @@ class AuthTest {
 
         // WHEN
         routing.execute(
-            BasicApplicationCall(
+            ApplicationCall(
                 application = routing.application,
                 uri = "/parent"
             )
         )
         advanceTimeBy(99)
         routing.execute(
-            BasicApplicationCall(
+            ApplicationCall(
                 application = routing.application,
                 uri = "/child"
             )

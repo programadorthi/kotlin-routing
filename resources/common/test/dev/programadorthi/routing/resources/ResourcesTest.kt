@@ -2,7 +2,6 @@ package dev.programadorthi.routing.resources
 
 import dev.programadorthi.routing.core.RouteMethod
 import dev.programadorthi.routing.core.application
-import dev.programadorthi.routing.core.application.Application
 import dev.programadorthi.routing.core.application.ApplicationCall
 import dev.programadorthi.routing.core.application.call
 import dev.programadorthi.routing.core.install
@@ -10,7 +9,6 @@ import dev.programadorthi.routing.core.routing
 import io.ktor.http.Parameters
 import io.ktor.http.parametersOf
 import io.ktor.resources.Resource
-import io.ktor.util.Attributes
 import kotlinx.coroutines.ExperimentalCoroutinesApi
 import kotlinx.coroutines.Job
 import kotlinx.coroutines.test.advanceTimeBy
@@ -206,17 +204,6 @@ class ResourcesTest {
     @Test
     fun shouldHandleChildEventWhenCallingFromParent() = runTest {
         // GIVEN
-        class BasicApplicationCall(
-            override val application: Application,
-            override val name: String = "",
-            override val uri: String = "",
-            override val parameters: Parameters = Parameters.Empty,
-        ) : ApplicationCall {
-            override val attributes: Attributes = Attributes()
-
-            override val routeMethod: RouteMethod get() = RouteMethod.Empty
-        }
-
         val job = Job()
         var result: ApplicationCall? = null
 
@@ -246,7 +233,7 @@ class ResourcesTest {
         // WHEN
         // TODO: For now, parent looking for child is not supported using the type. We need to use path based
         parent.execute(
-            BasicApplicationCall(
+            ApplicationCall(
                 application = parent.application,
                 uri = "/resources/path"
             )

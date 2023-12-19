@@ -2,17 +2,14 @@ package dev.programadorthi.routing.statuspages
 
 import dev.programadorthi.routing.core.RouteMethod
 import dev.programadorthi.routing.core.application
-import dev.programadorthi.routing.core.application.Application
 import dev.programadorthi.routing.core.application.ApplicationCall
 import dev.programadorthi.routing.core.application.call
-import dev.programadorthi.routing.core.application.path
 import dev.programadorthi.routing.core.application.redirectToPath
 import dev.programadorthi.routing.core.errors.RouteNotFoundException
 import dev.programadorthi.routing.core.handle
 import dev.programadorthi.routing.core.install
 import dev.programadorthi.routing.core.routing
 import io.ktor.http.Parameters
-import io.ktor.util.Attributes
 import kotlinx.coroutines.ExperimentalCoroutinesApi
 import kotlinx.coroutines.Job
 import kotlinx.coroutines.test.advanceTimeBy
@@ -23,17 +20,6 @@ import kotlin.test.assertIs
 
 @OptIn(ExperimentalCoroutinesApi::class)
 class StatusPagesTest {
-
-    class BasicApplicationCall(
-        override val application: Application,
-        override val name: String = "",
-        override val uri: String = "",
-        override val parameters: Parameters = Parameters.Empty,
-    ) : ApplicationCall {
-        override val attributes: Attributes = Attributes()
-
-        override val routeMethod: RouteMethod get() = RouteMethod.Empty
-    }
 
     @Test
     fun shouldHandleAnyException() = runTest {
@@ -56,7 +42,7 @@ class StatusPagesTest {
 
         // WHEN
         routing.execute(
-            BasicApplicationCall(
+            ApplicationCall(
                 application = routing.application,
                 uri = "/exception",
             )
@@ -89,7 +75,7 @@ class StatusPagesTest {
 
         // WHEN
         routing.execute(
-            BasicApplicationCall(
+            ApplicationCall(
                 application = routing.application,
                 uri = "/not-registered-path",
             )
@@ -128,7 +114,7 @@ class StatusPagesTest {
 
         // WHEN
         routing.execute(
-            BasicApplicationCall(
+            ApplicationCall(
                 application = routing.application,
                 uri = "/not-registered-path",
             )
