@@ -1,7 +1,6 @@
 package dev.programadorthi.routing.core
 
 import dev.programadorthi.routing.core.application.ApplicationCall
-import dev.programadorthi.routing.core.application.call
 import dev.programadorthi.routing.core.application.pluginOrNull
 import io.ktor.util.KtorDsl
 import io.ktor.util.pipeline.PipelineInterceptor
@@ -88,7 +87,6 @@ private fun Route.handleInternal(
 ) {
     handle {
         body(this, Unit)
-        call.stackManager.update(call)
     }
 }
 

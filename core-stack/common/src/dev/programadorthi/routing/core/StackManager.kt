@@ -6,18 +6,14 @@ import dev.programadorthi.routing.core.application.ApplicationPlugin
 import dev.programadorthi.routing.core.application.ApplicationStarted
 import dev.programadorthi.routing.core.application.ApplicationStopped
 import dev.programadorthi.routing.core.application.createApplicationPlugin
+import dev.programadorthi.routing.core.application.hooks.ResponseSent
 import dev.programadorthi.routing.core.application.pluginOrNull
 import io.ktor.util.AttributeKey
 import io.ktor.util.KtorDsl
+import io.ktor.util.pipeline.PipelineContext
 
 private val StackManagerAttributeKey: AttributeKey<StackManager> =
     AttributeKey("StackManagerAttributeKey")
-
-internal var ApplicationCall.stackManager: StackManager
-    get() = application.stackManager
-    private set(value) {
-        application.stackManager = value
-    }
 
 internal var Application.stackManager: StackManager
     get() = attributes[StackManagerAttributeKey]
@@ -25,8 +21,11 @@ internal var Application.stackManager: StackManager
         attributes.put(StackManagerAttributeKey, value)
     }
 
-public val ApplicationCall.previous: ApplicationCall?
-    get() = stackManager.lastOrNull()
+public fun PipelineContext<*, *>.previousCall(): ApplicationCall? {
+    val call = context as? ApplicationCall
+        ?: error("You can't get previous ApplicationCall out of a PipelineContext")
+    return call.application.stackManager.lastOrNull()
+}
 
 /**
  * A plugin that provides a stack manager on each call
@@ -37,8 +36,10 @@ public val StackRouting: ApplicationPlugin<StackRoutingConfig> = createApplicati
 ) {
     val stackManager = StackManager(application, pluginConfig)
 
-    onCall { call ->
-        call.stackManager = stackManager
+    application.stackManager = stackManager
+
+    on(ResponseSent) { call ->
+        stackManager.update(call)
     }
 }
 
@@ -97,7 +98,7 @@ internal class StackManager(
             StackRouteMethod.Pop -> {
                 // Pop in a valid state only
                 if (call.uri == stack.lastOrNull()?.uri) {
-                    stack.removeLast()
+                    stack.removeLastOrNull()
                 }
             }
 

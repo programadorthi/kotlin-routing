@@ -516,7 +516,6 @@ class StackRoutingTest {
         assertEquals("", "${result?.name}")
         assertEquals(StackRouteMethod.Push, result?.routeMethod)
         assertEquals(parametersOf(), result?.parameters)
-        assertNull(result?.previous)
     }
 
     @Test
@@ -544,7 +543,6 @@ class StackRoutingTest {
         assertEquals("", "${result?.name}")
         assertEquals(StackRouteMethod.Push, result?.routeMethod)
         assertEquals(parametersOf(), result?.parameters)
-        assertNotNull(result?.previous)
     }
 
     @Test
@@ -650,13 +648,12 @@ class StackRoutingTest {
 
             route(path = "/path", name = "path") {
                 push {
-                    result = call.previous
+                    result = previousCall()
                 }
             }
         }
 
         // WHEN
-        // A route must exist to pop
         routing.push(path = "/path")
         advanceTimeBy(99)
 
@@ -676,7 +673,7 @@ class StackRoutingTest {
             route(path = "/path", name = "path") {
                 push {}
                 pop {
-                    result = call.previous
+                    result = previousCall()
                     job.complete()
                 }
             }
