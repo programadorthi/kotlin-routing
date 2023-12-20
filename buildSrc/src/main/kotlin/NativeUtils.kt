@@ -34,7 +34,6 @@ fun Project.iosTargets(): List<String> = fastOr {
         listOf(
             iosX64(),
             iosArm64(),
-            iosArm32(),
             iosSimulatorArm64(),
         ).map { it.name }
     }

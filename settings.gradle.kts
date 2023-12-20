@@ -23,6 +23,7 @@ rootProject.name = "kotlin-routing"
 
 include(":auth")
 include(":call-logging")
+include(":compose")
 include(":core")
 include(":core-stack")
 include(":events")
