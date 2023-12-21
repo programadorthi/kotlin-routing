@@ -16,7 +16,9 @@ public fun Route.route(
     path: String,
     name: String? = null,
     build: Route.() -> Unit
-): Route = createRouteFromPath(path, name).apply(build).registerToParents(null, build)
+): Route = createRouteFromPath(path, name)
+    .apply(build)
+    .registerToParents(null, build)
 
 /**
  * Builds a route to match the specified [RouteMethod] and [path].
@@ -29,7 +31,10 @@ public fun Route.route(
     build: Route.() -> Unit,
 ): Route {
     val selector = RouteMethodRouteSelector(method)
-    return createRouteFromPath(path, name).createChild(selector).apply(build).registerToParents(selector, build)
+    return createRouteFromPath(path, name)
+        .createChild(selector)
+        .apply(build)
+        .registerToParents(selector, build)
 }
 
 /**
@@ -38,7 +43,9 @@ public fun Route.route(
 @KtorDsl
 public fun Route.method(method: RouteMethod, body: Route.() -> Unit): Route {
     val selector = RouteMethodRouteSelector(method)
-    return createChild(selector).apply(body).registerToParents(selector, body)
+    return createChild(selector)
+        .apply(body)
+        .registerToParents(selector, body)
 }
 
 @KtorDsl
@@ -47,6 +54,14 @@ public fun Route.handle(
     name: String? = null,
     body: PipelineInterceptor<Unit, ApplicationCall>,
 ): Route = route(path, name) { handle(body) }
+
+@KtorDsl
+public fun Route.handle(
+    path: String,
+    method: RouteMethod,
+    name: String? = null,
+    body: PipelineInterceptor<Unit, ApplicationCall>,
+): Route = route(path = path, name = name, method = method) { handle(body) }
 
 /**
  * Creates a routing entry for the specified path and name
@@ -121,7 +136,7 @@ internal object PathSegmentSelectorBuilder {
     /**
      * Builds a [RouteSelector] to match a path segment parameter with a prefix/suffix and name.
      */
-    public fun parseParameter(value: String): RouteSelector {
+    fun parseParameter(value: String): RouteSelector {
         val prefixIndex = value.indexOf('{')
         val suffixIndex = value.lastIndexOf('}')
 
@@ -151,7 +166,7 @@ internal object PathSegmentSelectorBuilder {
     /**
      * Builds a [RouteSelector] to match a constant or wildcard segment parameter.
      */
-    public fun parseConstant(value: String): RouteSelector = when (value) {
+    fun parseConstant(value: String): RouteSelector = when (value) {
         "*" -> PathSegmentWildcardRouteSelector
         else -> PathSegmentConstantRouteSelector(value)
     }
@@ -159,7 +174,7 @@ internal object PathSegmentSelectorBuilder {
     /**
      * Parses a name out of segment specification.
      */
-    public fun parseName(value: String): String {
+    fun parseName(value: String): String {
         val prefix = value.substringBefore('{', "")
         val suffix = value.substringAfterLast('}', "")
         val signature = value.substring(prefix.length + 1, value.length - suffix.length - 1)

@@ -38,7 +38,7 @@ class StackResourcesTest {
             install(Resources)
             install(StackRouting)
 
-            push<Path> {
+            handle<Path> {
                 result = call
                 path = it
                 job.complete()
@@ -69,7 +69,7 @@ class StackResourcesTest {
             install(Resources)
             install(StackRouting)
 
-            replace<Path> {
+            handle<Path> {
                 result = call
                 path = it
                 job.complete()
@@ -100,7 +100,7 @@ class StackResourcesTest {
             install(Resources)
             install(StackRouting)
 
-            replaceAll<Path> {
+            handle<Path> {
                 result = call
                 path = it
                 job.complete()
@@ -131,7 +131,7 @@ class StackResourcesTest {
             install(Resources)
             install(StackRouting)
 
-            push<Path.Id> {
+            handle<Path.Id> {
                 result = call
                 id = it
                 job.complete()
@@ -162,7 +162,7 @@ class StackResourcesTest {
             install(Resources)
             install(StackRouting)
 
-            replace<Path.Id> {
+            handle<Path.Id> {
                 result = call
                 id = it
                 job.complete()
@@ -193,7 +193,7 @@ class StackResourcesTest {
             install(Resources)
             install(StackRouting)
 
-            replaceAll<Path.Id> {
+            handle<Path.Id> {
                 result = call
                 id = it
                 job.complete()
@@ -224,15 +224,9 @@ class StackResourcesTest {
             install(Resources)
             install(StackRouting)
 
-            push<Path.Id> {
-            }
-
-            pop<Path.Id> {
+            handle<Path.Id> {
                 result = call
                 ids += it
-                if (ids.size >= 3) {
-                    job.complete()
-                }
             }
         }
 
@@ -256,7 +250,7 @@ class StackResourcesTest {
         assertEquals("", "${result?.name}")
         assertEquals(StackRouteMethod.Pop, result?.routeMethod)
         assertEquals(parametersOf("id", "1"), result?.parameters)
-        assertEquals(listOf(3, 2, 1), ids.map { it.id })
+        assertEquals(listOf(1, 2, 3, 3, 2, 1), ids.map { it.id })
     }
 
     @Test
@@ -269,7 +263,7 @@ class StackResourcesTest {
             install(Resources)
             install(StackRouting)
 
-            handleStacked<Path.Id> { id ->
+            handle<Path.Id> { id ->
                 result += call to id
                 if (call.routeMethod == StackRouteMethod.Pop) {
                     job.complete()

@@ -6,6 +6,7 @@ import dev.programadorthi.routing.core.application.ApplicationPlugin
 import dev.programadorthi.routing.core.application.ApplicationStarted
 import dev.programadorthi.routing.core.application.ApplicationStopped
 import dev.programadorthi.routing.core.application.createApplicationPlugin
+import dev.programadorthi.routing.core.application.hooks.CallSetup
 import dev.programadorthi.routing.core.application.hooks.ResponseSent
 import dev.programadorthi.routing.core.application.pluginOrNull
 import io.ktor.util.AttributeKey
@@ -21,10 +22,22 @@ internal var Application.stackManager: StackManager
         attributes.put(StackManagerAttributeKey, value)
     }
 
+internal var ApplicationCall.stackManager: StackManager
+    get() = application.stackManager
+    private set(value) {
+        application.stackManager = value
+    }
+
+internal fun Application.checkPluginInstalled() {
+    checkNotNull(pluginOrNull(StackRouting)) {
+        "StackRouting plugin not installed"
+    }
+}
+
 public fun PipelineContext<*, *>.previousCall(): ApplicationCall? {
     val call = context as? ApplicationCall
         ?: error("You can't get previous ApplicationCall out of a PipelineContext")
-    return call.application.stackManager.lastOrNull()
+    return call.stackManager.lastOrNull()
 }
 
 /**
@@ -36,10 +49,15 @@ public val StackRouting: ApplicationPlugin<StackRoutingConfig> = createApplicati
 ) {
     val stackManager = StackManager(application, pluginConfig)
 
-    application.stackManager = stackManager
+    on(CallSetup) { call ->
+        if (call.routeMethod is StackRouteMethod) {
+            call.application.checkPluginInstalled()
+        }
+        call.stackManager = stackManager
+    }
 
     on(ResponseSent) { call ->
-        stackManager.update(call)
+        call.stackManager.update(call)
     }
 }
 

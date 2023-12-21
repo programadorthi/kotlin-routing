@@ -24,7 +24,8 @@ import io.ktor.util.pipeline.PipelineInterceptor
  * ```
  */
 @KtorDsl
-public fun Route.route(path: Regex, build: Route.() -> Unit): Route = createRouteFromRegexPath(path).apply(build)
+public fun Route.route(path: Regex, build: Route.() -> Unit): Route =
+    createRouteFromRegexPath(path).apply(build)
 
 /**
  * Builds a route to match the specified HTTP [method] and regex [path].
@@ -52,13 +53,23 @@ public fun Route.handle(
     body: PipelineInterceptor<Unit, ApplicationCall>,
 ): Route = route(path) { handle(body) }
 
+@KtorDsl
+public fun Route.handle(
+    path: Regex,
+    method: RouteMethod,
+    body: PipelineInterceptor<Unit, ApplicationCall>,
+): Route = route(path, method) { handle(body) }
+
 private fun Route.createRouteFromRegexPath(regex: Regex): Route {
     return this.createChild(PathSegmentRegexRouteSelector(regex))
 }
 
 public class PathSegmentRegexRouteSelector(private val regex: Regex) : RouteSelector() {
 
-    override fun evaluate(context: RoutingResolveContext, segmentIndex: Int): RouteSelectorEvaluation {
+    override fun evaluate(
+        context: RoutingResolveContext,
+        segmentIndex: Int
+    ): RouteSelectorEvaluation {
         val prefix = if (regex.pattern.startsWith('/')) "/" else ""
         val postfix = if (regex.pattern.endsWith('/')) "/" else ""
         val pathSegments = context.segments.drop(segmentIndex).joinToString("/", prefix, postfix)

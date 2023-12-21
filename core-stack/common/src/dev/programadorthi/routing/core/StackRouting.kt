@@ -7,6 +7,7 @@ public fun Routing.pop(
     parameters: Parameters = Parameters.Empty,
     neglect: Boolean = false,
 ) {
+    application.checkPluginInstalled()
     val lastCall = application.stackManager.lastOrNull() ?: return
     execute(
         ApplicationCall(
@@ -24,6 +25,7 @@ public fun Routing.push(
     parameters: Parameters = Parameters.Empty,
     neglect: Boolean = false,
 ) {
+    application.checkPluginInstalled()
     execute(
         ApplicationCall(
             application = application,
@@ -39,6 +41,7 @@ public fun Routing.pushNamed(
     parameters: Parameters = Parameters.Empty,
     neglect: Boolean = false,
 ) {
+    application.checkPluginInstalled()
     execute(
         ApplicationCall(
             application = application,
@@ -54,6 +57,7 @@ public fun Routing.replace(
     parameters: Parameters = Parameters.Empty,
     neglect: Boolean = false,
 ) {
+    application.checkPluginInstalled()
     execute(
         ApplicationCall(
             application = application,
@@ -69,6 +73,7 @@ public fun Routing.replaceAll(
     parameters: Parameters = Parameters.Empty,
     neglect: Boolean = false,
 ) {
+    application.checkPluginInstalled()
     execute(
         ApplicationCall(
             application = application,
@@ -84,6 +89,7 @@ public fun Routing.replaceNamed(
     parameters: Parameters = Parameters.Empty,
     neglect: Boolean = false,
 ) {
+    application.checkPluginInstalled()
     execute(
         ApplicationCall(
             application = application,
@@ -99,6 +105,7 @@ public fun Routing.replaceAllNamed(
     parameters: Parameters = Parameters.Empty,
     neglect: Boolean = false,
 ) {
+    application.checkPluginInstalled()
     execute(
         ApplicationCall(
             application = application,

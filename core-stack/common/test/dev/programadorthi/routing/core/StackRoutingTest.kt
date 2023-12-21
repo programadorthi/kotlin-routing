@@ -28,13 +28,14 @@ class StackRoutingTest {
 
     @Test
     fun shouldFailWhenMissingStackPlugin() = runTest {
+        // GIVEN
+        val routing = routing {
+            route(path = "/path") {}
+        }
+
         // WHEN
         val result = assertFails {
-            routing {
-                route(path = "/path") {
-                    push { }
-                }
-            }
+            routing.push(path = "/path")
         }
 
         // THEN
@@ -52,7 +53,7 @@ class StackRoutingTest {
             install(StackRouting)
 
             route(path = "/path") {
-                push {
+                handle {
                     result = call
                     job.complete()
                 }
@@ -81,7 +82,7 @@ class StackRoutingTest {
             install(StackRouting)
 
             route(path = "/path") {
-                push {
+                handle {
                     result = call
                     job.complete()
                 }
@@ -110,7 +111,7 @@ class StackRoutingTest {
             install(StackRouting)
 
             route(path = "/path", name = "path") {
-                push {
+                handle {
                     result = call
                     job.complete()
                 }
@@ -139,7 +140,7 @@ class StackRoutingTest {
             install(StackRouting)
 
             route(path = "/path", name = "path") {
-                push {
+                handle {
                     result = call
                     job.complete()
                 }
@@ -168,7 +169,7 @@ class StackRoutingTest {
             install(StackRouting)
 
             route(path = "/path/{id}", name = "path") {
-                push {
+                handle {
                     result = call
                     job.complete()
                 }
@@ -197,8 +198,7 @@ class StackRoutingTest {
             install(StackRouting)
 
             route(path = "/path", name = "path") {
-                push {}
-                pop {
+                handle {
                     result = call
                     job.complete()
                 }
@@ -230,8 +230,7 @@ class StackRoutingTest {
             install(StackRouting)
 
             route(path = "/path", name = "path") {
-                push {}
-                pop {
+                handle {
                     result = call
                     job.complete()
                 }
@@ -260,6 +259,8 @@ class StackRoutingTest {
         var result: ApplicationCall? = null
 
         val routing = routing(parentCoroutineContext = coroutineContext + job) {
+            install(StackRouting)
+
             handle(path = "/path") {
                 result = call
                 job.complete()
@@ -279,7 +280,7 @@ class StackRoutingTest {
     }
 
     @Test
-    fun shouldCreateARouteUsingPushDirectly() = runTest {
+    fun shouldReplaceAPath() = runTest {
         // GIVEN
         val job = Job()
         var result: ApplicationCall? = null
@@ -287,34 +288,7 @@ class StackRoutingTest {
         val routing = routing(parentCoroutineContext = coroutineContext + job) {
             install(StackRouting)
 
-            push(path = "/path") {
-                result = call
-                job.complete()
-            }
-        }
-
-        // WHEN
-        routing.push(path = "/path")
-        advanceTimeBy(99)
-
-        // THEN
-        assertNotNull(result)
-        assertEquals("/path", "${result?.uri}")
-        assertEquals("", "${result?.name}")
-        assertEquals(StackRouteMethod.Push, result?.routeMethod)
-        assertEquals(Parameters.Empty, result?.parameters)
-    }
-
-    @Test
-    fun shouldCreateARouteUsingReplaceDirectly() = runTest {
-        // GIVEN
-        val job = Job()
-        var result: ApplicationCall? = null
-
-        val routing = routing(parentCoroutineContext = coroutineContext + job) {
-            install(StackRouting)
-
-            replace(path = "/path") {
+            handle(path = "/path") {
                 result = call
                 job.complete()
             }
@@ -333,7 +307,7 @@ class StackRoutingTest {
     }
 
     @Test
-    fun shouldCreateARouteUsingReplaceAllDirectly() = runTest {
+    fun shouldReplaceAllPaths() = runTest {
         // GIVEN
         val job = Job()
         var result: ApplicationCall? = null
@@ -341,7 +315,7 @@ class StackRoutingTest {
         val routing = routing(parentCoroutineContext = coroutineContext + job) {
             install(StackRouting)
 
-            replaceAll(path = "/path") {
+            handle(path = "/path") {
                 result = call
                 job.complete()
             }
@@ -356,37 +330,6 @@ class StackRoutingTest {
         assertEquals("/path", "${result?.uri}")
         assertEquals("", "${result?.name}")
         assertEquals(StackRouteMethod.ReplaceAll, result?.routeMethod)
-        assertEquals(Parameters.Empty, result?.parameters)
-    }
-
-    @Test
-    fun shouldCreateARouteUsingPopDirectly() = runTest {
-        // GIVEN
-        val job = Job()
-        var result: ApplicationCall? = null
-
-        val routing = routing(parentCoroutineContext = coroutineContext + job) {
-            install(StackRouting)
-
-            push(path = "/path") { }
-            pop(path = "/path") {
-                result = call
-                job.complete()
-            }
-        }
-
-        // WHEN
-        // A route must exist to pop
-        routing.push(path = "/path")
-        advanceTimeBy(99)
-        routing.pop()
-        advanceTimeBy(99)
-
-        // THEN
-        assertNotNull(result)
-        assertEquals("/path", "${result?.uri}")
-        assertEquals("", "${result?.name}")
-        assertEquals(StackRouteMethod.Pop, result?.routeMethod)
         assertEquals(Parameters.Empty, result?.parameters)
     }
 
@@ -407,7 +350,7 @@ class StackRoutingTest {
 
             route(path = "/path2") {
                 // Redirect will match same routing call (push to push, replace to replace, etc)
-                replace {
+                handle {
                     result = call
                     job.complete()
                 }
@@ -443,7 +386,7 @@ class StackRoutingTest {
 
             route(path = "/path2", name = "path2") {
                 // Redirect will match same routing call (push to push, replace to replace, etc)
-                push {
+                handle {
                     result = call
                     job.complete()
                 }
@@ -472,7 +415,7 @@ class StackRoutingTest {
             install(StackRouting)
 
             route(path = Regex("/(?<number>\\d+)")) {
-                push(path = "/regex") {
+                handle(path = "/regex") {
                     result = call
                     job.complete()
                 }
@@ -500,7 +443,7 @@ class StackRoutingTest {
         val routing = routing(parentCoroutineContext = coroutineContext + job) {
             install(StackRouting)
 
-            push(path = "/path") {
+            handle(path = "/path") {
                 result = call
                 job.complete()
             }
@@ -527,7 +470,7 @@ class StackRoutingTest {
         val routing = routing(parentCoroutineContext = coroutineContext + job) {
             install(StackRouting)
 
-            push(path = "/path") {
+            handle(path = "/path") {
                 result = call
                 job.complete()
             }
@@ -557,7 +500,7 @@ class StackRoutingTest {
             install(StackRouting)
 
             route(path = "/pathParent") {
-                push {
+                handle {
                     result = call
                     job.complete()
                 }
@@ -572,7 +515,7 @@ class StackRoutingTest {
             install(StackRouting)
 
             route(path = "/pathChild") {
-                push {
+                handle {
                     result = call
                     job.complete()
                 }
@@ -603,7 +546,7 @@ class StackRoutingTest {
             install(StackRouting)
 
             route(path = "/pathParent") {
-                push {
+                handle {
                     result = call
                     job.complete()
                 }
@@ -618,7 +561,7 @@ class StackRoutingTest {
             install(StackRouting)
 
             route(path = "/pathChild") {
-                push {
+                handle {
                     result = call
                     job.complete()
                 }
@@ -647,7 +590,7 @@ class StackRoutingTest {
             install(StackRouting)
 
             route(path = "/path", name = "path") {
-                push {
+                handle {
                     result = previousCall()
                 }
             }
@@ -671,8 +614,11 @@ class StackRoutingTest {
             install(StackRouting)
 
             route(path = "/path", name = "path") {
-                push {}
-                pop {
+                handle {}
+            }
+
+            route(path = "/path2", name = "path2") {
+                handle {
                     result = previousCall()
                     job.complete()
                 }
@@ -683,7 +629,7 @@ class StackRoutingTest {
         // A route must exist to pop
         routing.push(path = "/path")
         advanceTimeBy(99)
-        routing.pop(parameters = parametersOf("key", "value"))
+        routing.push(path = "/path2")
         advanceTimeBy(99)
 
         // THEN
@@ -741,7 +687,7 @@ class StackRoutingTest {
         val routing = routing(parentCoroutineContext = coroutineContext + job) {
             install(StackRouting)
 
-            handleStacked(path = "/path", name = "path") {
+            handle(path = "/path", name = "path") {
                 result += call
                 if (call.routeMethod == StackRouteMethod.Pop) {
                     job.complete()
@@ -796,11 +742,11 @@ class StackRoutingTest {
         routing(parentCoroutineContext = coroutineContext + job) {
             install(StackRouting)
 
-            push(path = "/path01", name = "path01") {
+            handle(path = "/path01", name = "path01") {
                 result = call
             }
 
-            push(path = "/path02", name = "path02") {
+            handle(path = "/path02", name = "path02") {
                 result = call
                 job.complete()
             }
