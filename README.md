@@ -66,40 +66,16 @@ val router = routing {
     }
 }  
 ```
-Using core-stack module, it's possible to define an action for each StackRouteMethod available
-```Kotlin
-(StackRouteMethod.Pop, StackRouteMethod.Push, StackRouteMethod.Replace, StackRouteMethod.ReplaceAll)
-
-route(path = "/path2") {
-    push { }   // handle push to this route only
-    replace { }  // handle replace to this route only
-    replaceAll { }  // handle replaceAll to this route only
-    pop { }  // handle pop to this route only
-}
-```
 
 ### Handling route short version
 
 ```Kotlin
 handle(path = "/path3", name = "path3") {
-
-}
-push(path = "/path4", name = "path4") {
-
-}
-replace(path = "/path5", name = "path5") {
-
-}
-replaceAll(path = "/path6", name = "path6") {
-
-}
-// Pop can not be named
-pop(path = "/path7") {
-
+    
 }
 ```
 ### Getting route detail 
-Use `call` inside of handle block or any `StackRouteMethod` (core-stack) to get all details available of a route that was called
+Use `call` inside of handle block to get all details available of a route that was called
 
 ```Kotlin
 val application = call.application
@@ -107,14 +83,13 @@ val routeMethod = call.routeMethod
 val uri = call.uri
 val attributes = call.attributes
 val parameters = call.parameters // routing parameters (see Routing routes) plus query parameters when provided
-val previous = call.previous // Available using core-stack to get the last emitted ApplicationCall
 ```
 
 ### Redirecting route
 You can redirect from anywhere with an `ApplicationCall`:
 
 ```Kotlin
-route|handle|push|replace|replaceAll|pop(...) {
+handle(...) {
     call.redirectToPath(path = "/path-destination")
     // or
     call.redirectToName(name = "destination-name")
@@ -124,7 +99,7 @@ route|handle|push|replace|replaceAll|pop(...) {
 You can also create a route using regex.
 
 ```Kotlin
-route|handle|push|replace|replaceAll|pop(path = Regex(...)) {
+handle(path = Regex(...)) {
     // ...
 }
 ```
@@ -171,7 +146,7 @@ router.pop(parameters = parametersOf("number", "123"))
 In case you need to call a route without put it in the Stack, you can tell to avoid it by calling:
 
 ```kotlin
-router.push|replace|replaceAll|pop(..., neglect = true)
+router.push|replace|replaceAll(..., neglect = true)
 ```
 
 ## Type-safe routing
@@ -261,7 +236,7 @@ router.emitEvent(
 
 ## Nested Routing
 
-With nested routing you can connect one `Routing` to another. It is good for projects that have routes on demand 
+With nested routing you can connect one `Routing` to another. It is good for projects that have routes on demand
 as Android Dynamic Feature that each module has your own navigation and are loaded at runtime.
 Checkout `RoutingTest` for more usages.
 
@@ -272,6 +247,35 @@ val router = routing(
     rootPath = "/child",
     parent = parent,
 ) { }
+```
+
+## Compose Routing
+
+Are you using Compose Jetpack or Multiplatform? This module is for you.
+Easily route any composable you have just doing:
+
+```kotlin
+val routing = routing { 
+    composable(path = "/login") {
+        // Your composable or any compose behavior here 
+    }
+}
+
+@Composable
+fun MyComposeApp() {
+    Routing(routing = routing) {
+        // Initial content
+    }
+}
+
+// And in any place that have the routing instance call:
+routing.execute(ApplicationCall(
+    application = routing.application,
+    uri = "/login",
+))
+
+// Or easily using core-stack module
+routing.push(path = "/login")
 ```
 
 ## Limitations
