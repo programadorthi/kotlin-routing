@@ -38,12 +38,7 @@ class RoutingTest {
         }
 
         // WHEN
-        routing.execute(
-            ApplicationCall(
-                application = routing.application,
-                uri = "/path",
-            )
-        )
+        routing.call(uri = "/path")
         advanceTimeBy(99)
 
         // THEN
@@ -68,12 +63,7 @@ class RoutingTest {
         }
 
         // WHEN
-        routing.execute(
-            ApplicationCall(
-                application = routing.application,
-                uri = "/path",
-            )
-        )
+        routing.call(uri = "/path")
         advanceTimeBy(99)
 
         // THEN
@@ -98,12 +88,9 @@ class RoutingTest {
         }
 
         // WHEN
-        routing.execute(
-            ApplicationCall(
-                application = routing.application,
-                uri = "/path",
-                parameters = parametersOf("key", "values"),
-            )
+        routing.call(
+            uri = "/path",
+            parameters = parametersOf("key", "values"),
         )
         advanceTimeBy(99)
 
@@ -129,12 +116,7 @@ class RoutingTest {
         }
 
         // WHEN
-        routing.execute(
-            ApplicationCall(
-                application = routing.application,
-                name = "named",
-            )
-        )
+        routing.call(name = "named")
         advanceTimeBy(99)
 
         // THEN
@@ -159,12 +141,9 @@ class RoutingTest {
         }
 
         // WHEN
-        routing.execute(
-            ApplicationCall(
-                application = routing.application,
-                name = "named",
-                parameters = parametersOf("key", "values"),
-            )
+        routing.call(
+            name = "named",
+            parameters = parametersOf("key", "values"),
         )
         advanceTimeBy(99)
 
@@ -190,12 +169,7 @@ class RoutingTest {
         }
 
         // WHEN
-        routing.execute(
-            ApplicationCall(
-                application = routing.application,
-                uri = "/path/123"
-            )
-        )
+        routing.call(uri = "/path/123")
         advanceTimeBy(99)
 
         // THEN
@@ -220,14 +194,11 @@ class RoutingTest {
         }
 
         // WHEN
-        routing.execute(
-            ApplicationCall(
-                application = routing.application,
-                name = "named",
-                parameters = parametersOf(
-                    "id" to listOf("123"),
-                    "name" to listOf("routing"),
-                )
+        routing.call(
+            name = "named",
+            parameters = parametersOf(
+                "id" to listOf("123"),
+                "name" to listOf("routing"),
             )
         )
         advanceTimeBy(99)
@@ -260,12 +231,7 @@ class RoutingTest {
         }
 
         // WHEN
-        routing.execute(
-            ApplicationCall(
-                application = routing.application,
-                uri = "/path?q=routing&kind=multiplatform"
-            )
-        )
+        routing.call(uri = "/path?q=routing&kind=multiplatform")
         advanceTimeBy(99)
 
         // THEN
@@ -301,12 +267,7 @@ class RoutingTest {
         }
 
         // WHEN
-        routing.execute(
-            ApplicationCall(
-                application = routing.application,
-                uri = "/path1"
-            )
-        )
+        routing.call(uri = "/path1")
         advanceTimeBy(99)
 
         // THEN
@@ -336,12 +297,7 @@ class RoutingTest {
         }
 
         // WHEN
-        routing.execute(
-            ApplicationCall(
-                application = routing.application,
-                name = "path1"
-            )
-        )
+        routing.call(name = "path1")
         advanceTimeBy(99)
 
         // THEN
@@ -371,12 +327,7 @@ class RoutingTest {
         }
 
         // WHEN
-        routing.execute(
-            ApplicationCall(
-                application = routing.application,
-                name = "path1"
-            )
-        )
+        routing.call(name = "path1")
         advanceTimeBy(99)
 
         // THEN
@@ -412,12 +363,7 @@ class RoutingTest {
         }
 
         // WHEN
-        routing.execute(
-            ApplicationCall(
-                application = routing.application,
-                name = "path1"
-            )
-        )
+        routing.call(name = "path1")
         advanceTimeBy(99)
 
         // THEN
@@ -450,12 +396,7 @@ class RoutingTest {
         }
 
         // WHEN
-        routing.execute(
-            ApplicationCall(
-                application = routing.application,
-                uri = "/123/hello"
-            )
-        )
+        routing.call(uri = "/123/hello")
         advanceTimeBy(99)
 
         // THEN
@@ -482,12 +423,7 @@ class RoutingTest {
         }
 
         // WHEN
-        routing.execute(
-            ApplicationCall(
-                application = routing.application,
-                uri = "/456/qwe/rty"
-            )
-        )
+        routing.call(uri = "/456/qwe/rty")
         advanceTimeBy(99)
 
         // THEN
@@ -523,12 +459,7 @@ class RoutingTest {
         }
 
         // WHEN
-        routing.execute(
-            ApplicationCall(
-                application = routing.application,
-                uri = "/ondemand"
-            )
-        )
+        routing.call(uri = "/ondemand")
         advanceTimeBy(99)
 
         // THEN
@@ -575,12 +506,7 @@ class RoutingTest {
         }
 
         // WHEN
-        routing.execute(
-            ApplicationCall(
-                application = routing.application,
-                uri = "/initial/default"
-            )
-        )
+        routing.call(uri = "/initial/default")
         advanceTimeBy(99)
 
         // THEN
@@ -620,12 +546,7 @@ class RoutingTest {
         }
 
         // WHEN
-        routing.execute(
-            ApplicationCall(
-                application = routing.application,
-                uri = "/middle/inner"
-            )
-        )
+        routing.call(uri = "/middle/inner")
         advanceTimeBy(99)
 
         // THEN
@@ -664,12 +585,7 @@ class RoutingTest {
         }
 
         // WHEN
-        routing.execute(
-            ApplicationCall(
-                application = routing.application,
-                uri = "/middle/inner"
-            )
-        )
+        routing.call(uri = "/middle/inner")
         advanceTimeBy(99)
 
         // THEN
@@ -709,12 +625,7 @@ class RoutingTest {
         }
 
         // WHEN
-        routing.execute(
-            ApplicationCall(
-                application = routing.application,
-                uri = "/initial/default"
-            )
-        )
+        routing.call(uri = "/initial/default")
         advanceTimeBy(99)
 
         // THEN
@@ -753,12 +664,7 @@ class RoutingTest {
         }
 
         // WHEN
-        routing.execute(
-            ApplicationCall(
-                application = routing.application,
-                uri = "/default"
-            )
-        )
+        routing.call(uri = "/default")
         advanceTimeBy(99)
 
         // THEN
@@ -798,12 +704,7 @@ class RoutingTest {
         }
 
         // WHEN
-        routing.execute(
-            ApplicationCall(
-                application = routing.application,
-                uri = "/initial/middle/inner"
-            )
-        )
+        routing.call(uri = "/initial/middle/inner")
         advanceTimeBy(99)
 
         // THEN
@@ -843,12 +744,7 @@ class RoutingTest {
         }
 
         // WHEN
-        routing.execute(
-            ApplicationCall(
-                application = routing.application,
-                uri = "/initial/middle/inner"
-            )
-        )
+        routing.call(uri = "/initial/middle/inner")
         advanceTimeBy(99)
 
         // THEN
@@ -887,12 +783,7 @@ class RoutingTest {
         }
 
         // WHEN
-        routing.execute(
-            ApplicationCall(
-                application = routing.application,
-                uri = "/middle/inner"
-            )
-        )
+        routing.call(uri = "/middle/inner")
         advanceTimeBy(99)
 
         // THEN
@@ -940,12 +831,7 @@ class RoutingTest {
         }
 
         // WHEN
-        routing.execute(
-            ApplicationCall(
-                application = routing.application,
-                uri = "/end/content"
-            )
-        )
+        routing.call(uri = "/end/content")
         advanceTimeBy(99)
 
         // THEN
@@ -993,12 +879,7 @@ class RoutingTest {
         }
 
         // WHEN
-        routing.execute(
-            ApplicationCall(
-                application = routing.application,
-                uri = "/initial/middle/end/content"
-            )
-        )
+        routing.call(uri = "/initial/middle/end/content")
         advanceTimeBy(99)
 
         // THEN
@@ -1045,12 +926,7 @@ class RoutingTest {
         }
 
         // WHEN
-        routing.execute(
-            ApplicationCall(
-                application = routing.application,
-                uri = "/middle/end/content"
-            )
-        )
+        routing.call(uri = "/middle/end/content")
         advanceTimeBy(99)
 
         // THEN
@@ -1110,12 +986,7 @@ class RoutingTest {
 
         // WHEN
         routing.dispose()
-        routing.execute(
-            ApplicationCall(
-                application = routing.application,
-                uri = "/initial/middle/end/content"
-            )
-        )
+        routing.call(uri = "/initial/middle/end/content")
         advanceTimeBy(99)
 
         // THEN
@@ -1149,12 +1020,7 @@ class RoutingTest {
         }
 
         // WHEN
-        routing.execute(
-            ApplicationCall(
-                application = routing.application,
-                uri = "/default"
-            )
-        )
+        routing.call(uri = "/default")
         advanceTimeBy(99)
 
         // THEN
@@ -1181,12 +1047,7 @@ class RoutingTest {
         }
 
         // WHEN
-        routing.execute(
-            ApplicationCall(
-                application = routing.application,
-                uri = "/default"
-            )
-        )
+        routing.call(uri = "/default")
         advanceTimeBy(99)
 
         // THEN
@@ -1234,12 +1095,7 @@ class RoutingTest {
         }
 
         // WHEN
-        routing.execute(
-            ApplicationCall(
-                application = routing.application,
-                uri = "/inner"
-            )
-        )
+        routing.call(uri = "/inner")
         advanceTimeBy(99)
 
         // THEN
@@ -1289,12 +1145,7 @@ class RoutingTest {
 
         // WHEN
         routing.dispose()
-        firstRouting.execute(
-            ApplicationCall(
-                application = routing.application,
-                uri = "/middle/inner"
-            )
-        )
+        firstRouting.call(uri = "/middle/inner")
         advanceTimeBy(99)
 
         // THEN
@@ -1322,12 +1173,7 @@ class RoutingTest {
         }
 
         // WHEN
-        routing.execute(
-            ApplicationCall(
-                application = routing.application,
-                uri = "/initial-default"
-            )
-        )
+        routing.call(uri = "/initial-default")
         advanceTimeBy(99)
 
         // THEN
@@ -1355,12 +1201,7 @@ class RoutingTest {
         }
 
         // WHEN
-        routing.execute(
-            ApplicationCall(
-                application = routing.application,
-                uri = "/end-default"
-            )
-        )
+        routing.call(uri = "/end-default")
         advanceTimeBy(99)
 
         // THEN
@@ -1397,12 +1238,7 @@ class RoutingTest {
             }
 
             // WHEN
-            routing.execute(
-                ApplicationCall(
-                    application = routing.application,
-                    uri = "/child-default"
-                )
-            )
+            routing.call(uri = "/child-default")
             advanceTimeBy(99)
 
             // THEN
@@ -1438,12 +1274,7 @@ class RoutingTest {
         }
 
         // WHEN
-        routing.execute(
-            ApplicationCall(
-                application = routing.application,
-                uri = "/initial"
-            )
-        )
+        routing.call(uri = "/initial")
         advanceTimeBy(99)
 
         // THEN
@@ -1471,12 +1302,7 @@ class RoutingTest {
         }
 
         // WHEN
-        routing.execute(
-            ApplicationCall(
-                application = routing.application,
-                uri = "/path/path" // Having rootPath and a route with same value your must provide rootPath on the URI
-            )
-        )
+        routing.call(uri = "/path/path") // Having rootPath and a route with same value your must provide rootPath on the URI
         advanceTimeBy(99)
 
         // THEN
@@ -1508,12 +1334,7 @@ class RoutingTest {
         }
 
         // WHEN
-        routing.execute(
-            ApplicationCall(
-                application = routing.application,
-                uri = "/path/path/path/path" // Having rootPath and a route with same value your must provide rootPath on the URI
-            )
-        )
+        routing.call(uri = "/path/path/path/path") // Having rootPath and a route with same value your must provide rootPath on the URI
         advanceTimeBy(99)
 
         // THEN

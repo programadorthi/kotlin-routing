@@ -1,9 +1,9 @@
 package dev.programadorthi.routing.resources
 
 import dev.programadorthi.routing.core.RouteMethod
-import dev.programadorthi.routing.core.application
 import dev.programadorthi.routing.core.application.ApplicationCall
 import dev.programadorthi.routing.core.application.call
+import dev.programadorthi.routing.core.call
 import dev.programadorthi.routing.core.install
 import dev.programadorthi.routing.core.routing
 import io.ktor.http.Parameters
@@ -232,12 +232,7 @@ class ResourcesTest {
 
         // WHEN
         // TODO: For now, parent looking for child is not supported using the type. We need to use path based
-        parent.execute(
-            ApplicationCall(
-                application = parent.application,
-                uri = "/resources/path"
-            )
-        )
+        parent.call(uri = "/resources/path")
         advanceTimeBy(99)
 
         // THEN

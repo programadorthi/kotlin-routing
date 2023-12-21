@@ -8,14 +8,11 @@ public fun Routing.pop(
 ) {
     application.checkPluginInstalled()
     val toPop = application.stackManager.toPop() ?: return
-    execute(
-        ApplicationCall(
-            application = application,
-            name = toPop.name,
-            uri = toPop.uri,
-            parameters = parameters,
-            routeMethod = StackRouteMethod.Pop,
-        )
+    call(
+        name = toPop.name,
+        uri = toPop.uri,
+        parameters = parameters,
+        routeMethod = StackRouteMethod.Pop,
     )
 }
 

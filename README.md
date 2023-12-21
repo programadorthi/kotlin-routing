@@ -21,11 +21,7 @@ val router = routing {
 }
 
 // And to call login routing...
-router.execute(
-    call = ApplicationCall(
-        uri = "/login"
-    )
-)
+router.call(uri = "/login")
 ```
 
 ## Core-stack module
@@ -207,11 +203,7 @@ val router = routing {
 }
 
 // And to simulate
-router.execute(
-    call = ApplicationCall(
-        uri = "/path"
-    )
-)
+router.call(uri = "/path")
 ```
 
 ## Events module
@@ -269,10 +261,7 @@ fun MyComposeApp() {
 }
 
 // And in any place that have the routing instance call:
-routing.execute(ApplicationCall(
-    application = routing.application,
-    uri = "/login",
-))
+routing.call(uri = "/login")
 
 // Or easily using core-stack module
 routing.push(path = "/login")
@@ -303,5 +292,5 @@ router.execute(Endpoint())
 parent.execute(Endpoint())
 
 // IT WORKS
-parent.execute(ApplicationCall(uri = "/child/endpoint"))
+parent.call(uri = "/child/endpoint")
 ```

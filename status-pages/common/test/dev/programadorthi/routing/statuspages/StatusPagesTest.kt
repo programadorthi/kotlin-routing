@@ -1,10 +1,10 @@
 package dev.programadorthi.routing.statuspages
 
 import dev.programadorthi.routing.core.RouteMethod
-import dev.programadorthi.routing.core.application
 import dev.programadorthi.routing.core.application.ApplicationCall
 import dev.programadorthi.routing.core.application.call
 import dev.programadorthi.routing.core.application.redirectToPath
+import dev.programadorthi.routing.core.call
 import dev.programadorthi.routing.core.errors.RouteNotFoundException
 import dev.programadorthi.routing.core.handle
 import dev.programadorthi.routing.core.install
@@ -41,12 +41,7 @@ class StatusPagesTest {
         }
 
         // WHEN
-        routing.execute(
-            ApplicationCall(
-                application = routing.application,
-                uri = "/exception",
-            )
-        )
+        routing.call(uri = "/exception")
         advanceTimeBy(99)
 
         // THEN
@@ -74,12 +69,7 @@ class StatusPagesTest {
         }
 
         // WHEN
-        routing.execute(
-            ApplicationCall(
-                application = routing.application,
-                uri = "/not-registered-path",
-            )
-        )
+        routing.call(uri = "/not-registered-path")
         advanceTimeBy(99)
 
         // THEN
@@ -113,12 +103,7 @@ class StatusPagesTest {
         }
 
         // WHEN
-        routing.execute(
-            ApplicationCall(
-                application = routing.application,
-                uri = "/not-registered-path",
-            )
-        )
+        routing.call(uri = "/not-registered-path")
         advanceTimeBy(99)
 
         // THEN

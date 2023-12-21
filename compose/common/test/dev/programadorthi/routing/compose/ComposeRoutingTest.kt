@@ -3,9 +3,9 @@ package dev.programadorthi.routing.compose
 import dev.programadorthi.routing.core.RouteMethod
 import dev.programadorthi.routing.core.StackRouteMethod
 import dev.programadorthi.routing.core.StackRouting
-import dev.programadorthi.routing.core.application
 import dev.programadorthi.routing.core.application.ApplicationCall
 import dev.programadorthi.routing.core.application.call
+import dev.programadorthi.routing.core.call
 import dev.programadorthi.routing.core.handle
 import dev.programadorthi.routing.core.install
 import dev.programadorthi.routing.core.pop
@@ -71,12 +71,7 @@ internal class ComposeRoutingTest {
             }
 
             // WHEN
-            routing.execute(
-                ApplicationCall(
-                    application = routing.application,
-                    uri = "/path",
-                )
-            )
+            routing.call(uri = "/path")
             advanceTimeBy(99) // Ask for routing
             clock.sendFrame(0L) // Ask for recomposition
 
@@ -108,12 +103,7 @@ internal class ComposeRoutingTest {
             }
 
             // WHEN
-            routing.execute(
-                ApplicationCall(
-                    application = routing.application,
-                    name = "path",
-                )
-            )
+            routing.call(name = "path")
             advanceTimeBy(99) // Ask for routing
             clock.sendFrame(0L) // Ask for recomposition
 
@@ -145,13 +135,7 @@ internal class ComposeRoutingTest {
             }
 
             // WHEN
-            routing.execute(
-                ApplicationCall(
-                    application = routing.application,
-                    uri = "/path",
-                    routeMethod = RouteMethod.Empty,
-                )
-            )
+            routing.call(uri = "/path", routeMethod = RouteMethod.Empty)
             advanceTimeBy(99) // Ask for routing
             clock.sendFrame(0L) // Ask for recomposition
 
@@ -185,12 +169,7 @@ internal class ComposeRoutingTest {
             }
 
             // WHEN
-            routing.execute(
-                ApplicationCall(
-                    application = routing.application,
-                    uri = "/any",
-                )
-            )
+            routing.call(uri = "/any")
             advanceTimeBy(99) // Ask for routing
             clock.sendFrame(0L) // Ask for recomposition
 

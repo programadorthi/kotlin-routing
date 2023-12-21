@@ -1,9 +1,9 @@
 package dev.programadorthi.routing.auth
 
 import dev.programadorthi.routing.core.RouteMethod
-import dev.programadorthi.routing.core.application
 import dev.programadorthi.routing.core.application.ApplicationCall
 import dev.programadorthi.routing.core.application.call
+import dev.programadorthi.routing.core.call
 import dev.programadorthi.routing.core.handle
 import dev.programadorthi.routing.core.install
 import dev.programadorthi.routing.core.routing
@@ -65,12 +65,7 @@ class AuthTest {
         }
 
         // WHEN
-        routing.execute(
-            ApplicationCall(
-                application = routing.application,
-                uri = "/user"
-            )
-        )
+        routing.call(uri = "/user")
         advanceTimeBy(99)
 
         // THEN
@@ -101,12 +96,7 @@ class AuthTest {
         }
 
         // WHEN
-        routing.execute(
-            ApplicationCall(
-                application = routing.application,
-                uri = "/user"
-            )
-        )
+        routing.call(uri = "/user")
         advanceTimeBy(99)
 
         // THEN
@@ -145,12 +135,7 @@ class AuthTest {
         }
 
         // WHEN
-        routing.execute(
-            ApplicationCall(
-                application = routing.application,
-                uri = "/user"
-            )
-        )
+        routing.call(uri = "/user")
         advanceTimeBy(99)
 
         // THEN
@@ -187,12 +172,7 @@ class AuthTest {
         }
 
         // WHEN
-        routing.execute(
-            ApplicationCall(
-                application = routing.application,
-                uri = "/user"
-            )
-        )
+        routing.call(uri = "/user")
         advanceTimeBy(99)
 
         // THEN
@@ -238,12 +218,7 @@ class AuthTest {
         }
 
         // WHEN
-        routing.execute(
-            ApplicationCall(
-                application = routing.application,
-                uri = "/user"
-            )
-        )
+        routing.call(uri = "/user")
         advanceTimeBy(99)
 
         // THEN
@@ -294,12 +269,7 @@ class AuthTest {
         }
 
         // WHEN
-        routing.execute(
-            ApplicationCall(
-                application = routing.application,
-                uri = "/user"
-            )
-        )
+        routing.call(uri = "/user")
         advanceTimeBy(99)
 
         // THEN
@@ -355,12 +325,7 @@ class AuthTest {
         }
 
         // WHEN
-        routing.execute(
-            ApplicationCall(
-                application = routing.application,
-                uri = "/user"
-            )
-        )
+        routing.call(uri = "/user")
         advanceTimeBy(99)
         advanceTimeBy(500)
 
@@ -407,12 +372,7 @@ class AuthTest {
         }
 
         // WHEN
-        routing.execute(
-            ApplicationCall(
-                application = routing.application,
-                uri = "/user"
-            )
-        )
+        routing.call(uri = "/user")
         advanceTimeBy(99)
 
         // THEN
@@ -495,12 +455,7 @@ class AuthTest {
         }
 
         // WHEN
-        routing.execute(
-            ApplicationCall(
-                application = routing.application,
-                uri = "/user"
-            )
-        )
+        routing.call(uri = "/user")
         advanceTimeBy(99)
 
         // THEN
@@ -564,19 +519,9 @@ class AuthTest {
         }
 
         // WHEN
-        routing.execute(
-            ApplicationCall(
-                application = routing.application,
-                uri = "/parent"
-            )
-        )
+        routing.call(uri = "/parent")
         advanceTimeBy(99)
-        routing.execute(
-            ApplicationCall(
-                application = routing.application,
-                uri = "/child"
-            )
-        )
+        routing.call(uri = "/child")
         advanceTimeBy(99)
 
         // THEN

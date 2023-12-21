@@ -1,9 +1,8 @@
 package dev.programadorthi.routing.sessions
 
-import dev.programadorthi.routing.core.application
-import dev.programadorthi.routing.core.application.ApplicationCall
 import dev.programadorthi.routing.core.application.call
 import dev.programadorthi.routing.core.application.redirectToPath
+import dev.programadorthi.routing.core.call
 import dev.programadorthi.routing.core.handle
 import dev.programadorthi.routing.core.install
 import dev.programadorthi.routing.core.routing
@@ -42,12 +41,7 @@ class SessionTest {
         }
 
         // WHEN
-        routing.execute(
-            ApplicationCall(
-                application = routing.application,
-                uri = "/login"
-            )
-        )
+        routing.call(uri = "/login")
         advanceTimeBy(99)
 
         // THEN
@@ -83,12 +77,7 @@ class SessionTest {
         }
 
         // WHEN
-        routing.execute(
-            ApplicationCall(
-                application = routing.application,
-                uri = "/login"
-            )
-        )
+        routing.call(uri = "/login")
         advanceTimeBy(99)
 
         // THEN
@@ -128,12 +117,7 @@ class SessionTest {
         }
 
         // WHEN
-        routing.execute(
-            ApplicationCall(
-                application = routing.application,
-                uri = "/login"
-            )
-        )
+        routing.call(uri = "/login")
         advanceTimeBy(99)
 
         // THEN
@@ -171,12 +155,7 @@ class SessionTest {
         }
 
         // WHEN
-        parent.execute(
-            ApplicationCall(
-                application = parent.application,
-                uri = "/login"
-            )
-        )
+        parent.call(uri = "/login")
         advanceTimeBy(99)
 
         // THEN
@@ -218,12 +197,7 @@ class SessionTest {
         }
 
         // WHEN
-        routing.execute(
-            ApplicationCall(
-                application = routing.application,
-                uri = "/login"
-            )
-        )
+        routing.call(uri = "/login")
         advanceTimeBy(99)
 
         // THEN

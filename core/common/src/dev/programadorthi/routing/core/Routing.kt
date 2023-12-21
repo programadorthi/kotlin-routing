@@ -25,6 +25,7 @@ import io.ktor.http.Parameters
 import io.ktor.http.Url
 import io.ktor.http.plus
 import io.ktor.util.AttributeKey
+import io.ktor.util.Attributes
 import io.ktor.util.KtorDsl
 import io.ktor.util.logging.KtorSimpleLogger
 import io.ktor.util.logging.Logger
@@ -282,7 +283,8 @@ public class Routing internal constructor(
         val resolveContext = RoutingResolveContext(this, call, tracers)
         when (val resolveResult = resolveContext.resolve()) {
             is RoutingResolveResult.Failure -> {
-                val routing = parent?.asRouting ?: throw RouteNotFoundException(message = resolveResult.reason)
+                val routing = parent?.asRouting
+                    ?: throw RouteNotFoundException(message = resolveResult.reason)
                 routing.execute(context.call)
             }
 
@@ -319,7 +321,8 @@ public class Routing internal constructor(
         /**
          * A definition for an event that is fired when routing-based call processing is finished.
          */
-        internal val RoutingCallFinished: EventDefinition<RoutingApplicationCall> = EventDefinition()
+        internal val RoutingCallFinished: EventDefinition<RoutingApplicationCall> =
+            EventDefinition()
 
         override val key: AttributeKey<Routing> = AttributeKey("Routing")
 
@@ -355,6 +358,25 @@ public fun <B : Any, F : Any> Route.install(
     configure: B.() -> Unit = {}
 ): F = application.install(plugin, configure)
 
+public fun Routing.call(
+    name: String = "",
+    uri: String = "",
+    routeMethod: RouteMethod = RouteMethod.Empty,
+    attributes: Attributes = Attributes(),
+    parameters: Parameters = Parameters.Empty,
+) {
+    execute(
+        ApplicationCall(
+            application = application,
+            name = name,
+            uri = uri,
+            routeMethod = routeMethod,
+            attributes = attributes,
+            parameters = parameters,
+        )
+    )
+}
+
 @KtorDsl
 public fun routing(
     rootPath: String = "/",
@@ -382,7 +404,10 @@ public fun routing(
     return instance
 }
 
-private fun ApplicationEnvironment?.safeRiseEvent(event: EventDefinition<Application>, application: Application) {
+private fun ApplicationEnvironment?.safeRiseEvent(
+    event: EventDefinition<Application>,
+    application: Application
+) {
     val instance = this ?: return
     runCatching {
         instance.monitor.raise(event, application)
