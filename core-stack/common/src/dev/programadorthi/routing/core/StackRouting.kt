@@ -4,19 +4,18 @@ import dev.programadorthi.routing.core.application.ApplicationCall
 import io.ktor.http.Parameters
 
 public fun Routing.pop(
-    parameters: Parameters = Parameters.Empty,
-    neglect: Boolean = false,
+    parameters: Parameters = Parameters.Empty
 ) {
     application.checkPluginInstalled()
-    val lastCall = application.stackManager.lastOrNull() ?: return
+    val toPop = application.stackManager.toPop() ?: return
     execute(
         ApplicationCall(
             application = application,
-            name = lastCall.name,
-            uri = lastCall.uri,
+            name = toPop.name,
+            uri = toPop.uri,
             parameters = parameters,
             routeMethod = StackRouteMethod.Pop,
-        ).tryNeglect(neglect)
+        )
     )
 }
 

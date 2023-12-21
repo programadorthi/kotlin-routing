@@ -92,9 +92,11 @@ internal class StackManager(
 
     fun lastOrNull(): ApplicationCall? = stack.lastOrNull()
 
+    fun toPop(): ApplicationCall? = stack.removeLastOrNull()
+
     fun update(call: ApplicationCall) {
         // Check if route should be out of the stack
-        if (call.stackNeglect) {
+        if (call.stackNeglect || call.routeMethod == StackRouteMethod.Pop) {
             return
         }
 
@@ -111,13 +113,6 @@ internal class StackManager(
             StackRouteMethod.ReplaceAll -> {
                 stack.clear()
                 stack += call
-            }
-
-            StackRouteMethod.Pop -> {
-                // Pop in a valid state only
-                if (call.uri == stack.lastOrNull()?.uri) {
-                    stack.removeLastOrNull()
-                }
             }
 
             else -> Unit
