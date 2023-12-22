@@ -751,19 +751,25 @@ class StackRoutingTest {
                 job.complete()
             }
 
-            // WHEN (Android restored calls)
-            stackManagerNotifier.callsToRestore += ApplicationCall(
-                application = application,
-                uri = "/path01",
-                routeMethod = StackRouteMethod.Push,
-            )
-
-            stackManagerNotifier.callsToRestore += ApplicationCall(
-                application = application,
-                uri = "/path02",
-                routeMethod = StackRouteMethod.Push,
-                parameters = parametersOf("key" to listOf("value")),
-            )
+            // WHEN (Platform restored calls)
+            stackManagerNotifier.restoration = """
+                [
+                    {
+                        "name": "",
+                        "uri": "/path01",
+                        "routeMethod": "PUSH",
+                        "parameters": {}
+                    },
+                    {
+                        "name": "",
+                        "uri": "/path02",
+                        "routeMethod": "PUSH",
+                        "parameters": {
+                            "key": ["value"]
+                        }
+                    }
+                ]
+            """.trimIndent()
         }
         advanceTimeBy(99)
 

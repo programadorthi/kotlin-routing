@@ -9,6 +9,7 @@ import dev.programadorthi.routing.core.application.createApplicationPlugin
 import dev.programadorthi.routing.core.application.hooks.CallSetup
 import dev.programadorthi.routing.core.application.hooks.ResponseSent
 import dev.programadorthi.routing.core.application.pluginOrNull
+import io.ktor.http.parametersOf
 import io.ktor.util.AttributeKey
 import io.ktor.util.KtorDsl
 import io.ktor.util.pipeline.PipelineContext
@@ -70,7 +71,7 @@ public class StackRoutingConfig {
 }
 
 internal class StackManager(
-    val application: Application,
+    private val application: Application,
     private val config: StackRoutingConfig,
 ) {
     private val stack = mutableListOf<ApplicationCall>()
@@ -119,13 +120,23 @@ internal class StackManager(
         }
     }
 
-    fun toSave(): List<ApplicationCall> = buildList {
-        addAll(stack)
-    }
+    fun toSave(): String = stack.map { it.toState() }.toJson()
 
-    fun toRestore(previous: List<ApplicationCall>) {
+    fun toRestore(saved: String?) {
+        if (saved.isNullOrBlank()) return
+
+        val states = saved.toStateList().map { stackState ->
+            ApplicationCall(
+                application = application,
+                name = stackState.name,
+                uri = stackState.uri,
+                routeMethod = RouteMethod(stackState.routeMethod),
+                parameters = parametersOf(stackState.parameters),
+            )
+        }
+
         stack.clear()
-        stack.addAll(previous)
+        stack.addAll(states)
         tryEmitLastItem()
     }
 

@@ -9,7 +9,7 @@ import io.ktor.util.KtorDsl
 import io.ktor.util.pipeline.PipelineContext
 import kotlinx.browser.window
 import org.w3c.dom.Element
-import kotlin.js.json
+import toData
 
 @KtorDsl
 public fun Route.jsRoute(
@@ -32,10 +32,6 @@ public fun Route.jsRoute(
 ) {
     handle {
         call.destination = body(this)
-        val data = json(
-            METHOD_KEY to call.routeMethod.value,
-            URI_KEY to call.uri,
-        )
-        window.history.pushState(data = data, title = "", url = call.uri)
+        window.history.pushState(data = call.toData(), title = "", url = call.uri)
     }
 }

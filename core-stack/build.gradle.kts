@@ -1,7 +1,7 @@
 plugins {
     kotlin("multiplatform")
     id("com.android.library")
-    id("kotlin-parcelize")
+    kotlin("plugin.serialization")
     id("org.jlleitschuh.gradle.ktlint")
     id("org.jetbrains.kotlinx.kover")
     alias(libs.plugins.maven.publish)
@@ -14,6 +14,7 @@ kotlin {
         commonMain {
             dependencies {
                 api(projects.core)
+                api(libs.serialization.json)
             }
         }
 
