@@ -28,7 +28,7 @@ public fun Routing.push(
             uri = path,
             parameters = parameters,
             routeMethod = StackRouteMethod.Push,
-        ).tryNeglect(neglect)
+        ).toNeglect(neglect)
     )
 }
 
@@ -44,7 +44,7 @@ public fun Routing.pushNamed(
             name = name,
             parameters = parameters,
             routeMethod = StackRouteMethod.Push,
-        ).tryNeglect(neglect)
+        ).toNeglect(neglect)
     )
 }
 
@@ -60,7 +60,7 @@ public fun Routing.replace(
             uri = path,
             parameters = parameters,
             routeMethod = StackRouteMethod.Replace,
-        ).tryNeglect(neglect)
+        ).toNeglect(neglect)
     )
 }
 
@@ -76,7 +76,7 @@ public fun Routing.replaceAll(
             uri = path,
             parameters = parameters,
             routeMethod = StackRouteMethod.ReplaceAll,
-        ).tryNeglect(neglect)
+        ).toNeglect(neglect)
     )
 }
 
@@ -92,7 +92,7 @@ public fun Routing.replaceNamed(
             name = name,
             parameters = parameters,
             routeMethod = StackRouteMethod.Replace,
-        ).tryNeglect(neglect)
+        ).toNeglect(neglect)
     )
 }
 
@@ -108,11 +108,11 @@ public fun Routing.replaceAllNamed(
             name = name,
             parameters = parameters,
             routeMethod = StackRouteMethod.ReplaceAll,
-        ).tryNeglect(neglect)
+        ).toNeglect(neglect)
     )
 }
 
-private fun ApplicationCall.tryNeglect(neglect: Boolean): ApplicationCall {
-    stackNeglect = neglect
+public fun ApplicationCall.toNeglect(neglect: Boolean): ApplicationCall {
+    this.neglect = neglect
     return this
 }

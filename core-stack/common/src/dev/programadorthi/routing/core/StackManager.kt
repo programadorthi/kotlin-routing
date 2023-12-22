@@ -96,7 +96,7 @@ internal class StackManager(
 
     fun update(call: ApplicationCall) {
         // Check if route should be out of the stack
-        if (call.stackNeglect || call.routeMethod == StackRouteMethod.Pop) {
+        if (call.neglect || call.routeMethod == StackRouteMethod.Pop) {
             return
         }
 
