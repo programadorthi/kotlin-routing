@@ -13,16 +13,15 @@ import toCall
 public fun render(
     routing: Routing,
     root: Element,
+    initial: Element,
 ) {
     with(routing.application) {
-        routingFlow = MutableStateFlow(null)
+        routingFlow = MutableStateFlow(initial)
 
         launch {
             routingFlow.collect { child ->
-                if (child != null) {
-                    root.clear()
-                    root.appendChild(child)
-                }
+                root.clear()
+                root.appendChild(child)
             }
         }
     }
