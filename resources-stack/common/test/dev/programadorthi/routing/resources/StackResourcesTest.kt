@@ -5,6 +5,7 @@ import dev.programadorthi.routing.core.StackRouting
 import dev.programadorthi.routing.core.application.ApplicationCall
 import dev.programadorthi.routing.core.application.call
 import dev.programadorthi.routing.core.install
+import dev.programadorthi.routing.core.isStackPop
 import dev.programadorthi.routing.core.pop
 import dev.programadorthi.routing.core.routing
 import io.ktor.http.Parameters
@@ -265,7 +266,7 @@ class StackResourcesTest {
 
             handle<Path.Id> { id ->
                 result += call to id
-                if (call.routeMethod == StackRouteMethod.Pop) {
+                if (call.routeMethod.isStackPop()) {
                     job.complete()
                 }
             }

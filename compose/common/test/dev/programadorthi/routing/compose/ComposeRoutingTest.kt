@@ -8,6 +8,7 @@ import dev.programadorthi.routing.core.application.call
 import dev.programadorthi.routing.core.call
 import dev.programadorthi.routing.core.handle
 import dev.programadorthi.routing.core.install
+import dev.programadorthi.routing.core.isStackPop
 import dev.programadorthi.routing.core.pop
 import dev.programadorthi.routing.core.push
 import dev.programadorthi.routing.core.replace
@@ -336,7 +337,7 @@ internal class ComposeRoutingTest {
                 }
                 composable(path = "/pop") {
                     result = call
-                    if (call.routeMethod == StackRouteMethod.Pop) {
+                    if (call.routeMethod.isStackPop()) {
                         error("I will never be called in a composable with a pop call")
                     }
                 }

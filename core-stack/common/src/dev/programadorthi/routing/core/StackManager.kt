@@ -50,7 +50,7 @@ public val StackRouting: ApplicationPlugin<StackRoutingConfig> = createApplicati
     val stackManager = StackManager(application, pluginConfig)
 
     on(CallSetup) { call ->
-        if (call.routeMethod is StackRouteMethod) {
+        if (call.routeMethod.isStackMethod()) {
             call.application.checkPluginInstalled()
         }
         call.stackManager = stackManager
@@ -96,7 +96,7 @@ internal class StackManager(
 
     fun update(call: ApplicationCall) {
         // Check if route should be out of the stack
-        if (call.neglect || call.routeMethod == StackRouteMethod.Pop) {
+        if (call.neglect || call.routeMethod.isStackPop()) {
             return
         }
 

@@ -689,7 +689,7 @@ class StackRoutingTest {
 
             handle(path = "/path", name = "path") {
                 result += call
-                if (call.routeMethod == StackRouteMethod.Pop) {
+                if (call.routeMethod.isStackPop()) {
                     job.complete()
                 }
             }

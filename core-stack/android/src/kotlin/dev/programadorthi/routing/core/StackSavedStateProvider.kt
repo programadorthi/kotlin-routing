@@ -45,7 +45,7 @@ internal class StackSavedStateProvider(
                 application = stackManager.application,
                 name = parcelable.name,
                 uri = parcelable.uri,
-                routeMethod = StackRouteMethod.parse(parcelable.routeMethod),
+                routeMethod = RouteMethod(parcelable.routeMethod),
                 parameters = parametersOf(parcelable.parameters),
             )
         }

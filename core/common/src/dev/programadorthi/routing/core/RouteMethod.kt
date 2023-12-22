@@ -8,3 +8,7 @@ public interface RouteMethod {
         override val value: String = "EMPTY"
     }
 }
+
+public fun RouteMethod(value: String): RouteMethod = RouteMethodImpl(value)
+
+private data class RouteMethodImpl(override val value: String) : RouteMethod
