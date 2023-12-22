@@ -4,15 +4,15 @@ import androidx.compose.runtime.Composable
 import dev.programadorthi.routing.core.Route
 import dev.programadorthi.routing.core.RouteMethod
 import dev.programadorthi.routing.core.application.ApplicationCall
-import dev.programadorthi.routing.core.application.application
 import dev.programadorthi.routing.core.application.call
 import dev.programadorthi.routing.core.isStackPop
-import dev.programadorthi.routing.core.previousCall
+import dev.programadorthi.routing.core.method
 import dev.programadorthi.routing.core.route
-import dev.programadorthi.routing.core.toNeglect
+import dev.programadorthi.routing.resources.handle
+import dev.programadorthi.routing.resources.resource
 import io.ktor.util.KtorDsl
 import io.ktor.util.pipeline.PipelineContext
-import io.ktor.util.pipeline.execute
+import kotlinx.serialization.serializer
 
 @KtorDsl
 public fun Route.composable(
@@ -34,28 +34,45 @@ public fun Route.composable(
     body: @Composable PipelineContext<Unit, ApplicationCall>.() -> Unit,
 ) {
     handle {
-        // Avoiding recompose same content on a popped call
-        if (!call.routeMethod.isStackPop()) {
-            call.content = { body(this) }
-        } else {
-            // Checking for previous ApplicationCall to recompose it
-            val popDestination = previousCall()
-            if (popDestination != null) {
-                // We need do some things here:
-                // 1. Use previous call name, uri and route method
-                // 2. Put pop call attributes and parameters to previous call consume
-                // 3. Neglect the call to avoid put again on the stack
-                application.execute(
-                    ApplicationCall(
-                        application = application,
-                        name = popDestination.name,
-                        uri = popDestination.uri,
-                        routeMethod = popDestination.routeMethod,
-                        attributes = call.attributes,
-                        parameters = call.parameters,
-                    ).toNeglect(neglect = true)
-                )
+        composable {
+            body(this)
+        }
+    }
+}
+
+@KtorDsl
+public inline fun <reified T : Any> Route.composable(
+    noinline body: @Composable PipelineContext<Unit, ApplicationCall>.(T) -> Unit
+): Route = resource<T> {
+    handle(serializer<T>()) { value ->
+        composable {
+            body(value)
+        }
+    }
+}
+
+public inline fun <reified T : Any> Route.composable(
+    method: RouteMethod,
+    noinline body: @Composable PipelineContext<Unit, ApplicationCall>.(T) -> Unit
+): Route {
+    lateinit var builtRoute: Route
+    resource<T> {
+        builtRoute = method(method) {
+            handle(serializer<T>()) { value ->
+                composable {
+                    body(value)
+                }
             }
         }
     }
+    return builtRoute
+}
+
+public fun PipelineContext<Unit, ApplicationCall>.composable(
+    body: @Composable () -> Unit,
+) {
+    // Avoiding recompose same content on a popped call
+    if (call.routeMethod.isStackPop()) return
+
+    call.content = body
 }

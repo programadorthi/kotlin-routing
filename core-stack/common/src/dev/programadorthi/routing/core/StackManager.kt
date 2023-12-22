@@ -5,6 +5,7 @@ import dev.programadorthi.routing.core.application.ApplicationCall
 import dev.programadorthi.routing.core.application.ApplicationPlugin
 import dev.programadorthi.routing.core.application.ApplicationStarted
 import dev.programadorthi.routing.core.application.ApplicationStopped
+import dev.programadorthi.routing.core.application.call
 import dev.programadorthi.routing.core.application.createApplicationPlugin
 import dev.programadorthi.routing.core.application.hooks.CallSetup
 import dev.programadorthi.routing.core.application.hooks.ResponseSent
@@ -35,9 +36,7 @@ internal fun Application.checkPluginInstalled() {
     }
 }
 
-public fun PipelineContext<*, *>.previousCall(): ApplicationCall? {
-    val call = context as? ApplicationCall
-        ?: error("You can't get previous ApplicationCall out of a PipelineContext")
+public fun PipelineContext<*, ApplicationCall>.previousCall(): ApplicationCall? {
     return call.stackManager.lastOrNull()
 }
 

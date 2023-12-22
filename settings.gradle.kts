@@ -30,7 +30,6 @@ include(":events")
 include(":events-resources")
 include(":javascript")
 include(":resources")
-include(":resources-stack")
 include(":sessions")
 include(":status-pages")
 

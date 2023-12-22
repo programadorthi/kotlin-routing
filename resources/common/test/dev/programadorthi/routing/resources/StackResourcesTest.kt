@@ -251,7 +251,11 @@ class StackResourcesTest {
         assertEquals("", "${result?.name}")
         assertEquals(StackRouteMethod.Pop, result?.routeMethod)
         assertEquals(parametersOf("id", "1"), result?.parameters)
-        assertEquals(listOf(1, 2, 3, 3, 2, 1), ids.map { it.id })
+        // 1, 2, 3 are pushed
+        // 3, 2 are the first pop (notify 3 for pop and 2 for it route method)
+        // 2, 1 are the second pop (notify 2 for pop and 1 for it route method)
+        // 1 is the last pop (notify 1 for pop and there is no more items on the stack)
+        assertEquals(listOf(1, 2, 3, 3, 2, 2, 1, 1), ids.map { it.id })
     }
 
     @Test
