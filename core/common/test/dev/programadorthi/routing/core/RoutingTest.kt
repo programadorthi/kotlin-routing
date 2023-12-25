@@ -1344,4 +1344,131 @@ class RoutingTest {
         assertEquals(RouteMethod.Empty, result?.routeMethod)
         assertEquals(Parameters.Empty, result?.parameters)
     }
+
+    @Test
+    fun shouldUnregisterByName() = runTest {
+        // GIVEN
+        val job = Job()
+        var result: ApplicationCall? = null
+        var exception: Throwable? = null
+
+        val statusPages = createApplicationPlugin("status-pages") {
+            on(CallFailed) { call, cause ->
+                result = call
+                exception = cause
+                job.complete()
+            }
+        }
+
+        val routing = routing(parentCoroutineContext = coroutineContext + job) {
+            install(statusPages)
+
+            handle(path = "/path", name = "named") {
+                error("No reached code")
+            }
+        }
+
+        // WHEN
+        routing.unregisterNamed(name = "named")
+        routing.call(name = "named")
+        advanceTimeBy(99)
+
+        // THEN
+        assertNotNull(result)
+        assertNotNull(exception)
+        assertEquals("", "${result?.uri}")
+        assertEquals("named", "${result?.name}")
+        assertEquals(RouteMethod.Empty, result?.routeMethod)
+        assertEquals(Parameters.Empty, result?.parameters)
+        assertIs<RouteNotFoundException>(exception)
+        assertEquals(
+            "Named route not found with name: named",
+            exception?.message
+        )
+    }
+
+    @Test
+    fun shouldUnregisterByPath() = runTest {
+        // GIVEN
+        val job = Job()
+        var result: ApplicationCall? = null
+        var exception: Throwable? = null
+
+        val statusPages = createApplicationPlugin("status-pages") {
+            on(CallFailed) { call, cause ->
+                result = call
+                exception = cause
+                job.complete()
+            }
+        }
+
+        val routing = routing(parentCoroutineContext = coroutineContext + job) {
+            install(statusPages)
+
+            handle(path = "/path") {
+                error("No reached code")
+            }
+        }
+
+        // WHEN
+        routing.unregisterPath(path = "/path")
+        routing.call(uri = "/path")
+        advanceTimeBy(99)
+
+        // THEN
+        assertNotNull(result)
+        assertNotNull(exception)
+        assertEquals("/path", "${result?.uri}")
+        assertEquals("", "${result?.name}")
+        assertEquals(RouteMethod.Empty, result?.routeMethod)
+        assertEquals(Parameters.Empty, result?.parameters)
+        assertIs<RouteNotFoundException>(exception)
+        assertEquals(
+            "No matched subtrees found for: /path",
+            exception?.message
+        )
+    }
+
+    @Test
+    fun shouldUnregisterByRoute() = runTest {
+        // GIVEN
+        val job = Job()
+        var result: ApplicationCall? = null
+        var exception: Throwable? = null
+        var routeToUnregister: Route? = null
+
+        val statusPages = createApplicationPlugin("status-pages") {
+            on(CallFailed) { call, cause ->
+                result = call
+                exception = cause
+                job.complete()
+            }
+        }
+
+        val routing = routing(parentCoroutineContext = coroutineContext + job) {
+            install(statusPages)
+
+            route(path = "/path") {
+                routeToUnregister = this
+            }
+        }
+
+        // WHEN
+        routing.unregisterRoute(routeToUnregister!!)
+        routing.call(uri = "/path")
+        advanceTimeBy(99)
+
+        // THEN
+        assertNotNull(result)
+        assertNotNull(exception)
+        assertEquals("/path", "${result?.uri}")
+        assertEquals("", "${result?.name}")
+        assertEquals(RouteMethod.Empty, result?.routeMethod)
+        assertEquals(Parameters.Empty, result?.parameters)
+        assertIs<RouteNotFoundException>(exception)
+        assertEquals(
+            "No matched subtrees found for: /path",
+            exception?.message
+        )
+    }
 }

@@ -72,12 +72,15 @@ public class Routing internal constructor(
 
     public fun unregisterNamed(name: String) {
         val route = namedRoutes.remove(name) ?: return
-        removeChild(route)
-        unregisterFromParents(route)
+        unregisterRoute(route)
     }
 
     public fun unregisterPath(path: String) {
         val route = createRouteFromPath(path)
+        unregisterRoute(route)
+    }
+
+    public fun unregisterRoute(route: Route) {
         removeChild(route)
         unregisterFromParents(route)
     }

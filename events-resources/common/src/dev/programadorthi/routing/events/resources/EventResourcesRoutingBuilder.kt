@@ -3,6 +3,7 @@ package dev.programadorthi.routing.events.resources
 import dev.programadorthi.routing.core.OptionalParameterRouteSelector
 import dev.programadorthi.routing.core.ParameterRouteSelector
 import dev.programadorthi.routing.core.Route
+import dev.programadorthi.routing.core.Routing
 import dev.programadorthi.routing.core.application
 import dev.programadorthi.routing.core.application.ApplicationCall
 import dev.programadorthi.routing.core.application.ApplicationCallPipeline
@@ -49,7 +50,10 @@ public inline fun <reified T : Any> Route.event(
         intercept(ApplicationCallPipeline.Plugins) {
             val resourcesPlugin = application.plugin(EventResources)
             runCatching {
-                val resource = resourcesPlugin.resourcesFormat.decodeFromParameters(serializer, call.parameters)
+                val resource = resourcesPlugin.resourcesFormat.decodeFromParameters(
+                    serializer,
+                    call.parameters
+                )
                 call.attributes.put(EventResourceInstanceKey, resource)
             }.getOrElse { cause ->
                 throw BadRequestException("Can't transform call to resource", cause)
@@ -61,4 +65,9 @@ public inline fun <reified T : Any> Route.event(
             body(resource)
         }
     }
+}
+
+public inline fun <reified T : Any> Routing.unregisterEvent() {
+    val route = event<T> { }
+    unregisterRoute(route)
 }

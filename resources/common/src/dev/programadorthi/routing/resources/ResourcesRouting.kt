@@ -8,6 +8,7 @@ import dev.programadorthi.routing.core.OptionalParameterRouteSelector
 import dev.programadorthi.routing.core.ParameterRouteSelector
 import dev.programadorthi.routing.core.Route
 import dev.programadorthi.routing.core.RouteMethod
+import dev.programadorthi.routing.core.Routing
 import dev.programadorthi.routing.core.application
 import dev.programadorthi.routing.core.application.ApplicationCall
 import dev.programadorthi.routing.core.application.ApplicationCallPipeline
@@ -125,4 +126,10 @@ public fun <T : Any> Route.handle(
         val resource = call.attributes[ResourceInstanceKey] as T
         body(resource)
     }
+}
+
+public inline fun <reified T : Any> Routing.unregisterResource() {
+    val serializer = serializer<T>()
+    val route = resource(serializer) {}
+    unregisterRoute(route)
 }

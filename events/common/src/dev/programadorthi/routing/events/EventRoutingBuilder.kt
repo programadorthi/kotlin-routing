@@ -23,3 +23,12 @@ public fun Route.event(
         handle(body)
     }
 }
+
+public fun Routing.unregisterEvent(name: String) {
+    val route = route(
+        path = name,
+        name = null,
+        method = EventRouteMethod,
+    ) { }
+    unregisterRoute(route)
+}

@@ -2,6 +2,10 @@ package dev.programadorthi.routing.events
 
 import dev.programadorthi.routing.core.application.ApplicationCall
 import dev.programadorthi.routing.core.application.call
+import dev.programadorthi.routing.core.application.createApplicationPlugin
+import dev.programadorthi.routing.core.application.hooks.CallFailed
+import dev.programadorthi.routing.core.errors.RouteNotFoundException
+import dev.programadorthi.routing.core.install
 import dev.programadorthi.routing.core.route
 import dev.programadorthi.routing.core.routing
 import io.ktor.http.Parameters
@@ -13,6 +17,7 @@ import kotlinx.coroutines.test.runTest
 import kotlin.test.Test
 import kotlin.test.assertEquals
 import kotlin.test.assertFails
+import kotlin.test.assertIs
 import kotlin.test.assertNotNull
 
 @OptIn(ExperimentalCoroutinesApi::class)
@@ -45,6 +50,48 @@ class EventRoutingTest {
         assertEquals("", "${result?.name}")
         assertEquals(EventRouteMethod, result?.routeMethod)
         assertEquals(Parameters.Empty, result?.parameters)
+    }
+
+    @Test
+    fun shouldUnregisterEvent() = runTest {
+        // GIVEN
+        val job = Job()
+        var result: ApplicationCall? = null
+        var exception: Throwable? = null
+
+        val statusPages = createApplicationPlugin("status-pages") {
+            on(CallFailed) { call, cause ->
+                result = call
+                exception = cause
+                job.complete()
+            }
+        }
+
+        val routing = routing(parentCoroutineContext = coroutineContext + job) {
+            install(statusPages)
+
+            event(name = "event_name") {
+                error("No reached code")
+            }
+        }
+
+        // WHEN
+        routing.unregisterEvent(name = "event_name")
+        routing.emitEvent(name = "event_name")
+        advanceTimeBy(99)
+
+        // THEN
+        assertNotNull(result)
+        assertNotNull(exception)
+        assertEquals("event_name", "${result?.uri}")
+        assertEquals("", "${result?.name}")
+        assertEquals(EventRouteMethod, result?.routeMethod)
+        assertEquals(Parameters.Empty, result?.parameters)
+        assertIs<RouteNotFoundException>(exception)
+        assertEquals(
+            "No matched subtrees found for: event_name",
+            exception?.message
+        )
     }
 
     @Test

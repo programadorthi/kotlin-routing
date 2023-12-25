@@ -3,7 +3,10 @@ package dev.programadorthi.routing.resources
 import dev.programadorthi.routing.core.RouteMethod
 import dev.programadorthi.routing.core.application.ApplicationCall
 import dev.programadorthi.routing.core.application.call
+import dev.programadorthi.routing.core.application.createApplicationPlugin
+import dev.programadorthi.routing.core.application.hooks.CallFailed
 import dev.programadorthi.routing.core.call
+import dev.programadorthi.routing.core.errors.RouteNotFoundException
 import dev.programadorthi.routing.core.install
 import dev.programadorthi.routing.core.routing
 import io.ktor.http.Parameters
@@ -15,6 +18,7 @@ import kotlinx.coroutines.test.advanceTimeBy
 import kotlinx.coroutines.test.runTest
 import kotlin.test.Test
 import kotlin.test.assertEquals
+import kotlin.test.assertIs
 import kotlin.test.assertNotNull
 
 @OptIn(ExperimentalCoroutinesApi::class)
@@ -241,5 +245,48 @@ class ResourcesTest {
         assertEquals("", "${result?.name}")
         assertEquals(RouteMethod.Empty, result?.routeMethod)
         assertEquals(Parameters.Empty, result?.parameters)
+    }
+
+    @Test
+    fun shouldUnregisterByType() = runTest {
+        // GIVEN
+        val job = Job()
+        var result: ApplicationCall? = null
+        var exception: Throwable? = null
+
+        val statusPages = createApplicationPlugin("status-pages") {
+            on(CallFailed) { call, cause ->
+                result = call
+                exception = cause
+                job.complete()
+            }
+        }
+
+        val routing = routing(parentCoroutineContext = coroutineContext + job) {
+            install(Resources)
+            install(statusPages)
+
+            handle<Path.Id> {
+                error("No reached code")
+            }
+        }
+
+        // WHEN
+        routing.unregisterResource<Path.Id>()
+        routing.execute(Path.Id(id = 123))
+        advanceTimeBy(99)
+
+        // THEN
+        assertNotNull(result)
+        assertNotNull(exception)
+        assertEquals("/path/123", "${result?.uri}")
+        assertEquals("", "${result?.name}")
+        assertEquals(RouteMethod.Empty, result?.routeMethod)
+        assertEquals(Parameters.Empty, result?.parameters)
+        assertIs<RouteNotFoundException>(exception)
+        assertEquals(
+            "No matched subtrees found for: /path/123",
+            exception?.message
+        )
     }
 }
