@@ -10,7 +10,9 @@ import org.gradle.kotlin.dsl.*
 
 fun Project.configureAndroid() {
     kotlin {
-        android()
+        android {
+            publishLibraryVariants = listOf("release")
+        }
 
         sourceSets.apply {
             val androidMain by getting {
