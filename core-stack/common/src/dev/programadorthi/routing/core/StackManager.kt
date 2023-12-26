@@ -5,7 +5,6 @@ import dev.programadorthi.routing.core.application.ApplicationCall
 import dev.programadorthi.routing.core.application.ApplicationPlugin
 import dev.programadorthi.routing.core.application.ApplicationStarted
 import dev.programadorthi.routing.core.application.ApplicationStopped
-import dev.programadorthi.routing.core.application.call
 import dev.programadorthi.routing.core.application.createApplicationPlugin
 import dev.programadorthi.routing.core.application.hooks.CallSetup
 import dev.programadorthi.routing.core.application.hooks.ResponseSent
@@ -14,16 +13,15 @@ import io.ktor.http.parametersOf
 import io.ktor.util.AttributeKey
 import io.ktor.util.Attributes
 import io.ktor.util.KtorDsl
-import io.ktor.util.pipeline.PipelineContext
 import io.ktor.util.putAll
 import kotlinx.coroutines.sync.Mutex
 import kotlinx.coroutines.sync.withLock
 
-private val AfterPopAttributeKey: AttributeKey<Boolean> =
-    AttributeKey("AfterPopAttributeKey")
-
 private val AfterRestorationAttributeKey: AttributeKey<Boolean> =
     AttributeKey("AfterRestorationAttributeKey")
+
+private val PreviousCallAttributeKey: AttributeKey<ApplicationCall> =
+    AttributeKey("PreviousCallAttributeKey")
 
 private val StackManagerAttributeKey: AttributeKey<StackManager> =
     AttributeKey("StackManagerAttributeKey")
@@ -40,27 +38,21 @@ internal var Application.stackManager: StackManager
         attributes.put(StackManagerAttributeKey, value)
     }
 
-internal var ApplicationCall.stackManager: StackManager
-    get() = application.stackManager
-    private set(value) {
-        application.stackManager = value
-    }
-
 internal fun Application.checkPluginInstalled() {
     checkNotNull(pluginOrNull(StackRouting)) {
         "StackRouting plugin not installed"
     }
 }
 
-public var ApplicationCall.isForward: Boolean
-    get() = attributes.getOrNull(AfterPopAttributeKey) ?: true
+public var ApplicationCall.previousCall: ApplicationCall?
+    get() = attributes.getOrNull(PreviousCallAttributeKey)
     internal set(value) {
-        attributes.put(AfterPopAttributeKey, value)
+        if (value != null) {
+            attributes.put(PreviousCallAttributeKey, value)
+        } else {
+            attributes.remove(PreviousCallAttributeKey)
+        }
     }
-
-public suspend fun PipelineContext<*, ApplicationCall>.previousCall(): ApplicationCall? {
-    return call.stackManager.lastOrNull()
-}
 
 /**
  * A plugin that provides a stack manager on each call
@@ -71,15 +63,19 @@ public val StackRouting: ApplicationPlugin<StackRoutingConfig> = createApplicati
 ) {
     val stackManager = StackManager(application, pluginConfig)
 
+    application.stackManager = stackManager
+
     on(CallSetup) { call ->
         if (call.routeMethod.isStackMethod()) {
             call.application.checkPluginInstalled()
         }
-        call.stackManager = stackManager
+        if (call.previousCall == null) {
+            call.previousCall = stackManager.lastOrNull()
+        }
     }
 
     on(ResponseSent) { call ->
-        call.stackManager.update(call)
+        stackManager.update(call)
     }
 }
 
@@ -140,23 +136,29 @@ internal class StackManager(
 
             StackRouteMethod.Replace -> {
                 stack.removeLastOrNull()?.let { toNotify ->
+                    val notify = toNotify.asPop()
+                    notify.previousCall = call
                     // Notify previous route that it will be popped
-                    executeCallWithNeglect(call = toNotify.asPop())
+                    executeCallWithNeglect(call = notify)
                 }
                 stack += call
             }
 
             StackRouteMethod.ReplaceAll -> {
+                var previousCall = call
                 while (true) {
                     val toNotify = stack.removeLastOrNull() ?: break
+                    val notify = toNotify.asPop()
+                    notify.previousCall = previousCall
                     // Notify previous route that it will be popped
-                    executeCallWithNeglect(call = toNotify.asPop())
+                    executeCallWithNeglect(call = notify)
+                    previousCall = toNotify
                 }
                 stack += call
             }
 
             StackRouteMethod.Pop -> {
-                // Don't be confused. The real route was popped on pop() call
+                // Don't be confused. The real route was popped on pop() function
                 // Here we are notifying previous route with popped parameters ;P
                 stack.lastOrNull()?.let { toNotify ->
                     // Attributes instances are by call and we need a fresh one
@@ -170,7 +172,7 @@ internal class StackManager(
                         attributes = attributes,
                         parameters = call.parameters,
                     )
-                    notify.isForward = false
+                    notify.previousCall = call
                     executeCallWithNeglect(call = notify)
                 }
             }
@@ -200,6 +202,7 @@ internal class StackManager(
         if (config.emitAfterRestoration) {
             val call = stack.removeLastOrNull() ?: return
             call.isRestored = true
+            call.previousCall = stack.lastOrNull()
             // Don't neglect to put again on the stack
             executeCallWithNeglect(call = call, neglect = false)
         }

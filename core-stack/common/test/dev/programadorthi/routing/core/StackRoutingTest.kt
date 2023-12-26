@@ -603,7 +603,7 @@ class StackRoutingTest {
 
             route(path = "/path", name = "path") {
                 handle {
-                    result = previousCall()
+                    result = call.previousCall
                 }
             }
         }
@@ -631,7 +631,7 @@ class StackRoutingTest {
 
             route(path = "/path2", name = "path2") {
                 handle {
-                    result = previousCall()
+                    result = call.previousCall
                     job.complete()
                 }
             }
@@ -789,7 +789,6 @@ class StackRoutingTest {
         // GIVEN
         val job = Job()
         val stackManagerNotifier = FakeStackManagerNotifier()
-        var previous: ApplicationCall? = null
         var result: ApplicationCall? = null
 
         StackManager.stackManagerNotifier = stackManagerNotifier
@@ -802,7 +801,6 @@ class StackRoutingTest {
             }
 
             handle(path = "/path02", name = "path02") {
-                previous = previousCall()
                 result = call
                 job.complete()
             }
@@ -830,12 +828,13 @@ class StackRoutingTest {
         advanceTimeBy(99)
 
         // THEN
-        assertNotNull(previous)
         assertNotNull(result)
-        assertEquals("/path01", "${previous?.uri}")
-        assertEquals("named", "${previous?.name}")
-        assertEquals(StackRouteMethod.Push, previous?.routeMethod)
-        assertEquals(Parameters.Empty, previous?.parameters)
+
+        assertEquals("/path01", "${result?.previousCall?.uri}")
+        assertEquals("named", "${result?.previousCall?.name}")
+        assertEquals(StackRouteMethod.Push, result?.previousCall?.routeMethod)
+        assertEquals(Parameters.Empty, result?.previousCall?.parameters)
+
         assertEquals("/path02", "${result?.uri}")
         assertEquals("", "${result?.name}")
         assertEquals(StackRouteMethod.Push, result?.routeMethod)
@@ -843,7 +842,7 @@ class StackRoutingTest {
     }
 
     @Test
-    fun shouldIsForwardBeFalseAfterPopCalls() = runTest {
+    fun shouldManyOperationsHandlePreviousCall() = runTest {
         // GIVEN
         val job = Job()
         val result = mutableListOf<ApplicationCall>()
@@ -851,19 +850,27 @@ class StackRoutingTest {
         val routing = routing(parentCoroutineContext = coroutineContext + job) {
             install(StackRouting)
 
-            handle(path = "/path", name = "path") {
+            handle(path = "/path1", name = "path1") {
+                result += call
+            }
+
+            handle(path = "/path2", name = "path2") {
+                result += call
+            }
+
+            handle(path = "/path3", name = "path3") {
                 result += call
             }
         }
 
         // WHEN
-        routing.push(path = "/path")
+        routing.push(path = "/path1")
         advanceTimeBy(99)
-        routing.push(path = "/path")
+        routing.push(path = "/path2")
         advanceTimeBy(99)
         routing.pop()
         advanceTimeBy(99)
-        routing.push(path = "/path")
+        routing.push(path = "/path3")
         advanceTimeBy(99)
         routing.pop()
         advanceTimeBy(99)
@@ -871,54 +878,84 @@ class StackRoutingTest {
         // THEN
         assertEquals(7, result.size)
         // First handle is a push call
-        assertEquals(StackRouteMethod.Push, result[0].routeMethod)
-        assertEquals("", result[0].name)
-        assertEquals("/path", result[0].uri)
-        assertEquals(Parameters.Empty, result[0].parameters)
-        assertEquals(true, result[0].isForward, message = "Expect push 1 is a forward")
+        val firstPushCall = result[0]
+        assertEquals(StackRouteMethod.Push, firstPushCall.routeMethod)
+        assertEquals("", firstPushCall.name)
+        assertEquals("/path1", firstPushCall.uri)
+        assertEquals(Parameters.Empty, firstPushCall.parameters)
+        assertNull(
+            firstPushCall.previousCall,
+            message = "Expect first push have no previous call"
+        )
         // Second handle is a push call
-        assertEquals(StackRouteMethod.Push, result[1].routeMethod)
-        assertEquals("", result[1].name)
-        assertEquals("/path", result[1].uri)
-        assertEquals(Parameters.Empty, result[1].parameters)
-        assertEquals(true, result[1].isForward, message = "Expect push 2 is a forward")
-        // Third handle is a pop call
-        assertEquals(StackRouteMethod.Pop, result[2].routeMethod)
-        assertEquals("", result[2].name)
-        assertEquals("/path", result[2].uri)
-        assertEquals(Parameters.Empty, result[2].parameters)
-        assertEquals(false, result[2].isForward, message = "Expect pop 1 is not a forward")
-        // Fourth handle is a push emitted by pop
-        assertEquals(StackRouteMethod.Push, result[3].routeMethod)
-        assertEquals("", result[3].name)
-        assertEquals("/path", result[3].uri)
-        assertEquals(Parameters.Empty, result[3].parameters)
+        val secondPushCall = result[1]
+        assertEquals(StackRouteMethod.Push, secondPushCall.routeMethod)
+        assertEquals("", secondPushCall.name)
+        assertEquals("/path2", secondPushCall.uri)
+        assertEquals(Parameters.Empty, secondPushCall.parameters)
         assertEquals(
-            false,
-            result[3].isForward,
-            message = "Expect push after pop 1 is not a forward"
+            firstPushCall.toCompare(),
+            secondPushCall.previousCall,
+            message = "Expect second push have first push as previous call"
+        )
+        // Third handle is a pop call
+        val firstPopCall = result[2]
+        assertEquals(StackRouteMethod.Pop, firstPopCall.routeMethod)
+        assertEquals("", firstPopCall.name)
+        assertEquals("/path2", firstPopCall.uri)
+        assertEquals(Parameters.Empty, firstPopCall.parameters)
+        assertEquals(
+            firstPushCall.toCompare(),
+            firstPopCall.previousCall,
+            message = "Expect first pop have first push as previous call"
+        )
+        // Fourth handle is a push emitted by pop
+        val firstPushByPopCall = result[3]
+        assertEquals(StackRouteMethod.Push, firstPushByPopCall.routeMethod)
+        assertEquals("", firstPushByPopCall.name)
+        assertEquals("/path1", firstPushByPopCall.uri)
+        assertEquals(Parameters.Empty, firstPushByPopCall.parameters)
+        assertEquals(
+            firstPopCall.toCompare(),
+            firstPushByPopCall.previousCall,
+            message = "Expect first push called by pop operation have first pop as previous call"
         )
         // Fifth handle is a replace call
-        assertEquals(StackRouteMethod.Push, result[4].routeMethod)
-        assertEquals("", result[4].name)
-        assertEquals("/path", result[4].uri)
-        assertEquals(Parameters.Empty, result[4].parameters)
-        assertEquals(true, result[4].isForward, message = "Expect push 3 is a forward")
-        // Sixth handle is a pop call
-        assertEquals(StackRouteMethod.Pop, result[5].routeMethod)
-        assertEquals("", result[5].name)
-        assertEquals("/path", result[5].uri)
-        assertEquals(Parameters.Empty, result[5].parameters)
-        assertEquals(false, result[5].isForward, message = "Expect pop 2 is not a forward")
-        // Fourth handle is a push emitted by pop
-        assertEquals(StackRouteMethod.Push, result[6].routeMethod)
-        assertEquals("", result[6].name)
-        assertEquals("/path", result[6].uri)
-        assertEquals(Parameters.Empty, result[6].parameters)
+        val thirdPushCall = result[4]
+        assertEquals(StackRouteMethod.Push, thirdPushCall.routeMethod)
+        assertEquals("", thirdPushCall.name)
+        assertEquals("/path3", thirdPushCall.uri)
+        assertEquals(Parameters.Empty, thirdPushCall.parameters)
         assertEquals(
-            false,
-            result[6].isForward,
-            message = "Expect push after pop 2 is not a forward"
+            firstPushCall.toCompare(),
+            thirdPushCall.previousCall,
+            message = "Expect third push have first push as previous call"
+        )
+        // Sixth handle is a pop call
+        val secondPopCall = result[5]
+        assertEquals(StackRouteMethod.Pop, secondPopCall.routeMethod)
+        assertEquals("", secondPopCall.name)
+        assertEquals("/path3", secondPopCall.uri)
+        assertEquals(Parameters.Empty, secondPopCall.parameters)
+        assertEquals(
+            firstPushCall.toCompare(),
+            secondPopCall.previousCall,
+            message = "Expect second pop have first push as previous call"
+        )
+        // Fourth handle is a push emitted by pop
+        val secondPushByPopCall = result[6]
+        assertEquals(StackRouteMethod.Push, secondPushByPopCall.routeMethod)
+        assertEquals("", secondPushByPopCall.name)
+        assertEquals("/path1", secondPushByPopCall.uri)
+        assertEquals(Parameters.Empty, secondPushByPopCall.parameters)
+        assertEquals(
+            secondPopCall.toCompare(),
+            secondPushByPopCall.previousCall,
+            message = "Expect second push called by pop operation have second pop as previous call"
         )
     }
+
+    private fun ApplicationCall.toCompare(): ApplicationCall = ApplicationCall(
+        application, name, uri, routeMethod, attributes, parameters
+    )
 }
