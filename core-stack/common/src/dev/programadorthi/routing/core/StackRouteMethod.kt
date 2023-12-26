@@ -1,5 +1,7 @@
 package dev.programadorthi.routing.core
 
+import dev.programadorthi.routing.core.application.ApplicationCall
+
 public object StackRouteMethod {
     public val Pop: RouteMethod = RouteMethod("POP")
     public val Push: RouteMethod = RouteMethod("PUSH")
@@ -24,3 +26,5 @@ public fun RouteMethod.isStackMethod(): Boolean =
         this == StackRouteMethod.ReplaceAll
 
 public fun RouteMethod.isStackPop(): Boolean = this == StackRouteMethod.Pop
+
+public fun ApplicationCall.isPop(): Boolean = routeMethod.isStackPop()

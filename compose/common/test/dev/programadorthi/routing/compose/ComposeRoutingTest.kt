@@ -1,5 +1,7 @@
 package dev.programadorthi.routing.compose
 
+import dev.programadorthi.routing.compose.helper.FakeContent
+import dev.programadorthi.routing.compose.helper.runComposeTest
 import dev.programadorthi.routing.core.RouteMethod
 import dev.programadorthi.routing.core.StackRouteMethod
 import dev.programadorthi.routing.core.StackRouting
@@ -8,7 +10,7 @@ import dev.programadorthi.routing.core.application.call
 import dev.programadorthi.routing.core.call
 import dev.programadorthi.routing.core.handle
 import dev.programadorthi.routing.core.install
-import dev.programadorthi.routing.core.isStackPop
+import dev.programadorthi.routing.core.isPop
 import dev.programadorthi.routing.core.pop
 import dev.programadorthi.routing.core.push
 import dev.programadorthi.routing.core.replace
@@ -119,7 +121,7 @@ internal class ComposeRoutingTest {
             val fakeContent = FakeContent()
 
             val routing = routing(parentCoroutineContext = coroutineContext) {
-                composable(path = "/path", method = RouteMethod.Empty) {
+                composable(path = "/path", method = RouteMethod) {
                     fakeContent.content = "I'm the route method based content"
                     fakeContent.Composable()
                 }
@@ -136,7 +138,7 @@ internal class ComposeRoutingTest {
             }
 
             // WHEN
-            routing.call(uri = "/path", routeMethod = RouteMethod.Empty)
+            routing.call(uri = "/path", routeMethod = RouteMethod)
             advanceTimeBy(99) // Ask for routing
             clock.sendFrame(0L) // Ask for recomposition
 
@@ -337,7 +339,7 @@ internal class ComposeRoutingTest {
                 }
                 composable(path = "/pop") {
                     result = call
-                    if (call.routeMethod.isStackPop()) {
+                    if (call.isPop()) {
                         error("I will never be called in a composable with a pop call")
                     }
                 }

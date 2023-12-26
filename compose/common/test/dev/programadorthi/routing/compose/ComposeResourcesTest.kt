@@ -1,5 +1,7 @@
 package dev.programadorthi.routing.compose
 
+import dev.programadorthi.routing.compose.helper.FakeContent
+import dev.programadorthi.routing.compose.helper.runComposeTest
 import dev.programadorthi.routing.core.RouteMethod
 import dev.programadorthi.routing.core.StackRouteMethod
 import dev.programadorthi.routing.core.StackRouting
@@ -70,7 +72,7 @@ class ComposeResourcesTest {
             assertEquals("I'm the path based content", fakeContent.result)
             assertEquals("/path", "${result?.uri}")
             assertEquals("", "${result?.name}")
-            assertEquals(RouteMethod.Empty, result?.routeMethod)
+            assertEquals(RouteMethod, result?.routeMethod)
             assertEquals(Parameters.Empty, result?.parameters)
         }
 

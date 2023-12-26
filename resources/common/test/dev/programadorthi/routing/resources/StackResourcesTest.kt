@@ -5,7 +5,7 @@ import dev.programadorthi.routing.core.StackRouting
 import dev.programadorthi.routing.core.application.ApplicationCall
 import dev.programadorthi.routing.core.application.call
 import dev.programadorthi.routing.core.install
-import dev.programadorthi.routing.core.isStackPop
+import dev.programadorthi.routing.core.isPop
 import dev.programadorthi.routing.core.pop
 import dev.programadorthi.routing.core.routing
 import io.ktor.http.Parameters
@@ -270,7 +270,7 @@ class StackResourcesTest {
 
             handle<Path.Id> { id ->
                 result += call to id
-                if (call.routeMethod.isStackPop()) {
+                if (call.isPop()) {
                     job.complete()
                 }
             }
@@ -291,13 +291,26 @@ class StackResourcesTest {
         // THEN
         assertEquals(StackRouteMethod.Push, result[0].first.routeMethod)
         assertEquals(1, result[0].second.id)
+
         assertEquals(StackRouteMethod.Push, result[1].first.routeMethod)
         assertEquals(2, result[1].second.id)
+
         assertEquals(StackRouteMethod.Replace, result[2].first.routeMethod)
         assertEquals(3, result[2].second.id)
-        assertEquals(StackRouteMethod.ReplaceAll, result[3].first.routeMethod)
-        assertEquals(4, result[3].second.id)
-        assertEquals(StackRouteMethod.Pop, result[4].first.routeMethod)
+
+        assertEquals(StackRouteMethod.Pop, result[3].first.routeMethod)
+        assertEquals(2, result[3].second.id)
+
+        assertEquals(StackRouteMethod.ReplaceAll, result[4].first.routeMethod)
         assertEquals(4, result[4].second.id)
+
+        assertEquals(StackRouteMethod.Pop, result[5].first.routeMethod)
+        assertEquals(3, result[5].second.id)
+
+        assertEquals(StackRouteMethod.Pop, result[6].first.routeMethod)
+        assertEquals(1, result[6].second.id)
+
+        assertEquals(StackRouteMethod.Pop, result[7].first.routeMethod)
+        assertEquals(4, result[7].second.id)
     }
 }

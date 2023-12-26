@@ -9,6 +9,7 @@ import dev.programadorthi.routing.core.application.createApplicationPlugin
 import dev.programadorthi.routing.core.application.hooks.CallSetup
 import dev.programadorthi.routing.core.application.hooks.ResponseSent
 import dev.programadorthi.routing.core.application.pluginOrNull
+import io.ktor.http.Parameters
 import io.ktor.http.parametersOf
 import io.ktor.util.AttributeKey
 import io.ktor.util.Attributes
@@ -136,7 +137,7 @@ internal class StackManager(
 
             StackRouteMethod.Replace -> {
                 stack.removeLastOrNull()?.let { toNotify ->
-                    val notify = toNotify.asPop()
+                    val notify = toNotify.copy(routeMethod = StackRouteMethod.Pop)
                     notify.previousCall = call
                     // Notify previous route that it will be popped
                     executeCallWithNeglect(call = notify)
@@ -148,7 +149,7 @@ internal class StackManager(
                 var previousCall = call
                 while (true) {
                     val toNotify = stack.removeLastOrNull() ?: break
-                    val notify = toNotify.asPop()
+                    val notify = toNotify.copy(routeMethod = StackRouteMethod.Pop)
                     notify.previousCall = previousCall
                     // Notify previous route that it will be popped
                     executeCallWithNeglect(call = notify)
@@ -161,17 +162,7 @@ internal class StackManager(
                 // Don't be confused. The real route was popped on pop() function
                 // Here we are notifying previous route with popped parameters ;P
                 stack.lastOrNull()?.let { toNotify ->
-                    // Attributes instances are by call and we need a fresh one
-                    val attributes = Attributes()
-                    attributes.putAll(toNotify.attributes)
-                    val notify = ApplicationCall(
-                        application = toNotify.application,
-                        name = toNotify.name,
-                        uri = toNotify.uri,
-                        routeMethod = toNotify.routeMethod,
-                        attributes = attributes,
-                        parameters = call.parameters,
-                    )
+                    val notify = toNotify.copy(parameters = call.parameters)
                     notify.previousCall = call
                     executeCallWithNeglect(call = notify)
                 }
@@ -214,13 +205,18 @@ internal class StackManager(
         application.pluginOrNull(Routing)?.execute(callToNeglect)
     }
 
-    private fun ApplicationCall.asPop(): ApplicationCall = ApplicationCall(
+    private fun ApplicationCall.copy(
+        parameters: Parameters = this.parameters,
+        routeMethod: RouteMethod = this.routeMethod,
+    ): ApplicationCall = ApplicationCall(
         application = this.application,
         name = this.name,
         uri = this.uri,
-        attributes = this.attributes,
-        parameters = this.parameters,
-        routeMethod = StackRouteMethod.Pop,
+        parameters = parameters,
+        routeMethod = routeMethod,
+        attributes = Attributes().apply {
+            putAll(this@copy.attributes)
+        },
     )
 
     internal companion object {

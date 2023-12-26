@@ -5,7 +5,7 @@ import dev.programadorthi.routing.core.Route
 import dev.programadorthi.routing.core.RouteMethod
 import dev.programadorthi.routing.core.application.ApplicationCall
 import dev.programadorthi.routing.core.application.call
-import dev.programadorthi.routing.core.isStackPop
+import dev.programadorthi.routing.core.isPop
 import dev.programadorthi.routing.core.method
 import dev.programadorthi.routing.core.route
 import dev.programadorthi.routing.resources.handle
@@ -72,7 +72,7 @@ public fun PipelineContext<Unit, ApplicationCall>.composable(
     body: @Composable () -> Unit,
 ) {
     // Avoiding recompose same content on a popped call
-    if (call.routeMethod.isStackPop()) return
+    if (call.isPop()) return
 
     call.content = body
 }

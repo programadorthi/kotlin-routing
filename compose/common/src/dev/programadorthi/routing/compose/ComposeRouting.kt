@@ -17,7 +17,9 @@ import io.ktor.util.logging.Logger
 import kotlin.coroutines.CoroutineContext
 import kotlin.coroutines.EmptyCoroutineContext
 
-public val LocalRouting: ProvidableCompositionLocal<Routing?> = staticCompositionLocalOf { null }
+public val LocalRouting: ProvidableCompositionLocal<Routing> = staticCompositionLocalOf {
+    error("Composition local LocalRouting not found")
+}
 
 @Composable
 public fun Routing(

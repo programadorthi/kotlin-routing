@@ -354,7 +354,7 @@ class StackRoutingTest {
 
             route(path = "/path") {
                 handle {
-                    if (!call.routeMethod.isStackPop()) {
+                    if (!call.isPop()) {
                         call.redirectToPath(path = "/path2")
                     }
                 }
@@ -722,66 +722,137 @@ class StackRoutingTest {
         advanceTimeBy(99)
 
         // THEN
+        assertEquals(12, result.size)
         // First handle is a push call
-        assertEquals(StackRouteMethod.Push, result[0].routeMethod)
-        assertEquals("", result[0].name)
-        assertEquals("/path", result[0].uri)
-        assertEquals(Parameters.Empty, result[0].parameters)
+        val firstPushCall = result[0]
+        assertEquals(StackRouteMethod.Push, firstPushCall.routeMethod)
+        assertEquals("", firstPushCall.name)
+        assertEquals("/path", firstPushCall.uri)
+        assertEquals(Parameters.Empty, firstPushCall.parameters)
+        assertNull(
+            firstPushCall.previousCall,
+            message = "Expect first push have no previous call"
+        )
         // Second handle is a push call
-        assertEquals(StackRouteMethod.Push, result[1].routeMethod)
-        assertEquals("path", result[1].name)
-        assertEquals("/path", result[1].uri)
-        assertEquals(Parameters.Empty, result[1].parameters)
+        val firstPushNamedCall = result[1]
+        assertEquals(StackRouteMethod.Push, firstPushNamedCall.routeMethod)
+        assertEquals("path", firstPushNamedCall.name)
+        assertEquals("/path", firstPushNamedCall.uri)
+        assertEquals(Parameters.Empty, firstPushNamedCall.parameters)
+        assertEquals(
+            firstPushCall.toCompare(),
+            firstPushNamedCall.previousCall,
+            message = "Expect first push named have first push as previous call"
+        )
         // Third handle is a replace call
-        assertEquals(StackRouteMethod.Replace, result[2].routeMethod)
-        assertEquals("", result[2].name)
-        assertEquals("/path", result[2].uri)
-        assertEquals(Parameters.Empty, result[2].parameters)
+        val firstReplaceCall = result[2]
+        assertEquals(StackRouteMethod.Replace, firstReplaceCall.routeMethod)
+        assertEquals("", firstReplaceCall.name)
+        assertEquals("/path", firstReplaceCall.uri)
+        assertEquals(Parameters.Empty, firstReplaceCall.parameters)
+        assertEquals(
+            firstPushNamedCall.toCompare(),
+            firstReplaceCall.previousCall,
+            message = "Expect first replace have first push named as previous call"
+        )
         // Fourth handle is a pop call emitted by replace
-        assertEquals(StackRouteMethod.Pop, result[3].routeMethod)
-        assertEquals("path", result[3].name)
-        assertEquals("/path", result[3].uri)
-        assertEquals(Parameters.Empty, result[3].parameters)
+        val firstPopByReplaceCall = result[3]
+        assertEquals(StackRouteMethod.Pop, firstPopByReplaceCall.routeMethod)
+        assertEquals("path", firstPopByReplaceCall.name)
+        assertEquals("/path", firstPopByReplaceCall.uri)
+        assertEquals(Parameters.Empty, firstPopByReplaceCall.parameters)
+        assertEquals(
+            firstReplaceCall.toCompare(),
+            firstPopByReplaceCall.previousCall,
+            message = "Expect first pop by replace have first replace as previous call"
+        )
         // Fifth handle is a replace call
-        assertEquals(StackRouteMethod.Replace, result[4].routeMethod)
-        assertEquals("path", result[4].name)
-        assertEquals("/path", result[4].uri)
-        assertEquals(Parameters.Empty, result[4].parameters)
+        val firstReplaceNamedCall = result[4]
+        assertEquals(StackRouteMethod.Replace, firstReplaceNamedCall.routeMethod)
+        assertEquals("path", firstReplaceNamedCall.name)
+        assertEquals("/path", firstReplaceNamedCall.uri)
+        assertEquals(Parameters.Empty, firstReplaceNamedCall.parameters)
+        assertEquals(
+            firstReplaceCall.toCompare(),
+            firstReplaceNamedCall.previousCall,
+            message = "Expect first replace named have first replace as previous call"
+        )
         // Sixth handle is a pop call emitted by replace
-        assertEquals(StackRouteMethod.Pop, result[5].routeMethod)
-        assertEquals("", result[5].name)
-        assertEquals("/path", result[5].uri)
-        assertEquals(Parameters.Empty, result[5].parameters)
+        val firstPopByReplaceNamedCall = result[5]
+        assertEquals(StackRouteMethod.Pop, firstPopByReplaceNamedCall.routeMethod)
+        assertEquals("", firstPopByReplaceNamedCall.name)
+        assertEquals("/path", firstPopByReplaceNamedCall.uri)
+        assertEquals(Parameters.Empty, firstPopByReplaceNamedCall.parameters)
+        assertEquals(
+            firstReplaceNamedCall.toCompare(),
+            firstPopByReplaceNamedCall.previousCall,
+            message = "Expect first pop by replace named have first replace named as previous call"
+        )
         // Seventh handle is a replace all call
-        assertEquals(StackRouteMethod.ReplaceAll, result[6].routeMethod)
-        assertEquals("", result[6].name)
-        assertEquals("/path", result[6].uri)
-        assertEquals(Parameters.Empty, result[6].parameters)
+        val firstReplaceAllCall = result[6]
+        assertEquals(StackRouteMethod.ReplaceAll, firstReplaceAllCall.routeMethod)
+        assertEquals("", firstReplaceAllCall.name)
+        assertEquals("/path", firstReplaceAllCall.uri)
+        assertEquals(Parameters.Empty, firstReplaceAllCall.parameters)
+        assertEquals(
+            firstReplaceNamedCall.toCompare(),
+            firstReplaceAllCall.previousCall,
+            message = "Expect first replace all have first replace named as previous call"
+        )
         // Eighth handle is a pop call emitted by replace all
-        assertEquals(StackRouteMethod.Pop, result[7].routeMethod)
-        assertEquals("path", result[7].name)
-        assertEquals("/path", result[7].uri)
-        assertEquals(Parameters.Empty, result[7].parameters)
+        val firstPopByReplaceAllCall = result[7]
+        assertEquals(StackRouteMethod.Pop, firstPopByReplaceAllCall.routeMethod)
+        assertEquals("path", firstPopByReplaceAllCall.name)
+        assertEquals("/path", firstPopByReplaceAllCall.uri)
+        assertEquals(Parameters.Empty, firstPopByReplaceAllCall.parameters)
+        assertEquals(
+            firstReplaceAllCall.toCompare(),
+            firstPopByReplaceAllCall.previousCall,
+            message = "Expect first pop by replace all have first replace all as previous call"
+        )
         // Ninth handle is a pop call emitted by replace all
-        assertEquals(StackRouteMethod.Pop, result[8].routeMethod)
-        assertEquals("", result[8].name)
-        assertEquals("/path", result[8].uri)
-        assertEquals(Parameters.Empty, result[8].parameters)
+        val secondPopByReplaceAllCall = result[8]
+        assertEquals(StackRouteMethod.Pop, secondPopByReplaceAllCall.routeMethod)
+        assertEquals("", secondPopByReplaceAllCall.name)
+        assertEquals("/path", secondPopByReplaceAllCall.uri)
+        assertEquals(Parameters.Empty, secondPopByReplaceAllCall.parameters)
+        assertEquals(
+            firstReplaceNamedCall.toCompare(),
+            secondPopByReplaceAllCall.previousCall,
+            message = "Expect second pop by replace all have first replace named as previous call"
+        )
         // Tenth handle is a replace all call
-        assertEquals(StackRouteMethod.ReplaceAll, result[9].routeMethod)
-        assertEquals("path", result[9].name)
-        assertEquals("/path", result[9].uri)
-        assertEquals(Parameters.Empty, result[9].parameters)
+        val firstReplaceAllNamedCall = result[9]
+        assertEquals(StackRouteMethod.ReplaceAll, firstReplaceAllNamedCall.routeMethod)
+        assertEquals("path", firstReplaceAllNamedCall.name)
+        assertEquals("/path", firstReplaceAllNamedCall.uri)
+        assertEquals(Parameters.Empty, firstReplaceAllNamedCall.parameters)
+        assertEquals(
+            firstReplaceAllCall.toCompare(),
+            firstReplaceAllNamedCall.previousCall,
+            message = "Expect first replace all named have first replace all as previous call"
+        )
         // Eleventh handle is a pop call emitted by replace all
-        assertEquals(StackRouteMethod.Pop, result[10].routeMethod)
-        assertEquals("", result[10].name)
-        assertEquals("/path", result[10].uri)
-        assertEquals(Parameters.Empty, result[10].parameters)
+        val firstPopByReplaceAllNamedCall = result[10]
+        assertEquals(StackRouteMethod.Pop, firstPopByReplaceAllNamedCall.routeMethod)
+        assertEquals("", firstPopByReplaceAllNamedCall.name)
+        assertEquals("/path", firstPopByReplaceAllNamedCall.uri)
+        assertEquals(Parameters.Empty, firstPopByReplaceAllNamedCall.parameters)
+        assertEquals(
+            firstReplaceAllNamedCall.toCompare(),
+            firstPopByReplaceAllNamedCall.previousCall,
+            message = "Expect first pop by replace all named have first replace all named as previous call"
+        )
         // Twelfth handle is a pop call
-        assertEquals(StackRouteMethod.Pop, result[11].routeMethod)
-        assertEquals("path", result[11].name)
-        assertEquals("/path", result[11].uri)
-        assertEquals(parametersOf("key", "value"), result[11].parameters)
+        val firstPopCall = result[11]
+        assertEquals(StackRouteMethod.Pop, firstPopCall.routeMethod)
+        assertEquals("path", firstPopCall.name)
+        assertEquals("/path", firstPopCall.uri)
+        assertEquals(parametersOf("key", "value"), firstPopCall.parameters)
+        assertNull(
+            firstPopCall.previousCall,
+            message = "Expect pop have no previous call"
+        )
     }
 
     @Test
@@ -956,6 +1027,11 @@ class StackRoutingTest {
     }
 
     private fun ApplicationCall.toCompare(): ApplicationCall = ApplicationCall(
-        application, name, uri, routeMethod, attributes, parameters
+        application = application,
+        name = name,
+        uri = if (name.isBlank()) uri else "",
+        routeMethod = routeMethod,
+        attributes = attributes,
+        parameters = parameters,
     )
 }
