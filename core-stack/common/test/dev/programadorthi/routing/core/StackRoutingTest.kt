@@ -192,15 +192,14 @@ class StackRoutingTest {
     fun shouldPopWithParameters() = runTest {
         // GIVEN
         val job = Job()
-        var result: ApplicationCall? = null
+        val result = mutableListOf<ApplicationCall>()
 
         val routing = routing(parentCoroutineContext = coroutineContext + job) {
             install(StackRouting)
 
             route(path = "/path", name = "path") {
                 handle {
-                    result = call
-                    job.complete()
+                    result += call
                 }
             }
         }
@@ -213,26 +212,31 @@ class StackRoutingTest {
         advanceTimeBy(99)
 
         // THEN
-        assertNotNull(result)
-        assertEquals("/path", "${result?.uri}")
-        assertEquals("", "${result?.name}")
-        assertEquals(StackRouteMethod.Pop, result?.routeMethod)
-        assertEquals(parametersOf("key", "value"), result?.parameters)
+        assertEquals(2, result.size)
+        // First handle is a push call
+        assertEquals("/path", result[0].uri)
+        assertEquals("", result[0].name)
+        assertEquals(StackRouteMethod.Push, result[0].routeMethod)
+        assertEquals(Parameters.Empty, result[0].parameters)
+        // Second handle is a pop call
+        assertEquals("/path", result[1].uri)
+        assertEquals("", result[1].name)
+        assertEquals(StackRouteMethod.Pop, result[1].routeMethod)
+        assertEquals(parametersOf("key", "value"), result[1].parameters)
     }
 
     @Test
     fun shouldPopNamedRoutes() = runTest {
         // GIVEN
         val job = Job()
-        var result: ApplicationCall? = null
+        val result = mutableListOf<ApplicationCall>()
 
         val routing = routing(parentCoroutineContext = coroutineContext + job) {
             install(StackRouting)
 
             route(path = "/path", name = "path") {
                 handle {
-                    result = call
-                    job.complete()
+                    result += call
                 }
             }
         }
@@ -245,11 +249,17 @@ class StackRoutingTest {
         advanceTimeBy(99)
 
         // THEN
-        assertNotNull(result)
-        assertEquals("/path", "${result?.uri}")
-        assertEquals("path", "${result?.name}")
-        assertEquals(StackRouteMethod.Pop, result?.routeMethod)
-        assertEquals(parametersOf("key", "value"), result?.parameters)
+        assertEquals(2, result.size)
+        // First handle is a push call
+        assertEquals("/path", result[0].uri)
+        assertEquals("path", result[0].name)
+        assertEquals(StackRouteMethod.Push, result[0].routeMethod)
+        assertEquals(Parameters.Empty, result[0].parameters)
+        // Second handle is a pop call
+        assertEquals("/path", result[1].uri)
+        assertEquals("path", result[1].name)
+        assertEquals(StackRouteMethod.Pop, result[1].routeMethod)
+        assertEquals(parametersOf("key", "value"), result[1].parameters)
     }
 
     @Test
@@ -344,7 +354,9 @@ class StackRoutingTest {
 
             route(path = "/path") {
                 handle {
-                    call.redirectToPath(path = "/path2")
+                    if (!call.routeMethod.isStackPop()) {
+                        call.redirectToPath(path = "/path2")
+                    }
                 }
             }
 
@@ -689,9 +701,6 @@ class StackRoutingTest {
 
             handle(path = "/path", name = "path") {
                 result += call
-                if (call.routeMethod.isStackPop()) {
-                    job.complete()
-                }
             }
         }
 
@@ -713,21 +722,66 @@ class StackRoutingTest {
         advanceTimeBy(99)
 
         // THEN
+        // First handle is a push call
         assertEquals(StackRouteMethod.Push, result[0].routeMethod)
         assertEquals("", result[0].name)
+        assertEquals("/path", result[0].uri)
+        assertEquals(Parameters.Empty, result[0].parameters)
+        // Second handle is a push call
         assertEquals(StackRouteMethod.Push, result[1].routeMethod)
         assertEquals("path", result[1].name)
+        assertEquals("/path", result[1].uri)
+        assertEquals(Parameters.Empty, result[1].parameters)
+        // Third handle is a replace call
         assertEquals(StackRouteMethod.Replace, result[2].routeMethod)
         assertEquals("", result[2].name)
-        assertEquals(StackRouteMethod.Replace, result[3].routeMethod)
+        assertEquals("/path", result[2].uri)
+        assertEquals(Parameters.Empty, result[2].parameters)
+        // Fourth handle is a pop call emitted by replace
+        assertEquals(StackRouteMethod.Pop, result[3].routeMethod)
         assertEquals("path", result[3].name)
-        assertEquals(StackRouteMethod.ReplaceAll, result[4].routeMethod)
-        assertEquals("", result[4].name)
-        assertEquals(StackRouteMethod.ReplaceAll, result[5].routeMethod)
-        assertEquals("path", result[5].name)
-        assertEquals(StackRouteMethod.Pop, result[6].routeMethod)
-        assertEquals("path", result[6].name)
-        assertEquals(parametersOf("key", "value"), result[6].parameters)
+        assertEquals("/path", result[3].uri)
+        assertEquals(Parameters.Empty, result[3].parameters)
+        // Fifth handle is a replace call
+        assertEquals(StackRouteMethod.Replace, result[4].routeMethod)
+        assertEquals("path", result[4].name)
+        assertEquals("/path", result[4].uri)
+        assertEquals(Parameters.Empty, result[4].parameters)
+        // Sixth handle is a pop call emitted by replace
+        assertEquals(StackRouteMethod.Pop, result[5].routeMethod)
+        assertEquals("", result[5].name)
+        assertEquals("/path", result[5].uri)
+        assertEquals(Parameters.Empty, result[5].parameters)
+        // Seventh handle is a replace all call
+        assertEquals(StackRouteMethod.ReplaceAll, result[6].routeMethod)
+        assertEquals("", result[6].name)
+        assertEquals("/path", result[6].uri)
+        assertEquals(Parameters.Empty, result[6].parameters)
+        // Eighth handle is a pop call emitted by replace all
+        assertEquals(StackRouteMethod.Pop, result[7].routeMethod)
+        assertEquals("path", result[7].name)
+        assertEquals("/path", result[7].uri)
+        assertEquals(Parameters.Empty, result[7].parameters)
+        // Ninth handle is a pop call emitted by replace all
+        assertEquals(StackRouteMethod.Pop, result[8].routeMethod)
+        assertEquals("", result[8].name)
+        assertEquals("/path", result[8].uri)
+        assertEquals(Parameters.Empty, result[8].parameters)
+        // Tenth handle is a replace all call
+        assertEquals(StackRouteMethod.ReplaceAll, result[9].routeMethod)
+        assertEquals("path", result[9].name)
+        assertEquals("/path", result[9].uri)
+        assertEquals(Parameters.Empty, result[9].parameters)
+        // Eleventh handle is a pop call emitted by replace all
+        assertEquals(StackRouteMethod.Pop, result[10].routeMethod)
+        assertEquals("", result[10].name)
+        assertEquals("/path", result[10].uri)
+        assertEquals(Parameters.Empty, result[10].parameters)
+        // Twelfth handle is a pop call
+        assertEquals(StackRouteMethod.Pop, result[11].routeMethod)
+        assertEquals("path", result[11].name)
+        assertEquals("/path", result[11].uri)
+        assertEquals(parametersOf("key", "value"), result[11].parameters)
     }
 
     @Test
@@ -735,6 +789,7 @@ class StackRoutingTest {
         // GIVEN
         val job = Job()
         val stackManagerNotifier = FakeStackManagerNotifier()
+        var previous: ApplicationCall? = null
         var result: ApplicationCall? = null
 
         StackManager.stackManagerNotifier = stackManagerNotifier
@@ -747,6 +802,7 @@ class StackRoutingTest {
             }
 
             handle(path = "/path02", name = "path02") {
+                previous = previousCall()
                 result = call
                 job.complete()
             }
@@ -755,7 +811,7 @@ class StackRoutingTest {
             stackManagerNotifier.restoration = """
                 [
                     {
-                        "name": "",
+                        "name": "named",
                         "uri": "/path01",
                         "routeMethod": "PUSH",
                         "parameters": {}
@@ -774,7 +830,12 @@ class StackRoutingTest {
         advanceTimeBy(99)
 
         // THEN
+        assertNotNull(previous)
         assertNotNull(result)
+        assertEquals("/path01", "${previous?.uri}")
+        assertEquals("named", "${previous?.name}")
+        assertEquals(StackRouteMethod.Push, previous?.routeMethod)
+        assertEquals(Parameters.Empty, previous?.parameters)
         assertEquals("/path02", "${result?.uri}")
         assertEquals("", "${result?.name}")
         assertEquals(StackRouteMethod.Push, result?.routeMethod)

@@ -14,9 +14,20 @@ import io.ktor.http.parametersOf
 import io.ktor.util.AttributeKey
 import io.ktor.util.KtorDsl
 import io.ktor.util.pipeline.PipelineContext
+import kotlinx.coroutines.sync.Mutex
+import kotlinx.coroutines.sync.withLock
 
 private val StackManagerAttributeKey: AttributeKey<StackManager> =
     AttributeKey("StackManagerAttributeKey")
+
+private val AfterRestorationAttributeKey: AttributeKey<Boolean> =
+    AttributeKey("AfterRestorationAttributeKey")
+
+private var ApplicationCall.isRestored: Boolean
+    get() = attributes.getOrNull(AfterRestorationAttributeKey) ?: false
+    private set(value) {
+        attributes.put(AfterRestorationAttributeKey, value)
+    }
 
 internal var Application.stackManager: StackManager
     get() = attributes[StackManagerAttributeKey]
@@ -36,7 +47,7 @@ internal fun Application.checkPluginInstalled() {
     }
 }
 
-public fun PipelineContext<*, ApplicationCall>.previousCall(): ApplicationCall? {
+public suspend fun PipelineContext<*, ApplicationCall>.previousCall(): ApplicationCall? {
     return call.stackManager.lastOrNull()
 }
 
@@ -73,6 +84,7 @@ internal class StackManager(
     private val application: Application,
     private val config: StackRoutingConfig,
 ) {
+    private val mutex = Mutex()
     private val stack = mutableListOf<ApplicationCall>()
 
     init {
@@ -90,14 +102,24 @@ internal class StackManager(
         }
     }
 
-    fun lastOrNull(): ApplicationCall? = stack.lastOrNull()
+    suspend fun lastOrNull(): ApplicationCall? = mutex.withLock {
+        stack.lastOrNull()
+    }
 
-    fun toPop(): ApplicationCall? = stack.removeLastOrNull()
+    suspend fun toPop(): ApplicationCall? = mutex.withLock {
+        stack.removeLastOrNull()
+    }
 
-    fun update(call: ApplicationCall) {
+    suspend fun update(call: ApplicationCall) = mutex.withLock {
         // Check if route should be out of the stack
-        if (call.neglect || call.routeMethod.isStackPop()) {
-            return
+        if (call.neglect) {
+            return@withLock
+        }
+
+        // State restoration emit last call again
+        if (call.isRestored) {
+            stack += call
+            return@withLock
         }
 
         when (call.routeMethod) {
@@ -106,13 +128,37 @@ internal class StackManager(
             }
 
             StackRouteMethod.Replace -> {
-                stack.removeLastOrNull()
+                stack.removeLastOrNull()?.let { toNotify ->
+                    // Notify previous route that it will be popped
+                    executeCallWithNeglect(call = toNotify.asPop())
+                }
                 stack += call
             }
 
             StackRouteMethod.ReplaceAll -> {
-                stack.clear()
+                while (true) {
+                    val toNotify = stack.removeLastOrNull() ?: break
+                    // Notify previous route that it will be popped
+                    executeCallWithNeglect(call = toNotify.asPop())
+                }
                 stack += call
+            }
+
+            StackRouteMethod.Pop -> {
+                // Don't be confused. The real route was popped on pop() call
+                // Here we are notifying previous route with popped parameters ;P
+                stack.lastOrNull()?.let { toNotify ->
+                    executeCallWithNeglect(
+                        call = ApplicationCall(
+                            application = toNotify.application,
+                            name = toNotify.name,
+                            uri = toNotify.uri,
+                            attributes = toNotify.attributes,
+                            routeMethod = toNotify.routeMethod,
+                            parameters = call.parameters,
+                        )
+                    )
+                }
             }
 
             else -> Unit
@@ -136,18 +182,29 @@ internal class StackManager(
 
         stack.clear()
         stack.addAll(states)
-        tryEmitLastItem()
+        // On platform that have state restoration we need to emit again the last item to notify
+        if (config.emitAfterRestoration) {
+            val call = stack.removeLastOrNull() ?: return
+            call.isRestored = true
+            // Don't neglect to put again on the stack
+            executeCallWithNeglect(call = call, neglect = false)
+        }
     }
 
-    // On Android after restoration we need to emit again the last item to notify
-    // We need neglect to avoid put again on the stack
-    private fun tryEmitLastItem() {
-        val item = stack.removeLastOrNull()
-
-        if (!config.emitAfterRestoration || item == null) return
-
-        application.pluginOrNull(Routing)?.execute(item)
+    private fun executeCallWithNeglect(call: ApplicationCall?, neglect: Boolean = true) {
+        // We need neglect to avoid put again on the stack
+        val callToNeglect = call?.toNeglect(neglect = neglect) ?: return
+        application.pluginOrNull(Routing)?.execute(callToNeglect)
     }
+
+    private fun ApplicationCall.asPop(): ApplicationCall = ApplicationCall(
+        application = this.application,
+        name = this.name,
+        uri = this.uri,
+        attributes = this.attributes,
+        parameters = this.parameters,
+        routeMethod = StackRouteMethod.Pop,
+    )
 
     internal companion object {
         private val subscriptions = mutableMapOf<String, StackManager>()

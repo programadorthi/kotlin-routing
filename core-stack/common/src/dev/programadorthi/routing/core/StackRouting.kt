@@ -2,30 +2,24 @@ package dev.programadorthi.routing.core
 
 import dev.programadorthi.routing.core.application.ApplicationCall
 import io.ktor.http.Parameters
+import kotlinx.coroutines.launch
 
 public fun Routing.pop(
     parameters: Parameters = Parameters.Empty
 ) {
-    application.checkPluginInstalled()
-    val toPop = application.stackManager.toPop() ?: return
-    // Notify the route that it was popped
-    call(
-        name = toPop.name,
-        uri = toPop.uri,
-        parameters = parameters,
-        routeMethod = StackRouteMethod.Pop,
-    )
-    val toShow = application.stackManager.lastOrNull() ?: return
-    // Notify the previous route with new parameters
-    execute(
-        ApplicationCall(
-            application = application,
-            name = toShow.name,
-            uri = toShow.uri,
-            parameters = parameters,
-            routeMethod = toShow.routeMethod,
-        ).toNeglect(neglect = true)
-    )
+    with(application) {
+        checkPluginInstalled()
+        launch {
+            val toPop = stackManager.toPop() ?: return@launch
+            // Notify the route that it was popped
+            this@pop.call(
+                name = toPop.name,
+                uri = toPop.uri,
+                parameters = parameters,
+                routeMethod = StackRouteMethod.Pop,
+            )
+        }
+    }
 }
 
 public fun Routing.push(
@@ -124,7 +118,7 @@ public fun Routing.replaceAllNamed(
     )
 }
 
-private fun ApplicationCall.toNeglect(neglect: Boolean): ApplicationCall {
+internal fun ApplicationCall.toNeglect(neglect: Boolean): ApplicationCall {
     this.neglect = neglect
     return this
 }
