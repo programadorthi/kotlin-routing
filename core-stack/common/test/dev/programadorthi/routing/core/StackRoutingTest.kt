@@ -841,4 +841,84 @@ class StackRoutingTest {
         assertEquals(StackRouteMethod.Push, result?.routeMethod)
         assertEquals(parametersOf("key" to listOf("value")), result?.parameters)
     }
+
+    @Test
+    fun shouldIsForwardBeFalseAfterPopCalls() = runTest {
+        // GIVEN
+        val job = Job()
+        val result = mutableListOf<ApplicationCall>()
+
+        val routing = routing(parentCoroutineContext = coroutineContext + job) {
+            install(StackRouting)
+
+            handle(path = "/path", name = "path") {
+                result += call
+            }
+        }
+
+        // WHEN
+        routing.push(path = "/path")
+        advanceTimeBy(99)
+        routing.push(path = "/path")
+        advanceTimeBy(99)
+        routing.pop()
+        advanceTimeBy(99)
+        routing.push(path = "/path")
+        advanceTimeBy(99)
+        routing.pop()
+        advanceTimeBy(99)
+
+        // THEN
+        assertEquals(7, result.size)
+        // First handle is a push call
+        assertEquals(StackRouteMethod.Push, result[0].routeMethod)
+        assertEquals("", result[0].name)
+        assertEquals("/path", result[0].uri)
+        assertEquals(Parameters.Empty, result[0].parameters)
+        assertEquals(true, result[0].isForward, message = "Expect push 1 is a forward")
+        // Second handle is a push call
+        assertEquals(StackRouteMethod.Push, result[1].routeMethod)
+        assertEquals("", result[1].name)
+        assertEquals("/path", result[1].uri)
+        assertEquals(Parameters.Empty, result[1].parameters)
+        assertEquals(true, result[1].isForward, message = "Expect push 2 is a forward")
+        // Third handle is a pop call
+        assertEquals(StackRouteMethod.Pop, result[2].routeMethod)
+        assertEquals("", result[2].name)
+        assertEquals("/path", result[2].uri)
+        assertEquals(Parameters.Empty, result[2].parameters)
+        assertEquals(false, result[2].isForward, message = "Expect pop 1 is not a forward")
+        // Fourth handle is a push emitted by pop
+        assertEquals(StackRouteMethod.Push, result[3].routeMethod)
+        assertEquals("", result[3].name)
+        assertEquals("/path", result[3].uri)
+        assertEquals(Parameters.Empty, result[3].parameters)
+        assertEquals(
+            false,
+            result[3].isForward,
+            message = "Expect push after pop 1 is not a forward"
+        )
+        // Fifth handle is a replace call
+        assertEquals(StackRouteMethod.Push, result[4].routeMethod)
+        assertEquals("", result[4].name)
+        assertEquals("/path", result[4].uri)
+        assertEquals(Parameters.Empty, result[4].parameters)
+        assertEquals(true, result[4].isForward, message = "Expect push 3 is a forward")
+        // Sixth handle is a pop call
+        assertEquals(StackRouteMethod.Pop, result[5].routeMethod)
+        assertEquals("", result[5].name)
+        assertEquals("/path", result[5].uri)
+        assertEquals(Parameters.Empty, result[5].parameters)
+        assertEquals(false, result[5].isForward, message = "Expect pop 2 is not a forward")
+        // Fourth handle is a push emitted by pop
+        assertEquals(StackRouteMethod.Push, result[6].routeMethod)
+        assertEquals("", result[6].name)
+        assertEquals("/path", result[6].uri)
+        assertEquals(Parameters.Empty, result[6].parameters)
+        assertEquals(
+            false,
+            result[6].isForward,
+            message = "Expect push after pop 2 is not a forward"
+        )
+    }
 }

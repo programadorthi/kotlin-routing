@@ -2,6 +2,9 @@ package dev.programadorthi.routing.core
 
 import dev.programadorthi.routing.core.application.ApplicationCall
 import io.ktor.http.Parameters
+import io.ktor.util.Attributes
+import io.ktor.util.pipeline.execute
+import io.ktor.util.putAll
 import kotlinx.coroutines.launch
 
 public fun Routing.pop(
@@ -11,13 +14,20 @@ public fun Routing.pop(
         checkPluginInstalled()
         launch {
             val toPop = stackManager.toPop() ?: return@launch
+            // Attributes instances are by call and we need a fresh one
+            val attributes = Attributes()
+            attributes.putAll(toPop.attributes)
             // Notify the route that it was popped
-            this@pop.call(
+            val notify = ApplicationCall(
+                application = toPop.application,
                 name = toPop.name,
                 uri = toPop.uri,
+                attributes = attributes,
                 parameters = parameters,
                 routeMethod = StackRouteMethod.Pop,
             )
+            notify.isForward = false
+            this@with.execute(notify)
         }
     }
 }

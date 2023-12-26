@@ -12,16 +12,21 @@ import dev.programadorthi.routing.core.application.hooks.ResponseSent
 import dev.programadorthi.routing.core.application.pluginOrNull
 import io.ktor.http.parametersOf
 import io.ktor.util.AttributeKey
+import io.ktor.util.Attributes
 import io.ktor.util.KtorDsl
 import io.ktor.util.pipeline.PipelineContext
+import io.ktor.util.putAll
 import kotlinx.coroutines.sync.Mutex
 import kotlinx.coroutines.sync.withLock
 
-private val StackManagerAttributeKey: AttributeKey<StackManager> =
-    AttributeKey("StackManagerAttributeKey")
+private val AfterPopAttributeKey: AttributeKey<Boolean> =
+    AttributeKey("AfterPopAttributeKey")
 
 private val AfterRestorationAttributeKey: AttributeKey<Boolean> =
     AttributeKey("AfterRestorationAttributeKey")
+
+private val StackManagerAttributeKey: AttributeKey<StackManager> =
+    AttributeKey("StackManagerAttributeKey")
 
 private var ApplicationCall.isRestored: Boolean
     get() = attributes.getOrNull(AfterRestorationAttributeKey) ?: false
@@ -46,6 +51,12 @@ internal fun Application.checkPluginInstalled() {
         "StackRouting plugin not installed"
     }
 }
+
+public var ApplicationCall.isForward: Boolean
+    get() = attributes.getOrNull(AfterPopAttributeKey) ?: true
+    internal set(value) {
+        attributes.put(AfterPopAttributeKey, value)
+    }
 
 public suspend fun PipelineContext<*, ApplicationCall>.previousCall(): ApplicationCall? {
     return call.stackManager.lastOrNull()
@@ -148,16 +159,19 @@ internal class StackManager(
                 // Don't be confused. The real route was popped on pop() call
                 // Here we are notifying previous route with popped parameters ;P
                 stack.lastOrNull()?.let { toNotify ->
-                    executeCallWithNeglect(
-                        call = ApplicationCall(
-                            application = toNotify.application,
-                            name = toNotify.name,
-                            uri = toNotify.uri,
-                            attributes = toNotify.attributes,
-                            routeMethod = toNotify.routeMethod,
-                            parameters = call.parameters,
-                        )
+                    // Attributes instances are by call and we need a fresh one
+                    val attributes = Attributes()
+                    attributes.putAll(toNotify.attributes)
+                    val notify = ApplicationCall(
+                        application = toNotify.application,
+                        name = toNotify.name,
+                        uri = toNotify.uri,
+                        routeMethod = toNotify.routeMethod,
+                        attributes = attributes,
+                        parameters = call.parameters,
                     )
+                    notify.isForward = false
+                    executeCallWithNeglect(call = notify)
                 }
             }
 
