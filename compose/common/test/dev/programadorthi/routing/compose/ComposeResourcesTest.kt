@@ -44,7 +44,7 @@ class ComposeResourcesTest {
             val routing = routing(parentCoroutineContext = coroutineContext) {
                 install(Resources)
 
-                composable<Path> {
+                composable<Path>(method = RouteMethod.Empty) {
                     result = call
                     path = it
                     fakeContent.content = "I'm the path based content"
@@ -88,7 +88,7 @@ class ComposeResourcesTest {
                 install(Resources)
                 install(StackRouting)
 
-                composable<Path> {
+                composable<Path>(method = StackRouteMethod.Push) {
                     result = call
                     path = it
                     fakeContent.content = "I'm the push based content"

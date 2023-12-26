@@ -1,3 +1,5 @@
+import kotlinx.kover.gradle.plugin.dsl.KoverReportExtension
+
 plugins {
     kotlin("multiplatform")
     id("org.jlleitschuh.gradle.ktlint")
@@ -14,6 +16,18 @@ kotlin {
                 api(libs.ktor.events)
                 api(libs.ktor.http)
             }
+        }
+    }
+}
+
+configure<KoverReportExtension> {
+    filters {
+        excludes {
+            packages(
+                "dev.programadorthi.routing.core.application",
+                "dev.programadorthi.routing.core.errors",
+                "dev.programadorthi.routing.core.logging",
+            )
         }
     }
 }
