@@ -14,6 +14,7 @@ kotlin = "1.8.10"
 ktor = "2.2.4"
 serialization = "1.4.1"
 slf4j = "2.0.4"
+voyager = "1.0.0"
 
 junit = "4.13.2"
 
@@ -43,6 +44,7 @@ serialization-core = { module = "org.jetbrains.kotlinx:kotlinx-serialization-cor
 serialization-json = { module = "org.jetbrains.kotlinx:kotlinx-serialization-json", version.ref = "serialization" }
 slf4j-api = { module = "org.slf4j:slf4j-api", version.ref = "slf4j" }
 slf4j-simple = { module = "org.slf4j:slf4j-simple", version.ref = "slf4j" }
+voyager-navigator = { module = "cafe.adriel.voyager:voyager-navigator", version.ref = "voyager" }
 
 test-coroutines = { module = "org.jetbrains.kotlinx:kotlinx-coroutines-test", version.ref = "coroutines" }
 test-coroutines-debug = { module = "org.jetbrains.kotlinx:kotlinx-coroutines-debug", version.ref = "coroutines" }

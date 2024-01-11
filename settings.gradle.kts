@@ -32,6 +32,7 @@ include(":javascript")
 include(":resources")
 include(":sessions")
 include(":status-pages")
+include(":voyager")
 
 // Samples are disabled by default to avoid sync their.
 //include(":samples:android-sample")
