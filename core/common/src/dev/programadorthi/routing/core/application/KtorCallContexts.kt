@@ -3,8 +3,8 @@
  */
 package dev.programadorthi.routing.core.application
 
-import io.ktor.util.KtorDsl
 import io.ktor.util.pipeline.PipelineContext
+import io.ktor.utils.io.KtorDsl
 
 /**
  * The context associated with the call that is currently being processed by server.

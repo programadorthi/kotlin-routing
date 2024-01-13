@@ -4,8 +4,8 @@
 
 package dev.programadorthi.routing.core.application
 
-import io.ktor.util.KtorDsl
 import io.ktor.util.logging.Logger
+import io.ktor.utils.io.KtorDsl
 import kotlinx.coroutines.CoroutineScope
 import kotlinx.coroutines.Job
 import kotlinx.coroutines.SupervisorJob

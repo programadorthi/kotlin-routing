@@ -26,12 +26,12 @@ import io.ktor.http.Url
 import io.ktor.http.plus
 import io.ktor.util.AttributeKey
 import io.ktor.util.Attributes
-import io.ktor.util.KtorDsl
 import io.ktor.util.logging.KtorSimpleLogger
 import io.ktor.util.logging.Logger
 import io.ktor.util.logging.isTraceEnabled
 import io.ktor.util.pipeline.PipelineContext
 import io.ktor.util.pipeline.execute
+import io.ktor.utils.io.KtorDsl
 import kotlinx.coroutines.launch
 import kotlin.coroutines.CoroutineContext
 import kotlin.coroutines.EmptyCoroutineContext

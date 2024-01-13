@@ -6,8 +6,8 @@ import dev.programadorthi.routing.core.RouteMethod
 import dev.programadorthi.routing.core.application.ApplicationCall
 import dev.programadorthi.routing.core.application.call
 import dev.programadorthi.routing.core.route
-import io.ktor.util.KtorDsl
 import io.ktor.util.pipeline.PipelineContext
+import io.ktor.utils.io.KtorDsl
 
 @KtorDsl
 public fun Route.screen(

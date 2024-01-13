@@ -5,8 +5,8 @@
 package dev.programadorthi.routing.core
 
 import dev.programadorthi.routing.core.application.ApplicationCall
-import io.ktor.util.KtorDsl
 import io.ktor.util.pipeline.PipelineInterceptor
+import io.ktor.utils.io.KtorDsl
 
 /**
  * Builds a route to match the specified [path].

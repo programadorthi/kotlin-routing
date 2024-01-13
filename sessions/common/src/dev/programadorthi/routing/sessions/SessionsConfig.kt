@@ -4,7 +4,7 @@
 
 package dev.programadorthi.routing.sessions
 
-import io.ktor.util.KtorDsl
+import io.ktor.utils.io.KtorDsl
 
 /**
  * A configuration for the [Sessions] plugin.

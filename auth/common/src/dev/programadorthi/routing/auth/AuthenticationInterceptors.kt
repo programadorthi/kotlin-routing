@@ -21,8 +21,8 @@ import dev.programadorthi.routing.core.application.plugin
 import dev.programadorthi.routing.core.application.pluginOrNull
 import dev.programadorthi.routing.core.asRouting
 import io.ktor.util.AttributeKey
-import io.ktor.util.KtorDsl
 import io.ktor.util.pipeline.PipelinePhase
+import io.ktor.utils.io.KtorDsl
 
 internal object AuthenticationHook : Hook<suspend (ApplicationCall) -> Unit> {
     internal val AuthenticatePhase: PipelinePhase = PipelinePhase("Authenticate")

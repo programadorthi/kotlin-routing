@@ -7,7 +7,7 @@ import dev.programadorthi.routing.core.replace
 import dev.programadorthi.routing.core.replaceAll
 import dev.programadorthi.routing.core.route
 import dev.programadorthi.routing.core.stackNeglect
-import io.ktor.util.KtorDsl
+import io.ktor.utils.io.KtorDsl
 import io.ktor.util.pipeline.PipelineInterceptor
 import kotlinx.browser.window
 import kotlinx.coroutines.channels.Channel

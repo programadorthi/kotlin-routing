@@ -13,8 +13,8 @@ import io.ktor.http.Parameters
 import io.ktor.http.parametersOf
 import io.ktor.util.AttributeKey
 import io.ktor.util.Attributes
-import io.ktor.util.KtorDsl
 import io.ktor.util.putAll
+import io.ktor.utils.io.KtorDsl
 import kotlinx.coroutines.sync.Mutex
 import kotlinx.coroutines.sync.withLock
 

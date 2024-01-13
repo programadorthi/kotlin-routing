@@ -1,6 +1,6 @@
 package dev.programadorthi.routing.core.application
 
-import io.ktor.util.KtorDsl
+import io.ktor.utils.io.KtorDsl
 
 /**
  * A hook that can be registered in [PluginBuilder].

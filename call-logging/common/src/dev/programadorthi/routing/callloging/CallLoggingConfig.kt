@@ -5,9 +5,9 @@
 package dev.programadorthi.routing.callloging
 
 import dev.programadorthi.routing.core.application.ApplicationCall
-import io.ktor.util.KtorDsl
 import io.ktor.util.date.getTimeMillis
 import io.ktor.util.logging.Logger
+import io.ktor.utils.io.KtorDsl
 
 /**
  * A configuration for the [CallLogging] plugin.

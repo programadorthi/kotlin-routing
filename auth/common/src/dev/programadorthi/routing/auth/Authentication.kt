@@ -10,7 +10,7 @@ import dev.programadorthi.routing.core.application.BaseApplicationPlugin
 import dev.programadorthi.routing.core.application.install
 import dev.programadorthi.routing.core.application.pluginOrNull
 import io.ktor.util.AttributeKey
-import io.ktor.util.KtorDsl
+import io.ktor.utils.io.KtorDsl
 
 /**
  * A configuration for the [Authentication] plugin.

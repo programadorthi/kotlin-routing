@@ -1,7 +1,7 @@
 package dev.programadorthi.routing.events.resources
 
 import dev.programadorthi.routing.events.resources.serialization.EventResourcesFormat
-import io.ktor.util.KtorDsl
+import io.ktor.utils.io.KtorDsl
 import kotlinx.serialization.modules.EmptySerializersModule
 import kotlinx.serialization.modules.SerializersModule
 

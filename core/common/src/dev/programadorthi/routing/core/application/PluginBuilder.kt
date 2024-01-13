@@ -8,10 +8,10 @@ import dev.programadorthi.routing.core.application.debug.PHASE_ON_CALL
 import dev.programadorthi.routing.core.application.debug.ijDebugReportHandlerFinished
 import dev.programadorthi.routing.core.application.debug.ijDebugReportHandlerStarted
 import io.ktor.util.AttributeKey
-import io.ktor.util.KtorDsl
 import io.ktor.util.debug.addToContextInDebugMode
 import io.ktor.util.pipeline.PipelineContext
 import io.ktor.util.pipeline.PipelinePhase
+import io.ktor.utils.io.KtorDsl
 import kotlin.random.Random
 
 /**

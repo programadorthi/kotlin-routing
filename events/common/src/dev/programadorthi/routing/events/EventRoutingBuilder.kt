@@ -4,8 +4,8 @@ import dev.programadorthi.routing.core.Route
 import dev.programadorthi.routing.core.Routing
 import dev.programadorthi.routing.core.application.ApplicationCall
 import dev.programadorthi.routing.core.route
-import io.ktor.util.KtorDsl
 import io.ktor.util.pipeline.PipelineInterceptor
+import io.ktor.utils.io.KtorDsl
 
 @KtorDsl
 public fun Route.event(

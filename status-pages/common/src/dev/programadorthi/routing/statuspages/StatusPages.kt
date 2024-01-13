@@ -10,9 +10,9 @@ import dev.programadorthi.routing.core.application.createApplicationPlugin
 import dev.programadorthi.routing.core.application.hooks.CallFailed
 import dev.programadorthi.routing.core.logging.mdcProvider
 import io.ktor.util.AttributeKey
-import io.ktor.util.KtorDsl
 import io.ktor.util.logging.KtorSimpleLogger
 import io.ktor.util.reflect.instanceOf
+import io.ktor.utils.io.KtorDsl
 import kotlin.reflect.KClass
 
 private val LOGGER = KtorSimpleLogger("kotlin-routing-status-pages")

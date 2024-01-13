@@ -7,8 +7,8 @@ package dev.programadorthi.routing.core
 import dev.programadorthi.routing.core.application.ApplicationCall
 import dev.programadorthi.routing.core.application.ApplicationCallPipeline
 import dev.programadorthi.routing.core.application.ApplicationEnvironment
-import io.ktor.util.KtorDsl
 import io.ktor.util.pipeline.PipelineInterceptor
+import io.ktor.utils.io.KtorDsl
 
 /**
  * Describes a node in a routing tree.

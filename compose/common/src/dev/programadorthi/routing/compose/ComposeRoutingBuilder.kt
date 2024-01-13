@@ -10,8 +10,8 @@ import dev.programadorthi.routing.core.method
 import dev.programadorthi.routing.core.route
 import dev.programadorthi.routing.resources.handle
 import dev.programadorthi.routing.resources.resource
-import io.ktor.util.KtorDsl
 import io.ktor.util.pipeline.PipelineContext
+import io.ktor.utils.io.KtorDsl
 import kotlinx.serialization.serializer
 
 @KtorDsl
