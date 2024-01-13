@@ -121,7 +121,7 @@ internal class ComposeRoutingTest {
             val fakeContent = FakeContent()
 
             val routing = routing(parentCoroutineContext = coroutineContext) {
-                composable(path = "/path", method = RouteMethod) {
+                composable(path = "/path", method = RouteMethod.Empty) {
                     fakeContent.content = "I'm the route method based content"
                     fakeContent.Composable()
                 }
@@ -138,7 +138,7 @@ internal class ComposeRoutingTest {
             }
 
             // WHEN
-            routing.call(uri = "/path", routeMethod = RouteMethod)
+            routing.call(uri = "/path", routeMethod = RouteMethod.Empty)
             advanceTimeBy(99) // Ask for routing
             clock.sendFrame(0L) // Ask for recomposition
 

@@ -72,7 +72,7 @@ class ComposeResourcesTest {
             assertEquals("I'm the path based content", fakeContent.result)
             assertEquals("/path", "${result?.uri}")
             assertEquals("", "${result?.name}")
-            assertEquals(RouteMethod, result?.routeMethod)
+            assertEquals(RouteMethod.Empty, result?.routeMethod)
             assertEquals(Parameters.Empty, result?.parameters)
         }
 

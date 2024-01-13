@@ -48,13 +48,13 @@ public fun VoyagerRouting(
 
 @Composable
 public fun VoyagerRouting(
+    initialScreen: Screen,
+    configuration: Route.() -> Unit,
     rootPath: String = "/",
     parent: Routing? = null,
     coroutineContext: CoroutineContext = EmptyCoroutineContext,
     log: Logger = KtorSimpleLogger("kotlin-routing"),
     developmentMode: Boolean = false,
-    configuration: Route.() -> Unit,
-    initialScreen: Screen,
     disposeBehavior: NavigatorDisposeBehavior = NavigatorDisposeBehavior(),
     onBackPressed: OnBackPressed = { true },
     key: String = compositionUniqueId(),

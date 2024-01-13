@@ -47,6 +47,12 @@ kotlin {
             }
         }
 
+        commonTest {
+            dependencies {
+                implementation(libs.compose.saveable)
+            }
+        }
+
         val jvmMain by getting {
             dependsOn(commonMain.get())
             dependencies {
