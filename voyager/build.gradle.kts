@@ -20,8 +20,6 @@ kotlin {
     setCompilationOptions()
     configureSourceSets()
 
-    jvm("desktop")
-
     android {
         publishLibraryVariants("release")
     }
@@ -70,15 +68,9 @@ kotlin {
             }
         }
 
-        val desktopMain by getting {
-            dependsOn(jvmMain)
-        }
         val androidMain by getting {
             dependsOn(jvmMain)
             kotlin.srcDir("android/src")
-        }
-        val desktopTest by getting {
-            dependsOn(jvmTest)
         }
 
         val nativeMain by creating {
