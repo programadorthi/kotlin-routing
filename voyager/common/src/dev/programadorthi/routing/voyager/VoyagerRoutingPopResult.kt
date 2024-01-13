@@ -9,5 +9,5 @@ import io.ktor.http.Parameters
  * @param T The result expected after the next screen was popped
  */
 public interface VoyagerRoutingPopResult<in T> {
-    public fun onResult(result: T)
+    public fun onResult(result: T?)
 }

@@ -448,7 +448,7 @@ internal class VoyagerRoutingTest {
             advanceTimeBy(99) // Ask for routing
             clock.sendFrame(0L) // Ask for recomposition
 
-            routing.pop(parameters = parametersOf("key" to listOf("value")))
+            routing.pop(result = parametersOf("key" to listOf("value")))
             advanceTimeBy(99) // Ask for routing
             clock.sendFrame(0L) // Ask for recomposition
 
@@ -501,7 +501,7 @@ internal class VoyagerRoutingTest {
             }
 
             routing.popUntil(
-                parameters = parametersOf("key" to listOf("value")),
+                result = parametersOf("key" to listOf("value")),
             ) { screen ->
                 screen == firstPushedScreen
             }

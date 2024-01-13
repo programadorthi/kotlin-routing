@@ -5,10 +5,18 @@ import androidx.compose.runtime.DisposableEffect
 import cafe.adriel.voyager.core.screen.Screen
 import cafe.adriel.voyager.core.screen.ScreenKey
 import dev.programadorthi.routing.voyager.VoyagerRoutingPopResult
-import io.ktor.http.Parameters
+import io.ktor.resources.Resource
+import kotlinx.serialization.Serializable
+import kotlinx.serialization.Transient
 import kotlin.random.Random
 
-class FakeScreen : Screen, VoyagerRoutingPopResult<Parameters> {
+@Serializable
+data class VoyagerResult(
+    val content: String
+)
+
+@Resource("/fakescreen")
+class FakeResourceScreen<T> : Screen, VoyagerRoutingPopResult<T> {
 
     var composed = ""
         private set
@@ -18,13 +26,14 @@ class FakeScreen : Screen, VoyagerRoutingPopResult<Parameters> {
     var disposed = false
         private set
 
-    var parameters = Parameters.Empty
+    @Transient
+    var parameters: T? = null
         private set
 
     override val key: ScreenKey = Random.Default.nextLong().toString()
 
-    override fun onResult(result: Parameters?) {
-        parameters = result ?: Parameters.Empty
+    override fun onResult(result: T?) {
+        parameters = result
     }
 
     @Composable
