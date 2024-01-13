@@ -6,8 +6,11 @@ import cafe.adriel.voyager.core.screen.Screen
 import cafe.adriel.voyager.core.screen.ScreenKey
 import dev.programadorthi.routing.voyager.VoyagerRoutingPopResult
 import io.ktor.http.Parameters
+import io.ktor.resources.Resource
+import kotlinx.serialization.Transient
 import kotlin.random.Random
 
+@Resource("/fakescreen")
 class FakeScreen : Screen, VoyagerRoutingPopResult<Parameters> {
 
     var composed = ""
@@ -18,6 +21,7 @@ class FakeScreen : Screen, VoyagerRoutingPopResult<Parameters> {
     var disposed = false
         private set
 
+    @Transient
     var parameters = Parameters.Empty
         private set
 

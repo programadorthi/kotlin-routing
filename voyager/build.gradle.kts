@@ -42,6 +42,8 @@ kotlin {
         commonMain {
             dependencies {
                 api(projects.core)
+                api(libs.ktor.resources)
+                api(libs.serialization.core)
                 api(libs.voyager.navigator)
                 implementation(libs.compose.runtime)
             }

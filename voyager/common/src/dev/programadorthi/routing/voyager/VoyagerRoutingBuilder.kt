@@ -13,7 +13,7 @@ import io.ktor.util.pipeline.PipelineContext
 public fun Route.screen(
     path: String,
     name: String? = null,
-    body: PipelineContext<Unit, ApplicationCall>.() -> Screen,
+    body: suspend PipelineContext<Unit, ApplicationCall>.() -> Screen,
 ): Route = route(path = path, name = name) { screen(body) }
 
 @KtorDsl
@@ -21,12 +21,12 @@ public fun Route.screen(
     path: String,
     method: RouteMethod,
     name: String? = null,
-    body: PipelineContext<Unit, ApplicationCall>.() -> Screen,
+    body: suspend PipelineContext<Unit, ApplicationCall>.() -> Screen,
 ): Route = route(path = path, name = name, method = method) { screen(body) }
 
 @KtorDsl
 public fun Route.screen(
-    body: PipelineContext<Unit, ApplicationCall>.() -> Screen,
+    body: suspend PipelineContext<Unit, ApplicationCall>.() -> Screen,
 ) {
     handle {
         screen {
@@ -35,36 +35,8 @@ public fun Route.screen(
     }
 }
 
-/*@KtorDsl
-public inline fun <reified T : Any> Route.screen(
-    noinline body: PipelineContext<Unit, ApplicationCall>.(T) -> Screen
-): Route = resource<T> {
-    handle(serializer<T>()) { value ->
-        screen {
-            body(value)
-        }
-    }
-}
-
-public inline fun <reified T : Any> Route.screen(
-    method: RouteMethod,
-    noinline body: PipelineContext<Unit, ApplicationCall>.(T) -> Screen
-): Route {
-    lateinit var builtRoute: Route
-    resource<T> {
-        builtRoute = method(method) {
-            handle(serializer<T>()) { value ->
-                screen {
-                    body(value)
-                }
-            }
-        }
-    }
-    return builtRoute
-}*/
-
-public fun PipelineContext<Unit, ApplicationCall>.screen(
-    body: () -> Screen,
+public suspend fun PipelineContext<Unit, ApplicationCall>.screen(
+    body: suspend () -> Screen,
 ) {
     val navigator = call.voyagerNavigator
     when (call.routeMethod) {
