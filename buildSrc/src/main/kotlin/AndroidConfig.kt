@@ -1,31 +1,17 @@
 /*
  * Copyright 2014-2021 JetBrains s.r.o and contributors. Use of this source code is governed by the Apache 2.0 license.
  */
-@file:Suppress("UNUSED_VARIABLE")
 
 import com.android.build.gradle.BaseExtension
 import org.gradle.api.JavaVersion
 import org.gradle.api.Project
-import org.gradle.kotlin.dsl.*
+import org.gradle.kotlin.dsl.findByType
+import org.gradle.kotlin.dsl.get
 
 fun Project.configureAndroid() {
     kotlin {
         androidTarget {
             publishLibraryVariants = listOf("release")
-        }
-
-        sourceSets.apply {
-            val androidMain by getting {
-                findByName("commonMain")?.let { dependsOn(it) }
-                findByName("jvmAndNixMain")?.let { dependsOn(it) }
-                findByName("jvmMain")?.let { dependsOn(it) }
-            }
-
-            val androidTest by creating {
-                findByName("commonTest")?.let { dependsOn(it) }
-                findByName("jvmAndNixTest")?.let { dependsOn(it) }
-                findByName("jvmTest")?.let { dependsOn(it) }
-            }
         }
     }
 

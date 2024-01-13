@@ -1,7 +1,6 @@
 plugins {
     kotlin("multiplatform")
     kotlin("plugin.serialization")
-    id("com.android.library")
     alias(libs.plugins.jetbrains.compose)
     id("org.jlleitschuh.gradle.ktlint")
     id("org.jetbrains.kotlinx.kover")
@@ -10,7 +9,6 @@ plugins {
 
 configureCommon()
 configureJvm()
-configureAndroid()
 setupJvmToolchain()
 
 // TODO: Voyager has targets limitation. That is the reason to duplicate configs below
@@ -19,10 +17,6 @@ kotlin {
 
     setCompilationOptions()
     configureSourceSets()
-
-    androidTarget {
-        publishLibraryVariants("release")
-    }
 
     js(IR) {
         nodejs()
@@ -64,11 +58,6 @@ kotlin {
             }
         }
 
-        val androidMain by getting {
-            dependsOn(jvmMain)
-            kotlin.srcDir("android/src")
-        }
-
         val nativeMain by creating {
             dependsOn(commonMain.get())
         }
@@ -88,24 +77,5 @@ kotlin {
         val iosArm64Main by getting {
             dependsOn(nativeMain)
         }
-        val iosSimulatorArm64Main by getting {
-            dependsOn(iosArm64Main)
-        }
     }
-}
-
-android {
-    compileSdk = 34
-    namespace = "dev.programadorthi.routing.voyager"
-
-    defaultConfig {
-        minSdk = 23
-    }
-
-    compileOptions {
-        sourceCompatibility = JavaVersion.VERSION_1_8
-        targetCompatibility = JavaVersion.VERSION_1_8
-    }
-
-    sourceSets["main"].manifest.srcFile("android/AndroidManifest.xml")
 }

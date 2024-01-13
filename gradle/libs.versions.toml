@@ -1,5 +1,5 @@
 [versions]
-plugin-android = "7.4.1"
+plugin-android = "8.2.1"
 plugin-kover = "0.7.0-Alpha"
 plugin-ktlint = "11.0.0"
 plugin-maven = "0.27.0"

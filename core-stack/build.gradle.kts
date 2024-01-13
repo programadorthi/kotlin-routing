@@ -1,13 +1,15 @@
 plugins {
     kotlin("multiplatform")
-    id("com.android.library")
     kotlin("plugin.serialization")
+    id("com.android.library")
     id("org.jlleitschuh.gradle.ktlint")
     id("org.jetbrains.kotlinx.kover")
     alias(libs.plugins.maven.publish)
 }
 
 applyBasicSetup()
+
+configureAndroid()
 
 kotlin {
     sourceSets {

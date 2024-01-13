@@ -1,15 +1,17 @@
 /*
  * Copyright 2014-2021 JetBrains s.r.o and contributors. Use of this source code is governed by the Apache 2.0 license.
  */
-@file:Suppress("UNUSED_VARIABLE")
 
-import org.gradle.api.*
-import org.gradle.kotlin.dsl.*
-import org.jetbrains.kotlin.gradle.plugin.*
-import java.io.*
+import org.gradle.api.Project
+import org.gradle.kotlin.dsl.creating
+import org.gradle.kotlin.dsl.extra
+import org.gradle.kotlin.dsl.getValue
+import org.gradle.kotlin.dsl.getting
+import org.gradle.kotlin.dsl.invoke
+import org.jetbrains.kotlin.gradle.plugin.KotlinSourceSet
+import java.io.File
 
 val Project.files: Array<File> get() = project.projectDir.listFiles() ?: emptyArray()
-val Project.hasAndroid: Boolean get() = files.any { it.name == "android" }
 val Project.hasCommon: Boolean get() = files.any { it.name == "common" }
 val Project.hasJvmAndNix: Boolean get() = hasCommon || files.any { it.name == "jvmAndNix" }
 val Project.hasPosix: Boolean get() = hasCommon || files.any { it.name == "posix" }
@@ -24,8 +26,6 @@ val Project.hasNative: Boolean get() = hasCommon || hasNix || hasPosix || hasDar
 fun Project.configureTargets() {
     configureCommon()
     if (hasJvm) configureJvm()
-
-    if (hasAndroid) configureAndroid()
 
     kotlin {
         if (hasJs) {
