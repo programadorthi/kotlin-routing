@@ -41,7 +41,7 @@ kotlin {
     sourceSets {
         commonMain {
             dependencies {
-                api(projects.compose)
+                api(projects.core)
                 api(libs.voyager.navigator)
                 implementation(libs.compose.runtime)
             }

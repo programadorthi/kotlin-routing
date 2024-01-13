@@ -3,16 +3,17 @@ package dev.programadorthi.routing.voyager
 import androidx.compose.runtime.Composable
 import androidx.compose.runtime.CompositionLocalProvider
 import androidx.compose.runtime.DisposableEffect
+import androidx.compose.runtime.ProvidableCompositionLocal
 import androidx.compose.runtime.SideEffect
 import androidx.compose.runtime.currentCompositeKeyHash
 import androidx.compose.runtime.remember
+import androidx.compose.runtime.staticCompositionLocalOf
 import cafe.adriel.voyager.core.screen.Screen
 import cafe.adriel.voyager.navigator.CurrentScreen
 import cafe.adriel.voyager.navigator.Navigator
 import cafe.adriel.voyager.navigator.NavigatorContent
 import cafe.adriel.voyager.navigator.NavigatorDisposeBehavior
 import cafe.adriel.voyager.navigator.OnBackPressed
-import dev.programadorthi.routing.compose.LocalRouting
 import dev.programadorthi.routing.core.Route
 import dev.programadorthi.routing.core.Routing
 import dev.programadorthi.routing.core.application
@@ -21,6 +22,10 @@ import io.ktor.util.logging.KtorSimpleLogger
 import io.ktor.util.logging.Logger
 import kotlin.coroutines.CoroutineContext
 import kotlin.coroutines.EmptyCoroutineContext
+
+public val LocalRouting: ProvidableCompositionLocal<Routing> = staticCompositionLocalOf {
+    error("Composition local LocalRouting not found")
+}
 
 @Composable
 public fun VoyagerRouting(

@@ -3,7 +3,6 @@ package dev.programadorthi.routing.voyager
 import cafe.adriel.voyager.navigator.CurrentScreen
 import cafe.adriel.voyager.navigator.Navigator
 import dev.programadorthi.routing.core.RouteMethod
-import dev.programadorthi.routing.core.StackRouteMethod
 import dev.programadorthi.routing.core.application.ApplicationCall
 import dev.programadorthi.routing.core.application.createApplicationPlugin
 import dev.programadorthi.routing.core.application.hooks.CallFailed
@@ -68,7 +67,7 @@ internal class VoyagerRoutingTest {
             }
 
             // WHEN
-            routing.call(uri = "/path", routeMethod = StackRouteMethod.Push)
+            routing.call(uri = "/path", routeMethod = VoyagerRouteMethod.Push)
             advanceTimeBy(99) // Ask for routing
             clock.sendFrame(0L) // Ask for recomposition
 
@@ -98,7 +97,7 @@ internal class VoyagerRoutingTest {
             }
 
             // WHEN
-            routing.call(name = "path", routeMethod = StackRouteMethod.Push)
+            routing.call(name = "path", routeMethod = VoyagerRouteMethod.Push)
             advanceTimeBy(99) // Ask for routing
             clock.sendFrame(0L) // Ask for recomposition
 
@@ -150,7 +149,7 @@ internal class VoyagerRoutingTest {
             assertIs<IllegalStateException>(exception)
             assertEquals(
                 "Voyager needs a stack route method to work. You called a screen /path using " +
-                    "route method RouteMethodImpl(value=EMPTY) that is not supported by Voyager",
+                        "route method RouteMethodImpl(value=EMPTY) that is not supported by Voyager",
                 exception?.message
             )
         }
@@ -179,7 +178,7 @@ internal class VoyagerRoutingTest {
             }
 
             // WHEN
-            routing.call(uri = "/any", routeMethod = StackRouteMethod.Push)
+            routing.call(uri = "/any", routeMethod = VoyagerRouteMethod.Push)
             advanceTimeBy(99) // Ask for routing
             clock.sendFrame(0L) // Ask for recomposition
 
@@ -212,7 +211,7 @@ internal class VoyagerRoutingTest {
             }
 
             // WHEN
-            routing.call(uri = "/path", routeMethod = StackRouteMethod.Push)
+            routing.push(path = "/path")
             advanceTimeBy(99) // Ask for routing
             clock.sendFrame(0L) // Ask for recomposition
             val lastScreen = navigator?.lastItemOrNull as? FakeScreen
@@ -253,12 +252,12 @@ internal class VoyagerRoutingTest {
             }
 
             // WHEN
-            routing.call(uri = "/push", routeMethod = StackRouteMethod.Push)
+            routing.push(path = "/push")
             advanceTimeBy(99) // Ask for routing
             clock.sendFrame(0L) // Ask for recomposition
             val pushedScreen = navigator?.lastItemOrNull as? FakeScreen
 
-            routing.call(uri = "/replace", routeMethod = StackRouteMethod.Replace)
+            routing.replace(path = "/replace")
             advanceTimeBy(99) // Ask for routing
             clock.sendFrame(0L) // Ask for recomposition
             val replacedScreen = navigator?.lastItemOrNull as? FakeScreen
@@ -302,17 +301,17 @@ internal class VoyagerRoutingTest {
             }
 
             // WHEN
-            routing.call(uri = "/push", routeMethod = StackRouteMethod.Push)
+            routing.push(path = "/push")
             advanceTimeBy(99) // Ask for routing
             clock.sendFrame(0L) // Ask for recomposition
             val firstPushedScreen = navigator?.lastItemOrNull as? FakeScreen
 
-            routing.call(uri = "/push", routeMethod = StackRouteMethod.Push)
+            routing.push(path = "/push")
             advanceTimeBy(99) // Ask for routing
             clock.sendFrame(0L) // Ask for recomposition
             val secondPushedScreen = navigator?.lastItemOrNull as? FakeScreen
 
-            routing.call(uri = "/replace", routeMethod = StackRouteMethod.ReplaceAll)
+            routing.replaceAll(path = "/replace")
             advanceTimeBy(99) // Ask for routing
             clock.sendFrame(0L) // Ask for recomposition
             val replacedAllScreen = navigator?.lastItemOrNull as? FakeScreen
@@ -371,17 +370,17 @@ internal class VoyagerRoutingTest {
             }
 
             // WHEN
-            routing.call(uri = "/push1", routeMethod = StackRouteMethod.Push)
+            routing.push(path = "/push1")
             advanceTimeBy(99) // Ask for routing
             clock.sendFrame(0L) // Ask for recomposition
             val firstPushedScreen = navigator?.lastItemOrNull as? FakeScreen
 
-            routing.call(uri = "/push2", routeMethod = StackRouteMethod.Push)
+            routing.push(path = "/push2")
             advanceTimeBy(99) // Ask for routing
             clock.sendFrame(0L) // Ask for recomposition
             val secondPushedScreen = navigator?.lastItemOrNull as? FakeScreen
 
-            routing.call(uri = "/push2", routeMethod = StackRouteMethod.Pop)
+            routing.pop()
             advanceTimeBy(99) // Ask for routing
             clock.sendFrame(0L) // Ask for recomposition
             val lastScreen = navigator?.lastItemOrNull as? FakeScreen
