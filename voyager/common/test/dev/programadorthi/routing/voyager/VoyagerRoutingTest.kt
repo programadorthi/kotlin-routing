@@ -13,6 +13,7 @@ import dev.programadorthi.routing.core.routing
 import dev.programadorthi.routing.voyager.helper.FakeScreen
 import dev.programadorthi.routing.voyager.helper.runComposeTest
 import io.ktor.http.Parameters
+import io.ktor.http.parametersOf
 import kotlinx.coroutines.ExperimentalCoroutinesApi
 import kotlinx.coroutines.test.advanceTimeBy
 import kotlin.test.Test
@@ -149,7 +150,7 @@ internal class VoyagerRoutingTest {
             assertIs<IllegalStateException>(exception)
             assertEquals(
                 "Voyager needs a stack route method to work. You called a screen /path using " +
-                        "route method RouteMethodImpl(value=EMPTY) that is not supported by Voyager",
+                    "route method RouteMethodImpl(value=EMPTY) that is not supported by Voyager",
                 exception?.message
             )
         }
@@ -403,5 +404,111 @@ internal class VoyagerRoutingTest {
                 lastScreen?.key,
                 "After pop should call first pushed screen content"
             )
+        }
+
+    @Test
+    fun shouldPopAScreenAndSendResultToPreviousScreen() =
+        runComposeTest { coroutineContext, composition, clock ->
+            // GIVEN
+            var navigator: Navigator? = null
+
+            val routing = routing(parentCoroutineContext = coroutineContext) {
+                screen(path = "/push1") {
+                    FakeScreen().apply {
+                        content = "Hey, I am the pushed screen number 1"
+                    }
+                }
+
+                screen(path = "/push2") {
+                    FakeScreen().apply {
+                        content = "Hey, I am the pushed screen number 2"
+                    }
+                }
+            }
+
+            composition.setContent {
+                VoyagerRouting(
+                    routing = routing,
+                    initialScreen = FakeScreen().apply {
+                        content = "I am the initial screen"
+                    },
+                ) { nav ->
+                    navigator = nav
+                    CurrentScreen()
+                }
+            }
+
+            // WHEN
+            routing.push(path = "/push1")
+            advanceTimeBy(99) // Ask for routing
+            clock.sendFrame(0L) // Ask for recomposition
+            val firstPushedScreen = navigator?.lastItemOrNull as? FakeScreen
+
+            routing.push(path = "/push2")
+            advanceTimeBy(99) // Ask for routing
+            clock.sendFrame(0L) // Ask for recomposition
+
+            routing.pop(parameters = parametersOf("key" to listOf("value")))
+            advanceTimeBy(99) // Ask for routing
+            clock.sendFrame(0L) // Ask for recomposition
+
+            // THEN
+            assertEquals(parametersOf("key" to listOf("value")), firstPushedScreen?.parameters)
+        }
+
+    @Test
+    fun shouldPopUntilAScreenAndSendResultToPreviousScreen() =
+        runComposeTest { coroutineContext, composition, clock ->
+            // GIVEN
+            var navigator: Navigator? = null
+
+            val routing = routing(parentCoroutineContext = coroutineContext) {
+                screen(path = "/push1") {
+                    FakeScreen().apply {
+                        content = "Hey, I am the pushed screen number 1"
+                    }
+                }
+
+                screen(path = "/push2") {
+                    FakeScreen().apply {
+                        content = "Hey, I am the pushed screen number 2"
+                    }
+                }
+            }
+
+            composition.setContent {
+                VoyagerRouting(
+                    routing = routing,
+                    initialScreen = FakeScreen().apply {
+                        content = "I am the initial screen"
+                    },
+                ) { nav ->
+                    navigator = nav
+                    CurrentScreen()
+                }
+            }
+
+            // WHEN
+            routing.push(path = "/push1")
+            advanceTimeBy(99) // Ask for routing
+            clock.sendFrame(0L) // Ask for recomposition
+            val firstPushedScreen = navigator?.lastItemOrNull as? FakeScreen
+
+            repeat(5) {
+                routing.push(path = "/push2")
+                advanceTimeBy(99) // Ask for routing
+                clock.sendFrame(0L) // Ask for recomposition
+            }
+
+            routing.popUntil(
+                parameters = parametersOf("key" to listOf("value")),
+            ) { screen ->
+                screen == firstPushedScreen
+            }
+            advanceTimeBy(99) // Ask for routing
+            clock.sendFrame(0L) // Ask for recomposition
+
+            // THEN
+            assertEquals(parametersOf("key" to listOf("value")), firstPushedScreen?.parameters)
         }
 }

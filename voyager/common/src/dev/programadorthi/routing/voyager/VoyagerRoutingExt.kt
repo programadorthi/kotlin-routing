@@ -1,6 +1,7 @@
 package dev.programadorthi.routing.voyager
 
 import cafe.adriel.voyager.core.screen.Screen
+import cafe.adriel.voyager.navigator.Navigator
 import dev.programadorthi.routing.core.Routing
 import dev.programadorthi.routing.core.application
 import dev.programadorthi.routing.core.call
@@ -8,12 +9,21 @@ import io.ktor.http.Parameters
 
 public fun Routing.canPop(): Boolean = application.voyagerNavigator.canPop
 
-public fun Routing.pop() {
-    application.voyagerNavigator.pop()
+public fun Routing.pop(parameters: Parameters = Parameters.Empty) {
+    val navigator = application.voyagerNavigator
+    if (navigator.pop()) {
+        navigator.trySendPopResult(parameters)
+    }
 }
 
-public fun Routing.popUntil(predicate: (Screen) -> Boolean) {
-    application.voyagerNavigator.popUntil(predicate)
+public fun Routing.popUntil(
+    parameters: Parameters = Parameters.Empty,
+    predicate: (Screen) -> Boolean
+) {
+    val navigator = application.voyagerNavigator
+    if (navigator.popUntil(predicate)) {
+        navigator.trySendPopResult(parameters)
+    }
 }
 
 public fun Routing.push(
@@ -80,4 +90,13 @@ public fun Routing.replaceAllNamed(
         parameters = parameters,
         routeMethod = VoyagerRouteMethod.ReplaceAll,
     )
+}
+
+@Suppress("UNCHECKED_CAST")
+private fun Navigator.trySendPopResult(
+    parameters: Parameters
+) {
+    // Safe here because navigator pop() call is sync by default and last item is the previous screen
+    val currentScreen = lastItemOrNull as? VoyagerRoutingPopResult<Parameters>
+    currentScreen?.onResult(parameters)
 }

@@ -73,7 +73,7 @@ public fun PipelineContext<Unit, ApplicationCall>.screen(
         VoyagerRouteMethod.ReplaceAll -> navigator.replaceAll(body())
         else -> error(
             "Voyager needs a stack route method to work. You called a screen ${call.uri} using " +
-                    "route method ${call.routeMethod} that is not supported by Voyager"
+                "route method ${call.routeMethod} that is not supported by Voyager"
         )
     }
 }
