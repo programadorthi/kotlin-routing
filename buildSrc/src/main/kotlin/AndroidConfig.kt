@@ -10,7 +10,7 @@ import org.gradle.kotlin.dsl.*
 
 fun Project.configureAndroid() {
     kotlin {
-        android {
+        androidTarget {
             publishLibraryVariants = listOf("release")
         }
 

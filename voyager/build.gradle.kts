@@ -20,7 +20,7 @@ kotlin {
     setCompilationOptions()
     configureSourceSets()
 
-    android {
+    androidTarget {
         publishLibraryVariants("release")
     }
 
@@ -33,7 +33,8 @@ kotlin {
 
     macosX64()
     macosArm64()
-    ios()
+    iosX64()
+    iosArm64()
     iosSimulatorArm64()
 
     sourceSets {
@@ -86,11 +87,14 @@ kotlin {
         val macosArm64Main by getting {
             dependsOn(macosMain)
         }
-        val iosMain by getting {
+        val iosX64Main by getting {
+            dependsOn(nativeMain)
+        }
+        val iosArm64Main by getting {
             dependsOn(nativeMain)
         }
         val iosSimulatorArm64Main by getting {
-            dependsOn(iosMain)
+            dependsOn(iosArm64Main)
         }
     }
 }

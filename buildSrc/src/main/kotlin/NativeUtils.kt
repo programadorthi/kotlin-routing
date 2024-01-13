@@ -42,7 +42,6 @@ fun Project.iosTargets(): List<String> = fastOr {
 fun Project.watchosTargets(): List<String> = fastOr {
     with(kotlin) {
         listOf(
-            watchosX86(),
             watchosX64(),
             watchosArm32(),
             watchosArm64(),

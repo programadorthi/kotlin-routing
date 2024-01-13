@@ -7,10 +7,10 @@ plugin-maven = "0.25.2"
 androidx-activity = "1.8.2"
 androidx-startup = "1.1.1"
 
-compose = "1.5.0"
+compose = "1.5.11"
 
 coroutines = "1.6.4"
-kotlin = "1.8.10"
+kotlin = "1.9.21"
 ktor = "2.2.4"
 serialization = "1.4.1"
 slf4j = "2.0.4"
