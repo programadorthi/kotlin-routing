@@ -45,11 +45,6 @@ kotlin {
                 api(libs.serialization.core)
                 api(libs.voyager.navigator)
                 implementation(libs.compose.runtime)
-            }
-        }
-
-        commonTest {
-            dependencies {
                 implementation(libs.compose.saveable)
             }
         }
