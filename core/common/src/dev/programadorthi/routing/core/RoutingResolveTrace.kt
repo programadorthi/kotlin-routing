@@ -15,7 +15,7 @@ import dev.programadorthi.routing.core.application.ApplicationCall
 public open class RoutingResolveTraceEntry(
     public val route: Route,
     public val segmentIndex: Int,
-    public var result: RoutingResolveResult? = null
+    public var result: RoutingResolveResult? = null,
 ) {
     /**
      * Optional list of children registered for this entry, or null if no children were processed.
@@ -33,7 +33,10 @@ public open class RoutingResolveTraceEntry(
     /**
      * Builds detailed text description for this trace entry, including children.
      */
-    public open fun buildText(builder: StringBuilder, indent: Int) {
+    public open fun buildText(
+        builder: StringBuilder,
+        indent: Int,
+    ) {
         builder.appendLine("  ".repeat(indent) + toString())
         children?.forEach { it.buildText(builder, indent + 1) }
     }
@@ -63,14 +66,21 @@ public class RoutingResolveTrace(public val call: ApplicationCall, public val se
     /**
      * Begins processing a [route] at segment with [segmentIndex] in [segments].
      */
-    public fun begin(route: Route, segmentIndex: Int) {
+    public fun begin(
+        route: Route,
+        segmentIndex: Int,
+    ) {
         stack.push(RoutingResolveTraceEntry(route, segmentIndex))
     }
 
     /**
      * Finishes processing a [route] at segment with [segmentIndex] in [segments] with the given [result].
      */
-    public fun finish(route: Route, segmentIndex: Int, result: RoutingResolveResult) {
+    public fun finish(
+        route: Route,
+        segmentIndex: Int,
+        result: RoutingResolveResult,
+    ) {
         val entry = stack.pop()
         require(entry.route == route) { "end should be called for the same route as begin" }
         require(entry.segmentIndex == segmentIndex) { "end should be called for the same segmentIndex as begin" }
@@ -81,7 +91,11 @@ public class RoutingResolveTrace(public val call: ApplicationCall, public val se
     /**
      * Begins and finishes processing a [route] at segment with [segmentIndex] in [segments] with the given [result].
      */
-    public fun skip(route: Route, segmentIndex: Int, result: RoutingResolveResult) {
+    public fun skip(
+        route: Route,
+        segmentIndex: Int,
+        result: RoutingResolveResult,
+    ) {
         register(RoutingResolveTraceEntry(route, segmentIndex, result))
     }
 
@@ -94,27 +108,28 @@ public class RoutingResolveTrace(public val call: ApplicationCall, public val se
     /**
      * Builds detailed text description for this trace, including all entries.
      */
-    public fun buildText(): String = buildString {
-        appendLine(this@RoutingResolveTrace.toString())
-        routing?.buildText(this, 0)
-        if (!this@RoutingResolveTrace::finalResult.isInitialized) {
-            return@buildString
+    public fun buildText(): String =
+        buildString {
+            appendLine(this@RoutingResolveTrace.toString())
+            routing?.buildText(this, 0)
+            if (!this@RoutingResolveTrace::finalResult.isInitialized) {
+                return@buildString
+            }
+            appendLine("Matched routes:")
+            if (resolveCandidates.isEmpty()) {
+                appendLine("  No results")
+            } else {
+                appendLine(
+                    resolveCandidates.joinToString("\n") { path ->
+                        path.joinToString(" -> ", prefix = "  ") {
+                            """"${it.route.selector}""""
+                        }
+                    },
+                )
+            }
+            appendLine("Route resolve result:")
+            append("  $finalResult")
         }
-        appendLine("Matched routes:")
-        if (resolveCandidates.isEmpty()) {
-            appendLine("  No results")
-        } else {
-            appendLine(
-                resolveCandidates.joinToString("\n") { path ->
-                    path.joinToString(" -> ", prefix = "  ") {
-                        """"${it.route.selector}""""
-                    }
-                }
-            )
-        }
-        appendLine("Route resolve result:")
-        append("  $finalResult")
-    }
 
     /**
      * Add candidate for resolving.

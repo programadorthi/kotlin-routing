@@ -22,9 +22,10 @@ internal fun List<StackState>.toJson(): String = Json.encodeToString(serializer(
 
 internal fun String.toStateList(): List<StackState> = Json.decodeFromString(serializer(), this)
 
-internal fun ApplicationCall.toState(): StackState = StackState(
-    name = this.name,
-    routeMethod = this.routeMethod.value,
-    uri = this.uri,
-    parameters = this.parameters.toMap(),
-)
+internal fun ApplicationCall.toState(): StackState =
+    StackState(
+        name = this.name,
+        routeMethod = this.routeMethod.value,
+        uri = this.uri,
+        parameters = this.parameters.toMap(),
+    )

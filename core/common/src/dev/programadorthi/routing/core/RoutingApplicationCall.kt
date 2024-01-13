@@ -12,9 +12,8 @@ internal class RoutingApplicationCall(
     override val routeMethod: RouteMethod,
     val previousCall: ApplicationCall,
     val route: Route,
-    parameters: Parameters
+    parameters: Parameters,
 ) : ApplicationCall, CoroutineScope {
-
     override val application: Application get() = previousCall.application
     override val attributes: Attributes get() = previousCall.attributes
     override val name: String get() = previousCall.name

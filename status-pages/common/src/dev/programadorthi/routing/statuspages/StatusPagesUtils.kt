@@ -10,10 +10,16 @@ import dev.programadorthi.routing.core.application.Hook
 import io.ktor.util.pipeline.PipelinePhase
 import kotlin.reflect.KClass
 
-internal expect fun selectNearestParentClass(cause: Throwable, keys: List<KClass<*>>): KClass<*>?
+internal expect fun selectNearestParentClass(
+    cause: Throwable,
+    keys: List<KClass<*>>,
+): KClass<*>?
 
 internal object BeforeFallback : Hook<suspend (ApplicationCall) -> Unit> {
-    override fun install(pipeline: ApplicationCallPipeline, handler: suspend (ApplicationCall) -> Unit) {
+    override fun install(
+        pipeline: ApplicationCallPipeline,
+        handler: suspend (ApplicationCall) -> Unit,
+    ) {
         val phase = PipelinePhase("BeforeFallback")
         pipeline.insertPhaseBefore(ApplicationCallPipeline.Fallback, phase)
         pipeline.intercept(phase) { handler(context) }

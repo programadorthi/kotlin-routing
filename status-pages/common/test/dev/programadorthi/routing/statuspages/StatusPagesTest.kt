@@ -20,98 +20,103 @@ import kotlin.test.assertIs
 
 @OptIn(ExperimentalCoroutinesApi::class)
 class StatusPagesTest {
-
     @Test
-    fun shouldHandleAnyException() = runTest {
-        // GIVEN
-        val job = Job()
-        var result: Throwable? = null
+    fun shouldHandleAnyException() =
+        runTest {
+            // GIVEN
+            val job = Job()
+            var result: Throwable? = null
 
-        val routing = routing(parentCoroutineContext = coroutineContext + job) {
-            install(StatusPages) {
-                exception<Throwable> { _, cause ->
-                    result = cause
-                    job.complete()
+            val routing =
+                routing(parentCoroutineContext = coroutineContext + job) {
+                    install(StatusPages) {
+                        exception<Throwable> { _, cause ->
+                            result = cause
+                            job.complete()
+                        }
+                    }
+
+                    handle(path = "/exception") {
+                        throw IllegalArgumentException("stop routing")
+                    }
                 }
-            }
 
-            handle(path = "/exception") {
-                throw IllegalArgumentException("stop routing")
-            }
+            // WHEN
+            routing.call(uri = "/exception")
+            advanceTimeBy(99)
+
+            // THEN
+            assertIs<IllegalArgumentException>(result)
+            assertEquals("stop routing", result?.message)
         }
 
-        // WHEN
-        routing.call(uri = "/exception")
-        advanceTimeBy(99)
-
-        // THEN
-        assertIs<IllegalArgumentException>(result)
-        assertEquals("stop routing", result?.message)
-    }
-
     @Test
-    fun shouldHandleRouteNotFoundException() = runTest {
-        // GIVEN
-        val job = Job()
-        var result: Throwable? = null
+    fun shouldHandleRouteNotFoundException() =
+        runTest {
+            // GIVEN
+            val job = Job()
+            var result: Throwable? = null
 
-        val routing = routing(parentCoroutineContext = coroutineContext + job) {
-            install(StatusPages) {
-                exception<RouteNotFoundException> { _, cause ->
-                    result = cause
-                    job.complete()
+            val routing =
+                routing(parentCoroutineContext = coroutineContext + job) {
+                    install(StatusPages) {
+                        exception<RouteNotFoundException> { _, cause ->
+                            result = cause
+                            job.complete()
+                        }
+                    }
+
+                    handle(path = "/exception") {
+                        throw IllegalArgumentException("stop routing")
+                    }
                 }
-            }
 
-            handle(path = "/exception") {
-                throw IllegalArgumentException("stop routing")
-            }
+            // WHEN
+            routing.call(uri = "/not-registered-path")
+            advanceTimeBy(99)
+
+            // THEN
+            assertIs<RouteNotFoundException>(result)
+            assertEquals("No matched subtrees found for: /not-registered-path", result?.message)
         }
 
-        // WHEN
-        routing.call(uri = "/not-registered-path")
-        advanceTimeBy(99)
-
-        // THEN
-        assertIs<RouteNotFoundException>(result)
-        assertEquals("No matched subtrees found for: /not-registered-path", result?.message)
-    }
-
     @Test
-    fun shouldFromAnExceptionRedirectToAnother() = runTest {
-        // GIVEN
-        val job = Job()
-        var result: Throwable? = null
-        var aCall: ApplicationCall? = null
+    fun shouldFromAnExceptionRedirectToAnother() =
+        runTest {
+            // GIVEN
+            val job = Job()
+            var result: Throwable? = null
+            var aCall: ApplicationCall? = null
 
-        val routing = routing(parentCoroutineContext = coroutineContext + job) {
-            install(StatusPages) {
-                exception<RouteNotFoundException> { call, cause ->
-                    result = cause
-                    call.redirectToPath(path = "/redirected")
+            val routing =
+                routing(parentCoroutineContext = coroutineContext + job) {
+                    install(StatusPages) {
+                        exception<RouteNotFoundException> { call, cause ->
+                            result = cause
+                            call.redirectToPath(path = "/redirected")
+                        }
+                    }
+
+                    handle(path = "/exception") {
+                        throw IllegalArgumentException("stop routing")
+                    }
+
+                    handle(path = "/redirected") {
+                        aCall = call
+                        job.complete()
+                    }
                 }
-            }
 
-            handle(path = "/exception") {
-                throw IllegalArgumentException("stop routing")
-            }
+            // WHEN
+            routing.call(uri = "/not-registered-path")
+            advanceTimeBy(99)
 
-            handle(path = "/redirected") {
-                aCall = call
-                job.complete()
-            }
+            // THEN
+            assertIs<RouteNotFoundException>(result)
+            assertEquals("No matched subtrees found for: /not-registered-path", result?.message)
+            assertEquals("/redirected", "${aCall?.uri}")
+            assertEquals("", "${aCall?.name}")
+            assertEquals(RouteMethod.Empty, aCall?.routeMethod)
+            assertEquals(Parameters.Empty, aCall?.parameters)
         }
-
-        // WHEN
-        routing.call(uri = "/not-registered-path")
-        advanceTimeBy(99)
-
-        // THEN
-        assertIs<RouteNotFoundException>(result)
-        assertEquals("No matched subtrees found for: /not-registered-path", result?.message)
-        assertEquals("/redirected", "${aCall?.uri}")
-        assertEquals("", "${aCall?.name}")
-        assertEquals(RouteMethod.Empty, aCall?.routeMethod)
-        assertEquals(Parameters.Empty, aCall?.parameters)
-    }
 }

@@ -13,7 +13,10 @@ public interface SessionStorage {
     /**
      * Writes a session [value] for [id].
      */
-    public suspend fun write(id: String, value: Any)
+    public suspend fun write(
+        id: String,
+        value: Any,
+    )
 
     /**
      * Invalidates a session with the [id] identifier.

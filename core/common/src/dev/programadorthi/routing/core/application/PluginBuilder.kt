@@ -19,9 +19,8 @@ import kotlin.random.Random
  **/
 @KtorDsl
 public abstract class PluginBuilder<PluginConfig : Any> internal constructor(
-    internal val key: AttributeKey<PluginInstance>
+    internal val key: AttributeKey<PluginInstance>,
 ) {
-
     /**
      * A reference to the [Application] where the plugin is installed.
      */
@@ -72,7 +71,7 @@ public abstract class PluginBuilder<PluginConfig : Any> internal constructor(
             callInterceptions,
             ApplicationCallPipeline.Plugins,
             PHASE_ON_CALL,
-            ::OnCallContext
+            ::OnCallContext,
         ) { call, _ ->
             block(call)
         }
@@ -97,7 +96,7 @@ public abstract class PluginBuilder<PluginConfig : Any> internal constructor(
      */
     public fun <HookHandler> on(
         hook: Hook<HookHandler>,
-        handler: HookHandler
+        handler: HookHandler,
     ) {
         hooks.add(HookHandler(hook, handler))
     }
@@ -107,7 +106,7 @@ public abstract class PluginBuilder<PluginConfig : Any> internal constructor(
         phase: PipelinePhase,
         handlerName: String,
         contextInit: (pluginConfig: PluginConfig, PipelineContext<T, ApplicationCall>) -> ContextT,
-        block: suspend ContextT.(ApplicationCall, T) -> Unit
+        block: suspend ContextT.(ApplicationCall, T) -> Unit,
     ) {
         interceptions.add(
             Interception(
@@ -126,8 +125,8 @@ public abstract class PluginBuilder<PluginConfig : Any> internal constructor(
                             ijDebugReportHandlerFinished(pluginName = key.name, handler = handlerName)
                         }
                     }
-                }
-            )
+                },
+            ),
         )
     }
 
@@ -136,7 +135,7 @@ public abstract class PluginBuilder<PluginConfig : Any> internal constructor(
         phase: PipelinePhase,
         handlerName: String,
         contextInit: (pluginConfig: PluginConfig, PipelineContext<T, ApplicationCall>) -> ContextT,
-        block: suspend ContextT.(call: ApplicationCall, body: T) -> Unit
+        block: suspend ContextT.(call: ApplicationCall, body: T) -> Unit,
     ) {
         onDefaultPhaseWithMessage(interceptions, phase, handlerName, contextInit) { call, body -> block(call, body) }
     }

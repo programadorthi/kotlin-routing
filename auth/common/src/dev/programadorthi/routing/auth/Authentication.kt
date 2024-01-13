@@ -23,7 +23,10 @@ public class AuthenticationConfig(providers: Map<String?, AuthenticationProvider
      * Registers a provider with the specified [name] and allows you to [configure] it.
      * @throws IllegalArgumentException if a provider with the same name is already installed.
      */
-    public fun provider(name: String? = null, configure: DynamicProviderConfig.() -> Unit) {
+    public fun provider(
+        name: String? = null,
+        configure: DynamicProviderConfig.() -> Unit,
+    ) {
         requireProviderNotRegistered(name)
         val configuration = DynamicProviderConfig(name).apply(configure)
         val provider = configuration.buildProvider()
@@ -83,7 +86,6 @@ public class AuthenticationConfig(providers: Map<String?, AuthenticationProvider
  * [Authentication and authorization](https://ktor.io/docs/authentication.html).
  */
 public class Authentication(internal var config: AuthenticationConfig) {
-
     /**
      * Configures an already installed plugin.
      */
@@ -99,7 +101,10 @@ public class Authentication(internal var config: AuthenticationConfig) {
     public companion object : BaseApplicationPlugin<Application, AuthenticationConfig, Authentication> {
         override val key: AttributeKey<Authentication> = AttributeKey("AuthenticationHolder")
 
-        override fun install(pipeline: Application, configure: AuthenticationConfig.() -> Unit): Authentication {
+        override fun install(
+            pipeline: Application,
+            configure: AuthenticationConfig.() -> Unit,
+        ): Authentication {
             val config = AuthenticationConfig().apply(configure)
             return Authentication(config)
         }
@@ -120,8 +125,7 @@ public inline fun <reified P : Principal> ApplicationCall.principal(): P? = prin
 /**
  * Retrieves an authenticated [Principal] for `this` call from provider with name [provider]
  */
-public inline fun <reified P : Principal> ApplicationCall.principal(provider: String?): P? =
-    authentication.principal(provider)
+public inline fun <reified P : Principal> ApplicationCall.principal(provider: String?): P? = authentication.principal(provider)
 
 /**
  * Installs the [Authentication] plugin if not yet installed and invokes [block] on its config.

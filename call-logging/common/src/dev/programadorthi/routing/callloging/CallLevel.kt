@@ -5,5 +5,5 @@ public enum class CallLevel {
     ERROR,
     INFO,
     WARN,
-    TRACE
+    TRACE,
 }

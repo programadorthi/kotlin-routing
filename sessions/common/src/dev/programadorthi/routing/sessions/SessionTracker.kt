@@ -16,14 +16,20 @@ public interface SessionTracker<S : Any> {
      * It is recommended to perform lookup asynchronously if there is an external session store
      * @return session instance or null if session was not found
      */
-    public suspend fun load(call: ApplicationCall, transport: String?): S?
+    public suspend fun load(
+        call: ApplicationCall,
+        transport: String?,
+    ): S?
 
     /**
      * Store session [value] and return respective transport string for the specified [call].
      *
      * Override if there is an existing session.
      */
-    public suspend fun store(call: ApplicationCall, value: S): String
+    public suspend fun store(
+        call: ApplicationCall,
+        value: S,
+    ): String
 
     /**
      * Clear session information

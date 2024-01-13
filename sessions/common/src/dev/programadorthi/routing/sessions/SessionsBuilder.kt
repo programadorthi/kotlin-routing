@@ -14,9 +14,7 @@ public inline fun <reified S : Any> SessionsConfig.session() {
  * Configures [Sessions] to pass the serialized session's data.
  * The [block] parameter allows you to configure additional settings, for example, sign and encrypt session data.
  */
-public inline fun <reified S : Any> SessionsConfig.session(
-    block: HeaderSessionBuilder<S>.() -> Unit
-) {
+public inline fun <reified S : Any> SessionsConfig.session(block: HeaderSessionBuilder<S>.() -> Unit) {
     val sessionType = S::class
     val builder = HeaderSessionBuilder(sessionType).apply(block)
     session(sessionType, null, builder)
@@ -29,7 +27,7 @@ public inline fun <reified S : Any> SessionsConfig.session(
  */
 public inline fun <reified S : Any> SessionsConfig.session(
     storage: SessionStorage,
-    block: HeaderSessionBuilder<S>.() -> Unit
+    block: HeaderSessionBuilder<S>.() -> Unit,
 ) {
     val sessionType = S::class
     val builder = HeaderSessionBuilder(sessionType).apply(block)
@@ -40,7 +38,7 @@ public inline fun <reified S : Any> SessionsConfig.session(
 internal fun <S : Any> SessionsConfig.session(
     sessionType: KClass<S>,
     storage: SessionStorage?,
-    builder: HeaderSessionBuilder<S>
+    builder: HeaderSessionBuilder<S>,
 ) {
     val transport = SessionTransportImpl("$sessionType", builder.transformers)
     val tracker = SessionTrackerImpl(sessionType, storage ?: SessionStorageMemory(), builder.serializer)
@@ -53,26 +51,26 @@ internal fun <S : Any> SessionsConfig.session(
  * @property type session instance type
  */
 public open class HeaderSessionBuilder<S : Any>
-@PublishedApi
-internal constructor(
-    private val type: KClass<S>,
-) {
-    /**
-     * Specifies a serializer used to serialize session data.
-     */
-    public var serializer: SessionSerializer<S>? = null
+    @PublishedApi
+    internal constructor(
+        private val type: KClass<S>,
+    ) {
+        /**
+         * Specifies a serializer used to serialize session data.
+         */
+        public var serializer: SessionSerializer<S>? = null
 
-    private val _transformers = mutableListOf<SessionTransportTransformer>()
+        private val _transformers = mutableListOf<SessionTransportTransformer>()
 
-    /**
-     * Gets transformers used to sign and encrypt session data.
-     */
-    public val transformers: List<SessionTransportTransformer> get() = _transformers
+        /**
+         * Gets transformers used to sign and encrypt session data.
+         */
+        public val transformers: List<SessionTransportTransformer> get() = _transformers
 
-    /**
-     * Registers a [transformer] used to sign and encrypt session data.
-     */
-    public fun transform(transformer: SessionTransportTransformer) {
-        _transformers.add(transformer)
+        /**
+         * Registers a [transformer] used to sign and encrypt session data.
+         */
+        public fun transform(transformer: SessionTransportTransformer) {
+            _transformers.add(transformer)
+        }
     }
-}

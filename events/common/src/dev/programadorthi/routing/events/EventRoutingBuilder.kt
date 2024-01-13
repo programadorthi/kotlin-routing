@@ -25,10 +25,11 @@ public fun Route.event(
 }
 
 public fun Routing.unregisterEvent(name: String) {
-    val route = route(
-        path = name,
-        name = null,
-        method = EventRouteMethod,
-    ) { }
+    val route =
+        route(
+            path = name,
+            name = null,
+            method = EventRouteMethod,
+        ) { }
     unregisterRoute(route)
 }

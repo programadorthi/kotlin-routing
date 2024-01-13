@@ -28,9 +28,7 @@ import kotlinx.serialization.serializer
  *
  * A class [T] **must** be annotated with [io.ktor.resources.Resource].
  */
-public inline fun <reified T : Any> Route.resource(
-    noinline body: Route.() -> Unit
-): Route {
+public inline fun <reified T : Any> Route.resource(noinline body: Route.() -> Unit): Route {
     val serializer = serializer<T>()
     return resource(serializer, body)
 }
@@ -42,11 +40,10 @@ public inline fun <reified T : Any> Route.resource(
  *
  * @param body receives an instance of the typed resource [T] as the first parameter.
  */
-public inline fun <reified T : Any> Route.handle(
-    noinline body: suspend PipelineContext<Unit, ApplicationCall>.(T) -> Unit
-): Route = resource<T> {
-    handle(serializer<T>(), body)
-}
+public inline fun <reified T : Any> Route.handle(noinline body: suspend PipelineContext<Unit, ApplicationCall>.(T) -> Unit): Route =
+    resource<T> {
+        handle(serializer<T>(), body)
+    }
 
 /**
  * Registers a typed handler [body] for a [RouteMethod] resource defined by the [T] class.
@@ -57,14 +54,15 @@ public inline fun <reified T : Any> Route.handle(
  */
 public inline fun <reified T : Any> Route.handle(
     method: RouteMethod,
-    noinline body: suspend PipelineContext<Unit, ApplicationCall>.(T) -> Unit
+    noinline body: suspend PipelineContext<Unit, ApplicationCall>.(T) -> Unit,
 ): Route {
     lateinit var builtRoute: Route
     resource<T> {
-        builtRoute = method(method) {
-            val serializer = serializer<T>()
-            handle(serializer, body)
-        }
+        builtRoute =
+            method(method) {
+                val serializer = serializer<T>()
+                handle(serializer, body)
+            }
     }
     return builtRoute
 }
@@ -81,7 +79,7 @@ internal val ResourceInstanceKey: AttributeKey<Any> = AttributeKey("ResourceInst
  */
 public fun <T : Any> Route.resource(
     serializer: KSerializer<T>,
-    body: Route.() -> Unit
+    body: Route.() -> Unit,
 ): Route {
     val resources = application.plugin(Resources)
     val path = resources.resourcesFormat.encodeToPathPattern(serializer)
@@ -89,14 +87,16 @@ public fun <T : Any> Route.resource(
     var route = this
     // Required for register to parents
     route(path = path, name = null) {
-        route = queryParameters.fold(this) { entry, query ->
-            val selector = if (query.isOptional) {
-                OptionalParameterRouteSelector(query.name)
-            } else {
-                ParameterRouteSelector(query.name)
-            }
-            entry.createChild(selector)
-        }.apply(body)
+        route =
+            queryParameters.fold(this) { entry, query ->
+                val selector =
+                    if (query.isOptional) {
+                        OptionalParameterRouteSelector(query.name)
+                    } else {
+                        ParameterRouteSelector(query.name)
+                    }
+                entry.createChild(selector)
+            }.apply(body)
     }
     return route
 }
@@ -109,7 +109,7 @@ public fun <T : Any> Route.resource(
  */
 public fun <T : Any> Route.handle(
     serializer: KSerializer<T>,
-    body: suspend PipelineContext<Unit, ApplicationCall>.(T) -> Unit
+    body: suspend PipelineContext<Unit, ApplicationCall>.(T) -> Unit,
 ) {
     intercept(ApplicationCallPipeline.Plugins) {
         val resources = application.plugin(Resources)

@@ -20,9 +20,8 @@ import kotlinx.serialization.modules.SerializersModule
 internal class ParametersDecoder(
     override val serializersModule: SerializersModule,
     private val parameters: Parameters,
-    elementNames: Iterable<String>
+    elementNames: Iterable<String>,
 ) : AbstractDecoder() {
-
     private val parameterNames = elementNames.iterator()
     private lateinit var currentName: String
 
@@ -99,7 +98,7 @@ internal class ParametersDecoder(
         val index = enumDescriptor.getElementIndex(enumName)
         if (index == CompositeDecoder.UNKNOWN_NAME) {
             throw ResourceSerializationException(
-                "${enumDescriptor.serialName} does not contain element with name '$enumName'"
+                "${enumDescriptor.serialName} does not contain element with name '$enumName'",
             )
         }
         return index
@@ -110,9 +109,8 @@ internal class ParametersDecoder(
 private class ListLikeDecoder(
     override val serializersModule: SerializersModule,
     private val parameters: Parameters,
-    private val parameterName: String
+    private val parameterName: String,
 ) : AbstractDecoder() {
-
     private var currentIndex = -1
 
     private val elementsCount = parameters.getAll(parameterName)?.size ?: 0
@@ -173,7 +171,7 @@ private class ListLikeDecoder(
         val index = enumDescriptor.getElementIndex(enumName)
         if (index == CompositeDecoder.UNKNOWN_NAME) {
             throw ResourceSerializationException(
-                "${enumDescriptor.serialName} does not contain element with name '$enumName'"
+                "${enumDescriptor.serialName} does not contain element with name '$enumName'",
             )
         }
         return index

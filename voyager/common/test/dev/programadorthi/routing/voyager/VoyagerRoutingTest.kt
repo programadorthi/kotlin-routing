@@ -23,15 +23,15 @@ import kotlin.test.assertNotNull
 
 @OptIn(ExperimentalCoroutinesApi::class)
 internal class VoyagerRoutingTest {
-
     @Test
     fun shouldInvokeInitialScreenWhenANavigatorIsCreated() =
         runComposeTest { coroutineContext, composition, clock ->
             // GIVEN
             val routing = routing(parentCoroutineContext = coroutineContext) {}
-            val fakeScreen = FakeScreen().apply {
-                content = "Hey, I am the initial screen"
-            }
+            val fakeScreen =
+                FakeScreen().apply {
+                    content = "Hey, I am the initial screen"
+                }
 
             // WHEN
             composition.setContent {
@@ -52,13 +52,14 @@ internal class VoyagerRoutingTest {
             // GIVEN
             val fakeScreen = FakeScreen()
 
-            val routing = routing(parentCoroutineContext = coroutineContext) {
-                screen(path = "/path") {
-                    fakeScreen.apply {
-                        content = "Hey, I am the called screen"
+            val routing =
+                routing(parentCoroutineContext = coroutineContext) {
+                    screen(path = "/path") {
+                        fakeScreen.apply {
+                            content = "Hey, I am the called screen"
+                        }
                     }
                 }
-            }
 
             composition.setContent {
                 VoyagerRouting(
@@ -82,13 +83,14 @@ internal class VoyagerRoutingTest {
             // GIVEN
             val fakeScreen = FakeScreen()
 
-            val routing = routing(parentCoroutineContext = coroutineContext) {
-                screen(path = "/path", name = "path") {
-                    fakeScreen.apply {
-                        content = "Hey, I am the called screen"
+            val routing =
+                routing(parentCoroutineContext = coroutineContext) {
+                    screen(path = "/path", name = "path") {
+                        fakeScreen.apply {
+                            content = "Hey, I am the called screen"
+                        }
                     }
                 }
-            }
 
             composition.setContent {
                 VoyagerRouting(
@@ -113,20 +115,22 @@ internal class VoyagerRoutingTest {
             var result: ApplicationCall? = null
             var exception: Throwable? = null
 
-            val statusPages = createApplicationPlugin("status-pages") {
-                on(CallFailed) { call, cause ->
-                    result = call
-                    exception = cause
+            val statusPages =
+                createApplicationPlugin("status-pages") {
+                    on(CallFailed) { call, cause ->
+                        result = call
+                        exception = cause
+                    }
                 }
-            }
 
-            val routing = routing(parentCoroutineContext = coroutineContext) {
-                install(statusPages)
+            val routing =
+                routing(parentCoroutineContext = coroutineContext) {
+                    install(statusPages)
 
-                screen(path = "/path", method = RouteMethod.Empty) {
-                    FakeScreen()
+                    screen(path = "/path", method = RouteMethod.Empty) {
+                        FakeScreen()
+                    }
                 }
-            }
 
             composition.setContent {
                 VoyagerRouting(
@@ -151,7 +155,7 @@ internal class VoyagerRoutingTest {
             assertEquals(
                 "Voyager needs a stack route method to work. You called a screen /path using " +
                     "route method RouteMethodImpl(value=EMPTY) that is not supported by Voyager",
-                exception?.message
+                exception?.message,
             )
         }
 
@@ -161,15 +165,16 @@ internal class VoyagerRoutingTest {
             // GIVEN
             val fakeScreen = FakeScreen()
 
-            val routing = routing(parentCoroutineContext = coroutineContext) {
-                route(path = "/any") {
-                    screen {
-                        fakeScreen.apply {
-                            content = "Hey, I am the called screen"
+            val routing =
+                routing(parentCoroutineContext = coroutineContext) {
+                    route(path = "/any") {
+                        screen {
+                            fakeScreen.apply {
+                                content = "Hey, I am the called screen"
+                            }
                         }
                     }
                 }
-            }
 
             composition.setContent {
                 VoyagerRouting(
@@ -193,13 +198,14 @@ internal class VoyagerRoutingTest {
             // GIVEN
             var navigator: Navigator? = null
 
-            val routing = routing(parentCoroutineContext = coroutineContext) {
-                screen(path = "/path") {
-                    FakeScreen().apply {
-                        content = "Hey, I am the pushed screen"
+            val routing =
+                routing(parentCoroutineContext = coroutineContext) {
+                    screen(path = "/path") {
+                        FakeScreen().apply {
+                            content = "Hey, I am the pushed screen"
+                        }
                     }
                 }
-            }
 
             composition.setContent {
                 VoyagerRouting(
@@ -228,19 +234,20 @@ internal class VoyagerRoutingTest {
             // GIVEN
             var navigator: Navigator? = null
 
-            val routing = routing(parentCoroutineContext = coroutineContext) {
-                screen(path = "/push") {
-                    FakeScreen().apply {
-                        content = "Hey, I am the pushed screen"
+            val routing =
+                routing(parentCoroutineContext = coroutineContext) {
+                    screen(path = "/push") {
+                        FakeScreen().apply {
+                            content = "Hey, I am the pushed screen"
+                        }
                     }
-                }
 
-                screen(path = "/replace") {
-                    FakeScreen().apply {
-                        content = "Hey, I am the replaced screen"
+                    screen(path = "/replace") {
+                        FakeScreen().apply {
+                            content = "Hey, I am the replaced screen"
+                        }
                     }
                 }
-            }
 
             composition.setContent {
                 VoyagerRouting(
@@ -277,19 +284,20 @@ internal class VoyagerRoutingTest {
             var counter = 1
             var navigator: Navigator? = null
 
-            val routing = routing(parentCoroutineContext = coroutineContext) {
-                screen(path = "/push") {
-                    FakeScreen().apply {
-                        content = "Hey, I am the pushed screen number ${counter++}"
+            val routing =
+                routing(parentCoroutineContext = coroutineContext) {
+                    screen(path = "/push") {
+                        FakeScreen().apply {
+                            content = "Hey, I am the pushed screen number ${counter++}"
+                        }
                     }
-                }
 
-                screen(path = "/replace") {
-                    FakeScreen().apply {
-                        content = "Hey, I am the replaced all screen"
+                    screen(path = "/replace") {
+                        FakeScreen().apply {
+                            content = "Hey, I am the replaced all screen"
+                        }
                     }
                 }
-            }
 
             composition.setContent {
                 VoyagerRouting(
@@ -322,19 +330,19 @@ internal class VoyagerRoutingTest {
             assertEquals(
                 true,
                 firstPushedScreen?.disposed,
-                "First pushed screen should be disposed"
+                "First pushed screen should be disposed",
             )
             assertEquals("Hey, I am the pushed screen number 2", secondPushedScreen?.composed)
             assertEquals(
                 true,
                 secondPushedScreen?.disposed,
-                "Second pushed screen should be disposed"
+                "Second pushed screen should be disposed",
             )
             assertEquals("Hey, I am the replaced all screen", replacedAllScreen?.composed)
             assertEquals(
                 false,
                 replacedAllScreen?.disposed,
-                "Replaced all screen should not be disposed"
+                "Replaced all screen should not be disposed",
             )
         }
 
@@ -344,26 +352,28 @@ internal class VoyagerRoutingTest {
             // GIVEN
             var navigator: Navigator? = null
 
-            val routing = routing(parentCoroutineContext = coroutineContext) {
-                screen(path = "/push1") {
-                    FakeScreen().apply {
-                        content = "Hey, I am the pushed screen number 1"
+            val routing =
+                routing(parentCoroutineContext = coroutineContext) {
+                    screen(path = "/push1") {
+                        FakeScreen().apply {
+                            content = "Hey, I am the pushed screen number 1"
+                        }
                     }
-                }
 
-                screen(path = "/push2") {
-                    FakeScreen().apply {
-                        content = "Hey, I am the pushed screen number 2"
+                    screen(path = "/push2") {
+                        FakeScreen().apply {
+                            content = "Hey, I am the pushed screen number 2"
+                        }
                     }
                 }
-            }
 
             composition.setContent {
                 VoyagerRouting(
                     routing = routing,
-                    initialScreen = FakeScreen().apply {
-                        content = "I am the initial screen"
-                    },
+                    initialScreen =
+                        FakeScreen().apply {
+                            content = "I am the initial screen"
+                        },
                 ) { nav ->
                     navigator = nav
                     CurrentScreen()
@@ -391,18 +401,18 @@ internal class VoyagerRoutingTest {
             assertEquals(
                 true,
                 firstPushedScreen?.disposed,
-                "First pushed screen should be disposed"
+                "First pushed screen should be disposed",
             )
             assertEquals("Hey, I am the pushed screen number 2", secondPushedScreen?.composed)
             assertEquals(
                 true,
                 secondPushedScreen?.disposed,
-                "Second pushed screen should be disposed"
+                "Second pushed screen should be disposed",
             )
             assertEquals(
                 firstPushedScreen?.key,
                 lastScreen?.key,
-                "After pop should call first pushed screen content"
+                "After pop should call first pushed screen content",
             )
         }
 
@@ -412,26 +422,28 @@ internal class VoyagerRoutingTest {
             // GIVEN
             var navigator: Navigator? = null
 
-            val routing = routing(parentCoroutineContext = coroutineContext) {
-                screen(path = "/push1") {
-                    FakeScreen().apply {
-                        content = "Hey, I am the pushed screen number 1"
+            val routing =
+                routing(parentCoroutineContext = coroutineContext) {
+                    screen(path = "/push1") {
+                        FakeScreen().apply {
+                            content = "Hey, I am the pushed screen number 1"
+                        }
                     }
-                }
 
-                screen(path = "/push2") {
-                    FakeScreen().apply {
-                        content = "Hey, I am the pushed screen number 2"
+                    screen(path = "/push2") {
+                        FakeScreen().apply {
+                            content = "Hey, I am the pushed screen number 2"
+                        }
                     }
                 }
-            }
 
             composition.setContent {
                 VoyagerRouting(
                     routing = routing,
-                    initialScreen = FakeScreen().apply {
-                        content = "I am the initial screen"
-                    },
+                    initialScreen =
+                        FakeScreen().apply {
+                            content = "I am the initial screen"
+                        },
                 ) { nav ->
                     navigator = nav
                     CurrentScreen()
@@ -462,26 +474,28 @@ internal class VoyagerRoutingTest {
             // GIVEN
             var navigator: Navigator? = null
 
-            val routing = routing(parentCoroutineContext = coroutineContext) {
-                screen(path = "/push1") {
-                    FakeScreen().apply {
-                        content = "Hey, I am the pushed screen number 1"
+            val routing =
+                routing(parentCoroutineContext = coroutineContext) {
+                    screen(path = "/push1") {
+                        FakeScreen().apply {
+                            content = "Hey, I am the pushed screen number 1"
+                        }
                     }
-                }
 
-                screen(path = "/push2") {
-                    FakeScreen().apply {
-                        content = "Hey, I am the pushed screen number 2"
+                    screen(path = "/push2") {
+                        FakeScreen().apply {
+                            content = "Hey, I am the pushed screen number 2"
+                        }
                     }
                 }
-            }
 
             composition.setContent {
                 VoyagerRouting(
                     routing = routing,
-                    initialScreen = FakeScreen().apply {
-                        content = "I am the initial screen"
-                    },
+                    initialScreen =
+                        FakeScreen().apply {
+                            content = "I am the initial screen"
+                        },
                 ) { nav ->
                     navigator = nav
                     CurrentScreen()

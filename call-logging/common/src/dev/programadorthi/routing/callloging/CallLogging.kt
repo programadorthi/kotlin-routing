@@ -34,43 +34,45 @@ public fun ApplicationCall.processingTimeMillis(clock: () -> Long = { getTimeMil
  *
  * You can learn more from [Call logging](https://ktor.io/docs/call-logging.html).
  */
-public val CallLogging: ApplicationPlugin<CallLoggingConfig> = createApplicationPlugin(
-    "CallLogging",
-    ::CallLoggingConfig
-) {
-    val log = pluginConfig.logger ?: application.log
-    val filters = pluginConfig.filters
-    val formatCall = pluginConfig.formatCall
-    val clock = pluginConfig.clock
+public val CallLogging: ApplicationPlugin<CallLoggingConfig> =
+    createApplicationPlugin(
+        "CallLogging",
+        ::CallLoggingConfig,
+    ) {
+        val log = pluginConfig.logger ?: application.log
+        val filters = pluginConfig.filters
+        val formatCall = pluginConfig.formatCall
+        val clock = pluginConfig.clock
 
-    fun log(message: String) = when (pluginConfig.level) {
-        CallLevel.ERROR -> log.error(message)
-        CallLevel.WARN -> log.warn(message)
-        CallLevel.INFO -> log.info(message)
-        CallLevel.DEBUG -> log.debug(message)
-        CallLevel.TRACE -> log.trace(message)
-    }
+        fun log(message: String) =
+            when (pluginConfig.level) {
+                CallLevel.ERROR -> log.error(message)
+                CallLevel.WARN -> log.warn(message)
+                CallLevel.INFO -> log.info(message)
+                CallLevel.DEBUG -> log.debug(message)
+                CallLevel.TRACE -> log.trace(message)
+            }
 
-    fun logSuccess(call: ApplicationCall) {
-        if (filters.isEmpty() || filters.any { it(call) }) {
-            log(formatCall(call))
+        fun logSuccess(call: ApplicationCall) {
+            if (filters.isEmpty() || filters.any { it(call) }) {
+                log(formatCall(call))
+            }
         }
+
+        setupMDCProvider()
+        setupLogging(application.environment.monitor, ::log)
+
+        on(CallSetup) { call ->
+            call.attributes.put(CALL_START_TIME, clock())
+        }
+
+        if (pluginConfig.mdcEntries.isEmpty()) {
+            logCompletedCalls(::logSuccess)
+            return@createApplicationPlugin
+        }
+
+        logCallsWithMDC(::logSuccess)
     }
-
-    setupMDCProvider()
-    setupLogging(application.environment.monitor, ::log)
-
-    on(CallSetup) { call ->
-        call.attributes.put(CALL_START_TIME, clock())
-    }
-
-    if (pluginConfig.mdcEntries.isEmpty()) {
-        logCompletedCalls(::logSuccess)
-        return@createApplicationPlugin
-    }
-
-    logCallsWithMDC(::logSuccess)
-}
 
 private fun PluginBuilder<CallLoggingConfig>.logCompletedCalls(logSuccess: (ApplicationCall) -> Unit) {
     on(ResponseSent) { call ->
@@ -97,7 +99,10 @@ private fun PluginBuilder<CallLoggingConfig>.logCallsWithMDC(logSuccess: (Applic
     }
 }
 
-private fun setupLogging(events: Events, log: (String) -> Unit) {
+private fun setupLogging(
+    events: Events,
+    log: (String) -> Unit,
+) {
     val starting: (Application) -> Unit = { log("Routing starting: $it") }
     val started: (Application) -> Unit = { log("Routing started: $it") }
     val stopping: (Application) -> Unit = { log("Routing stopping: $it") }

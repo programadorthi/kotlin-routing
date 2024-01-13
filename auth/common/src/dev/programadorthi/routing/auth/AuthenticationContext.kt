@@ -13,31 +13,33 @@ import kotlin.reflect.KClass
  * @param call instance of [ApplicationCall] this context is for.
  */
 public class AuthenticationContext(call: ApplicationCall) {
-
     public var call: ApplicationCall = call
         private set
 
-    private val _errors = HashMap<Any, AuthenticationFailedCause>()
+    private val errors = HashMap<Any, AuthenticationFailedCause>()
 
-    internal val _principal: CombinedPrincipal = CombinedPrincipal()
+    internal val combinedPrincipal: CombinedPrincipal = CombinedPrincipal()
 
     /**
      * All registered errors during auth procedure (only [AuthenticationFailedCause.Error]).
      */
     public val allErrors: List<AuthenticationFailedCause.Error>
-        get() = _errors.values.filterIsInstance<AuthenticationFailedCause.Error>()
+        get() = errors.values.filterIsInstance<AuthenticationFailedCause.Error>()
 
     /**
      * All authentication failures during auth procedure including missing or invalid credentials.
      */
     public val allFailures: List<AuthenticationFailedCause>
-        get() = _errors.values.toList()
+        get() = errors.values.toList()
 
     /**
      * Appends an error to the errors list. Overwrites if already registered for the same [key].
      */
-    public fun error(key: Any, cause: AuthenticationFailedCause) {
-        _errors[key] = cause
+    public fun error(
+        key: Any,
+        cause: AuthenticationFailedCause,
+    ) {
+        errors[key] = cause
     }
 
     /**
@@ -49,14 +51,17 @@ public class AuthenticationContext(call: ApplicationCall) {
      * Sets an authenticated principal for this context.
      */
     public fun principal(principal: Principal) {
-        _principal.add(null, principal)
+        combinedPrincipal.add(null, principal)
     }
 
     /**
      * Sets an authenticated principal for this context from provider with name [provider].
      */
-    public fun principal(provider: String? = null, principal: Principal) {
-        _principal.add(provider, principal)
+    public fun principal(
+        provider: String? = null,
+        principal: Principal,
+    ) {
+        combinedPrincipal.add(provider, principal)
     }
 
     /**
@@ -69,8 +74,11 @@ public class AuthenticationContext(call: ApplicationCall) {
     /**
      * Retrieves a principal of the type [T], if any.
      */
-    public fun <T : Principal> principal(provider: String?, klass: KClass<T>): T? {
-        return _principal.get(provider, klass)
+    public fun <T : Principal> principal(
+        provider: String?,
+        klass: KClass<T>,
+    ): T? {
+        return combinedPrincipal.get(provider, klass)
     }
 
     /**
@@ -79,7 +87,7 @@ public class AuthenticationContext(call: ApplicationCall) {
     public fun challenge(
         key: Any,
         cause: AuthenticationFailedCause,
-        function: ChallengeFunction
+        function: ChallengeFunction,
     ) {
         error(key, cause)
         challenge.register.add(cause to function)

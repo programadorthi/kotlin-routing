@@ -18,7 +18,7 @@ public fun Routing.pop(result: Any? = null) {
 
 public fun Routing.popUntil(
     result: Any? = null,
-    predicate: (Screen) -> Boolean
+    predicate: (Screen) -> Boolean,
 ) {
     val navigator = application.voyagerNavigator
     if (navigator.popUntil(predicate)) {

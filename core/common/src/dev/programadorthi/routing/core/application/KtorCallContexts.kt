@@ -14,7 +14,7 @@ import io.ktor.util.pipeline.PipelineContext
 @KtorDsl
 public open class CallContext<PluginConfig : Any> internal constructor(
     public val pluginConfig: PluginConfig,
-    protected open val context: PipelineContext<*, ApplicationCall>
+    protected open val context: PipelineContext<*, ApplicationCall>,
 ) {
     // Internal usage for tests only
     internal fun finish() = context.finish()
@@ -29,5 +29,5 @@ public open class CallContext<PluginConfig : Any> internal constructor(
 @KtorDsl
 public class OnCallContext<PluginConfig : Any> internal constructor(
     pluginConfig: PluginConfig,
-    context: PipelineContext<Unit, ApplicationCall>
+    context: PipelineContext<Unit, ApplicationCall>,
 ) : CallContext<PluginConfig>(pluginConfig, context)

@@ -26,7 +26,6 @@ import kotlin.test.assertNotNull
 
 @OptIn(ExperimentalCoroutinesApi::class)
 class ComposeResourcesTest {
-
     @Resource("/path")
     class Path {
         @Resource("{id}")
@@ -41,16 +40,17 @@ class ComposeResourcesTest {
             var result: ApplicationCall? = null
             var path: Path? = null
 
-            val routing = routing(parentCoroutineContext = coroutineContext) {
-                install(Resources)
+            val routing =
+                routing(parentCoroutineContext = coroutineContext) {
+                    install(Resources)
 
-                composable<Path>(method = RouteMethod.Empty) {
-                    result = call
-                    path = it
-                    fakeContent.content = "I'm the path based content"
-                    fakeContent.Composable()
+                    composable<Path>(method = RouteMethod.Empty) {
+                        result = call
+                        path = it
+                        fakeContent.content = "I'm the path based content"
+                        fakeContent.Composable()
+                    }
                 }
-            }
 
             composition.setContent {
                 Routing(
@@ -84,17 +84,18 @@ class ComposeResourcesTest {
             var result: ApplicationCall? = null
             var path: Path? = null
 
-            val routing = routing(parentCoroutineContext = coroutineContext) {
-                install(Resources)
-                install(StackRouting)
+            val routing =
+                routing(parentCoroutineContext = coroutineContext) {
+                    install(Resources)
+                    install(StackRouting)
 
-                composable<Path>(method = StackRouteMethod.Push) {
-                    result = call
-                    path = it
-                    fakeContent.content = "I'm the push based content"
-                    fakeContent.Composable()
+                    composable<Path>(method = StackRouteMethod.Push) {
+                        result = call
+                        path = it
+                        fakeContent.content = "I'm the push based content"
+                        fakeContent.Composable()
+                    }
                 }
-            }
 
             composition.setContent {
                 Routing(
@@ -128,17 +129,18 @@ class ComposeResourcesTest {
             var result: ApplicationCall? = null
             var path: Path? = null
 
-            val routing = routing(parentCoroutineContext = coroutineContext) {
-                install(Resources)
-                install(StackRouting)
+            val routing =
+                routing(parentCoroutineContext = coroutineContext) {
+                    install(Resources)
+                    install(StackRouting)
 
-                composable<Path> {
-                    result = call
-                    path = it
-                    fakeContent.content = "I'm the replace based content"
-                    fakeContent.Composable()
+                    composable<Path> {
+                        result = call
+                        path = it
+                        fakeContent.content = "I'm the replace based content"
+                        fakeContent.Composable()
+                    }
                 }
-            }
 
             composition.setContent {
                 Routing(
@@ -172,17 +174,18 @@ class ComposeResourcesTest {
             var result: ApplicationCall? = null
             var path: Path? = null
 
-            val routing = routing(parentCoroutineContext = coroutineContext) {
-                install(Resources)
-                install(StackRouting)
+            val routing =
+                routing(parentCoroutineContext = coroutineContext) {
+                    install(Resources)
+                    install(StackRouting)
 
-                composable<Path> {
-                    result = call
-                    path = it
-                    fakeContent.content = "I'm the replace all based content"
-                    fakeContent.Composable()
+                    composable<Path> {
+                        result = call
+                        path = it
+                        fakeContent.content = "I'm the replace all based content"
+                        fakeContent.Composable()
+                    }
                 }
-            }
 
             composition.setContent {
                 Routing(
@@ -216,17 +219,18 @@ class ComposeResourcesTest {
             var result: ApplicationCall? = null
             var id: Path.Id? = null
 
-            val routing = routing(parentCoroutineContext = coroutineContext) {
-                install(Resources)
-                install(StackRouting)
+            val routing =
+                routing(parentCoroutineContext = coroutineContext) {
+                    install(Resources)
+                    install(StackRouting)
 
-                composable<Path.Id> {
-                    result = call
-                    id = it
-                    fakeContent.content = "I'm the push based content"
-                    fakeContent.Composable()
+                    composable<Path.Id> {
+                        result = call
+                        id = it
+                        fakeContent.content = "I'm the push based content"
+                        fakeContent.Composable()
+                    }
                 }
-            }
 
             composition.setContent {
                 Routing(
@@ -261,17 +265,18 @@ class ComposeResourcesTest {
             var result: ApplicationCall? = null
             var id: Path.Id? = null
 
-            val routing = routing(parentCoroutineContext = coroutineContext) {
-                install(Resources)
-                install(StackRouting)
+            val routing =
+                routing(parentCoroutineContext = coroutineContext) {
+                    install(Resources)
+                    install(StackRouting)
 
-                composable<Path.Id> {
-                    result = call
-                    id = it
-                    fakeContent.content = "I'm the replace based content"
-                    fakeContent.Composable()
+                    composable<Path.Id> {
+                        result = call
+                        id = it
+                        fakeContent.content = "I'm the replace based content"
+                        fakeContent.Composable()
+                    }
                 }
-            }
 
             composition.setContent {
                 Routing(
@@ -306,17 +311,18 @@ class ComposeResourcesTest {
             var result: ApplicationCall? = null
             var id: Path.Id? = null
 
-            val routing = routing(parentCoroutineContext = coroutineContext) {
-                install(Resources)
-                install(StackRouting)
+            val routing =
+                routing(parentCoroutineContext = coroutineContext) {
+                    install(Resources)
+                    install(StackRouting)
 
-                composable<Path.Id> {
-                    result = call
-                    id = it
-                    fakeContent.content = "I'm the replace all based content"
-                    fakeContent.Composable()
+                    composable<Path.Id> {
+                        result = call
+                        id = it
+                        fakeContent.content = "I'm the replace all based content"
+                        fakeContent.Composable()
+                    }
                 }
-            }
 
             composition.setContent {
                 Routing(
@@ -351,17 +357,18 @@ class ComposeResourcesTest {
             var result: ApplicationCall? = null
             val ids = mutableListOf<Path.Id>()
 
-            val routing = routing(parentCoroutineContext = coroutineContext) {
-                install(Resources)
-                install(StackRouting)
+            val routing =
+                routing(parentCoroutineContext = coroutineContext) {
+                    install(Resources)
+                    install(StackRouting)
 
-                composable<Path.Id> {
-                    result = call
-                    ids += it
-                    fakeContent.content = "I'm the reactive based content"
-                    fakeContent.Composable()
+                    composable<Path.Id> {
+                        result = call
+                        ids += it
+                        fakeContent.content = "I'm the reactive based content"
+                        fakeContent.Composable()
+                    }
                 }
-            }
 
             composition.setContent {
                 Routing(
@@ -413,16 +420,17 @@ class ComposeResourcesTest {
             val fakeContent = FakeContent()
             val result = mutableListOf<Pair<ApplicationCall, Path.Id>>()
 
-            val routing = routing(parentCoroutineContext = coroutineContext) {
-                install(Resources)
-                install(StackRouting)
+            val routing =
+                routing(parentCoroutineContext = coroutineContext) {
+                    install(Resources)
+                    install(StackRouting)
 
-                composable<Path.Id> {
-                    result += call to it
-                    fakeContent.content = "I'm the reactive based content"
-                    fakeContent.Composable()
+                    composable<Path.Id> {
+                        result += call to it
+                        fakeContent.content = "I'm the reactive based content"
+                        fakeContent.Composable()
+                    }
                 }
-            }
 
             composition.setContent {
                 Routing(

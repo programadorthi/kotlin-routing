@@ -52,7 +52,10 @@ public class CallLoggingConfig {
      *
      * @see [CallLogging]
      */
-    public fun mdc(name: String, provider: (ApplicationCall) -> String?) {
+    public fun mdc(
+        name: String,
+        provider: (ApplicationCall) -> String?,
+    ) {
         mdcEntries.add(MDCEntry(name, provider))
     }
 

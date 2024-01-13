@@ -21,9 +21,8 @@ public open class Route(
     public val parent: Route?,
     public val selector: RouteSelector,
     developmentMode: Boolean = false,
-    environment: ApplicationEnvironment? = null
+    environment: ApplicationEnvironment? = null,
 ) : ApplicationCallPipeline(developmentMode, environment) {
-
     /**
      * List of child routes for this node.
      */
@@ -77,41 +76,44 @@ public open class Route(
 
     override fun toString(): String {
         return when (val parentRoute = parent?.toString()) {
-            null -> when (selector) {
-                is TrailingSlashRouteSelector -> "/"
-                else -> "/$selector"
-            }
+            null ->
+                when (selector) {
+                    is TrailingSlashRouteSelector -> "/"
+                    else -> "/$selector"
+                }
 
-            else -> when (selector) {
-                is TrailingSlashRouteSelector -> if (parentRoute.endsWith('/')) parentRoute else "$parentRoute/"
-                else -> if (parentRoute.endsWith('/')) "$parentRoute$selector" else "$parentRoute/$selector"
-            }
+            else ->
+                when (selector) {
+                    is TrailingSlashRouteSelector -> if (parentRoute.endsWith('/')) parentRoute else "$parentRoute/"
+                    else -> if (parentRoute.endsWith('/')) "$parentRoute$selector" else "$parentRoute/$selector"
+                }
         }
     }
 
-    internal fun buildPipeline(): ApplicationCallPipeline = cachedPipeline ?: run {
-        var current: Route? = this
-        val pipeline = ApplicationCallPipeline(developmentMode, application.environment)
-        val routePipelines = mutableListOf<ApplicationCallPipeline>()
-        while (current != null) {
-            routePipelines.add(current)
-            current = current.parent
-        }
-
-        for (index in routePipelines.lastIndex downTo 0) {
-            val routePipeline = routePipelines[index]
-            pipeline.merge(routePipeline)
-        }
-
-        val handlers = handlers
-        for (index in 0..handlers.lastIndex) {
-            pipeline.intercept(Call) {
-                handlers[index].invoke(this, Unit)
+    internal fun buildPipeline(): ApplicationCallPipeline =
+        cachedPipeline ?: run {
+            var current: Route? = this
+            val pipeline = ApplicationCallPipeline(developmentMode, application.environment)
+            val routePipelines = mutableListOf<ApplicationCallPipeline>()
+            while (current != null) {
+                routePipelines.add(current)
+                current = current.parent
             }
+
+            for (index in routePipelines.lastIndex downTo 0) {
+                val routePipeline = routePipelines[index]
+                pipeline.merge(routePipeline)
+            }
+
+            val handlers = handlers
+            for (index in 0..handlers.lastIndex) {
+                pipeline.intercept(Call) {
+                    handlers[index].invoke(this, Unit)
+                }
+            }
+            cachedPipeline = pipeline
+            pipeline
         }
-        cachedPipeline = pipeline
-        pipeline
-    }
 }
 
 /**

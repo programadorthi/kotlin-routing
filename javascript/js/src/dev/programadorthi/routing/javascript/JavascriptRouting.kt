@@ -31,7 +31,10 @@ public fun render(
     }
 }
 
-private fun onPopState(routing: Routing, event: PopStateEvent) {
+private fun onPopState(
+    routing: Routing,
+    event: PopStateEvent,
+) {
     val data = event.state as? String
     if (data.isNullOrBlank()) return
 

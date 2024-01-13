@@ -4,9 +4,7 @@ import dev.programadorthi.routing.core.application.ApplicationCall
 import io.ktor.http.Parameters
 import kotlinx.coroutines.launch
 
-public fun Routing.pop(
-    parameters: Parameters = Parameters.Empty
-) {
+public fun Routing.pop(parameters: Parameters = Parameters.Empty) {
     with(application) {
         checkPluginInstalled()
         launch {
@@ -34,7 +32,7 @@ public fun Routing.push(
             uri = path,
             parameters = parameters,
             routeMethod = StackRouteMethod.Push,
-        ).toNeglect(neglect)
+        ).toNeglect(neglect),
     )
 }
 
@@ -50,7 +48,7 @@ public fun Routing.pushNamed(
             name = name,
             parameters = parameters,
             routeMethod = StackRouteMethod.Push,
-        ).toNeglect(neglect)
+        ).toNeglect(neglect),
     )
 }
 
@@ -66,7 +64,7 @@ public fun Routing.replace(
             uri = path,
             parameters = parameters,
             routeMethod = StackRouteMethod.Replace,
-        ).toNeglect(neglect)
+        ).toNeglect(neglect),
     )
 }
 
@@ -82,7 +80,7 @@ public fun Routing.replaceAll(
             uri = path,
             parameters = parameters,
             routeMethod = StackRouteMethod.ReplaceAll,
-        ).toNeglect(neglect)
+        ).toNeglect(neglect),
     )
 }
 
@@ -98,7 +96,7 @@ public fun Routing.replaceNamed(
             name = name,
             parameters = parameters,
             routeMethod = StackRouteMethod.Replace,
-        ).toNeglect(neglect)
+        ).toNeglect(neglect),
     )
 }
 
@@ -114,7 +112,7 @@ public fun Routing.replaceAllNamed(
             name = name,
             parameters = parameters,
             routeMethod = StackRouteMethod.ReplaceAll,
-        ).toNeglect(neglect)
+        ).toNeglect(neglect),
     )
 }
 

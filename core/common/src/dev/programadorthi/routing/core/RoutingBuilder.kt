@@ -15,10 +15,11 @@ import io.ktor.util.pipeline.PipelineInterceptor
 public fun Route.route(
     path: String,
     name: String? = null,
-    build: Route.() -> Unit
-): Route = createRouteFromPath(path, name)
-    .apply(build)
-    .registerToParents(null, build)
+    build: Route.() -> Unit,
+): Route =
+    createRouteFromPath(path, name)
+        .apply(build)
+        .registerToParents(null, build)
 
 /**
  * Builds a route to match the specified [RouteMethod] and [path].
@@ -41,7 +42,10 @@ public fun Route.route(
  * Builds a route to match the specified [RouteMethod].
  */
 @KtorDsl
-public fun Route.method(method: RouteMethod, body: Route.() -> Unit): Route {
+public fun Route.method(
+    method: RouteMethod,
+    body: Route.() -> Unit,
+): Route {
     val selector = RouteMethodRouteSelector(method)
     return createChild(selector)
         .apply(body)
@@ -66,13 +70,17 @@ public fun Route.handle(
 /**
  * Creates a routing entry for the specified path and name
  */
-public fun Route.createRouteFromPath(path: String, name: String?): Route {
+public fun Route.createRouteFromPath(
+    path: String,
+    name: String?,
+): Route {
     val route = createRouteFromPath(path)
     // Registering named route
     if (!name.isNullOrBlank()) {
-        val validRouting = requireNotNull(asRouting) {
-            "Named route '$name' must be a Routing child."
-        }
+        val validRouting =
+            requireNotNull(asRouting) {
+                "Named route '$name' must be a Routing child."
+            }
         validRouting.registerNamed(name = name, route = route)
     }
     return route
@@ -86,10 +94,11 @@ internal fun Route.createRouteFromPath(path: String): Route {
     var current: Route = this
     for (index in parts.indices) {
         val (value, kind) = parts[index]
-        val selector = when (kind) {
-            RoutingPathSegmentKind.Parameter -> PathSegmentSelectorBuilder.parseParameter(value)
-            RoutingPathSegmentKind.Constant -> PathSegmentSelectorBuilder.parseConstant(value)
-        }
+        val selector =
+            when (kind) {
+                RoutingPathSegmentKind.Parameter -> PathSegmentSelectorBuilder.parseParameter(value)
+                RoutingPathSegmentKind.Constant -> PathSegmentSelectorBuilder.parseConstant(value)
+            }
         // there may already be entry with same selector, so join them
         current = current.createChild(selector)
     }
@@ -105,13 +114,14 @@ internal fun Route.createRouteFromPath(path: String): Route {
  */
 private fun Route.registerToParents(
     selector: RouteMethodRouteSelector?,
-    build: Route.() -> Unit
+    build: Route.() -> Unit,
 ): Route {
     val parentRouting = asRouting?.parent as? Routing ?: return this
-    val validPath = when (val parentPath = parentRouting.toString()) {
-        "/" -> toString()
-        else -> toString().substringAfter(parentPath)
-    }
+    val validPath =
+        when (val parentPath = parentRouting.toString()) {
+            "/" -> toString()
+            else -> toString().substringAfter(parentPath)
+        }
     if (selector == null) {
         parentRouting.route(path = validPath, name = null, build = build)
     } else {
@@ -123,7 +133,7 @@ private fun Route.registerToParents(
             path = path,
             method = selector.method,
             name = null,
-            build = build
+            build = build,
         )
     }
     return this
@@ -145,12 +155,14 @@ internal object PathSegmentSelectorBuilder {
 
         val signature = value.substring(prefixIndex + 1, suffixIndex)
         return when {
-            signature.endsWith("?") -> PathSegmentOptionalParameterRouteSelector(
-                signature.dropLast(
-                    1
-                ),
-                prefix, suffix
-            )
+            signature.endsWith("?") ->
+                PathSegmentOptionalParameterRouteSelector(
+                    signature.dropLast(
+                        1,
+                    ),
+                    prefix,
+                    suffix,
+                )
 
             signature.endsWith("...") -> {
                 if (!suffix.isNullOrEmpty()) {
@@ -166,10 +178,11 @@ internal object PathSegmentSelectorBuilder {
     /**
      * Builds a [RouteSelector] to match a constant or wildcard segment parameter.
      */
-    fun parseConstant(value: String): RouteSelector = when (value) {
-        "*" -> PathSegmentWildcardRouteSelector
-        else -> PathSegmentConstantRouteSelector(value)
-    }
+    fun parseConstant(value: String): RouteSelector =
+        when (value) {
+            "*" -> PathSegmentWildcardRouteSelector
+            else -> PathSegmentConstantRouteSelector(value)
+        }
 
     /**
      * Parses a name out of segment specification.

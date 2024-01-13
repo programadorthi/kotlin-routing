@@ -86,15 +86,25 @@ public fun ApplicationCall(
     )
 }
 
-public fun ApplicationCall.redirectToName(name: String, parameters: Parameters = Parameters.Empty) {
+public fun ApplicationCall.redirectToName(
+    name: String,
+    parameters: Parameters = Parameters.Empty,
+) {
     redirect(path = "", name = name, parameters = parameters)
 }
 
-public fun ApplicationCall.redirectToPath(path: String, parameters: Parameters = Parameters.Empty) {
+public fun ApplicationCall.redirectToPath(
+    path: String,
+    parameters: Parameters = Parameters.Empty,
+) {
     redirect(path = path, name = "", parameters = parameters)
 }
 
-private fun ApplicationCall.redirect(path: String, name: String, parameters: Parameters) {
+private fun ApplicationCall.redirect(
+    path: String,
+    name: String,
+    parameters: Parameters,
+) {
     with(application) {
         launch {
             execute(
@@ -104,7 +114,7 @@ private fun ApplicationCall.redirect(path: String, name: String, parameters: Par
                     uri = path,
                     coroutineContext = coroutineContext,
                     parameters = parameters,
-                )
+                ),
             )
         }
     }

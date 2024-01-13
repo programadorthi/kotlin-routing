@@ -17,7 +17,10 @@ import kotlinx.coroutines.coroutineScope
  * Useful for validating, updating a call based on proxy information, etc.
  */
 public object CallSetup : Hook<suspend (ApplicationCall) -> Unit> {
-    override fun install(pipeline: ApplicationCallPipeline, handler: suspend (ApplicationCall) -> Unit) {
+    override fun install(
+        pipeline: ApplicationCallPipeline,
+        handler: suspend (ApplicationCall) -> Unit,
+    ) {
         pipeline.intercept(ApplicationCallPipeline.Setup) {
             handler(call)
         }
@@ -28,11 +31,11 @@ public object CallSetup : Hook<suspend (ApplicationCall) -> Unit> {
  * A hook that is invoked when a call fails with an exception.
  */
 public object CallFailed : Hook<suspend (call: ApplicationCall, cause: Throwable) -> Unit> {
-
     private val phase = PipelinePhase("BeforeSetup")
+
     override fun install(
         pipeline: ApplicationCallPipeline,
-        handler: suspend (call: ApplicationCall, cause: Throwable) -> Unit
+        handler: suspend (call: ApplicationCall, cause: Throwable) -> Unit,
     ) {
         pipeline.insertPhaseBefore(ApplicationCallPipeline.Setup, phase)
         pipeline.intercept(phase) {
@@ -52,9 +55,12 @@ public object CallFailed : Hook<suspend (call: ApplicationCall, cause: Throwable
  * Useful for cleaning up opened resources or finishing measurements.
  */
 public object ResponseSent : Hook<suspend (ApplicationCall) -> Unit> {
-
     private val phase = PipelinePhase("AfterCall")
-    override fun install(pipeline: ApplicationCallPipeline, handler: suspend (ApplicationCall) -> Unit) {
+
+    override fun install(
+        pipeline: ApplicationCallPipeline,
+        handler: suspend (ApplicationCall) -> Unit,
+    ) {
         pipeline.insertPhaseAfter(ApplicationCallPipeline.Call, phase)
         pipeline.intercept(phase) {
             proceed()
@@ -67,9 +73,12 @@ public object ResponseSent : Hook<suspend (ApplicationCall) -> Unit> {
  * A shortcut hook for [ApplicationEnvironment.monitor] subscription.
  */
 public class MonitoringEvent<Param : Any, Event : EventDefinition<Param>>(
-    private val event: Event
+    private val event: Event,
 ) : Hook<(Param) -> Unit> {
-    override fun install(pipeline: ApplicationCallPipeline, handler: (Param) -> Unit) {
+    override fun install(
+        pipeline: ApplicationCallPipeline,
+        handler: (Param) -> Unit,
+    ) {
         pipeline.environment!!.monitor.subscribe(event) {
             handler(it)
         }

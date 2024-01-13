@@ -24,7 +24,10 @@ public interface CurrentSession {
      * Sets a new session instance with [name].
      * @throws IllegalStateException if no session provider is registered with for [name]
      */
-    public fun set(name: String, value: Any?)
+    public fun set(
+        name: String,
+        value: Any?,
+    )
 
     /**
      * Gets a session instance for [name]
@@ -74,7 +77,10 @@ public inline fun <reified T : Any> CurrentSession.clear(): Unit = clear(findNam
  * Gets or generates a new session instance using [generator] with the type [T] (or [name] if specified)
  * @throws IllegalStateException if no session provider is registered for the type [T] (or [name] if specified)
  */
-public inline fun <reified T : Any> CurrentSession.getOrSet(name: String = findName(T::class), generator: () -> T): T {
+public inline fun <reified T : Any> CurrentSession.getOrSet(
+    name: String = findName(T::class),
+    generator: () -> T,
+): T {
     val result = get<T>()
 
     if (result != null) {
@@ -87,9 +93,8 @@ public inline fun <reified T : Any> CurrentSession.getOrSet(name: String = findN
 }
 
 internal data class SessionData(
-    val providerData: Map<String, SessionProviderData<*>>
+    val providerData: Map<String, SessionProviderData<*>>,
 ) : CurrentSession {
-
     private var committed = false
 
     internal fun commit() {
@@ -97,12 +102,16 @@ internal data class SessionData(
     }
 
     override fun findName(type: KClass<*>): String {
-        val entry = providerData.entries.firstOrNull { it.value.provider.type == type }
-            ?: throw IllegalArgumentException("Session data for type `$type` was not registered")
+        val entry =
+            providerData.entries.firstOrNull { it.value.provider.type == type }
+                ?: throw IllegalArgumentException("Session data for type `$type` was not registered")
         return entry.value.provider.name
     }
 
-    override fun set(name: String, value: Any?) {
+    override fun set(
+        name: String,
+        value: Any?,
+    ) {
         if (committed) {
             throw TooLateSessionSetException()
         }
@@ -112,7 +121,10 @@ internal data class SessionData(
     }
 
     @Suppress("UNCHECKED_CAST")
-    private fun <S : Any> setTyped(data: SessionProviderData<S>, value: Any?) {
+    private fun <S : Any> setTyped(
+        data: SessionProviderData<S>,
+        value: Any?,
+    ) {
         if (value != null) {
             data.provider.tracker.validate(value as S)
         }
@@ -149,7 +161,7 @@ internal suspend fun <S : Any> SessionProviderData<S>.sendSessionData(call: Appl
             provider.transport.send(call, wrapped)
         }
         incoming && oldValue == null -> {
-            /* Deleted session should be cleared off */
+            // Deleted session should be cleared off
             provider.transport.clear(call)
             provider.tracker.clear(call)
         }
@@ -160,7 +172,7 @@ internal data class SessionProviderData<S : Any>(
     var oldValue: S?,
     var newValue: S?,
     val incoming: Boolean,
-    val provider: SessionProvider<S>
+    val provider: SessionProvider<S>,
 )
 
 internal val SessionDataKey = AttributeKey<SessionData>("SessionKey")

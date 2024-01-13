@@ -23,9 +23,10 @@ import io.ktor.util.logging.Logger
 import kotlin.coroutines.CoroutineContext
 import kotlin.coroutines.EmptyCoroutineContext
 
-public val LocalRouting: ProvidableCompositionLocal<Routing> = staticCompositionLocalOf {
-    error("Composition local LocalRouting not found")
-}
+public val LocalRouting: ProvidableCompositionLocal<Routing> =
+    staticCompositionLocalOf {
+        error("Composition local LocalRouting not found")
+    }
 
 @Composable
 public fun VoyagerRouting(
@@ -34,7 +35,7 @@ public fun VoyagerRouting(
     disposeBehavior: NavigatorDisposeBehavior = NavigatorDisposeBehavior(),
     onBackPressed: OnBackPressed = { true },
     key: String = compositionUniqueId(),
-    content: NavigatorContent = { CurrentScreen() }
+    content: NavigatorContent = { CurrentScreen() },
 ) {
     CompositionLocalProvider(LocalRouting provides routing) {
         Navigator(
@@ -63,18 +64,19 @@ public fun VoyagerRouting(
     disposeBehavior: NavigatorDisposeBehavior = NavigatorDisposeBehavior(),
     onBackPressed: OnBackPressed = { true },
     key: String = compositionUniqueId(),
-    content: NavigatorContent = { CurrentScreen() }
+    content: NavigatorContent = { CurrentScreen() },
 ) {
-    val routing = remember {
-        routing(
-            rootPath = rootPath,
-            parent = parent,
-            parentCoroutineContext = coroutineContext,
-            log = log,
-            developmentMode = developmentMode,
-            configuration = configuration,
-        )
-    }
+    val routing =
+        remember {
+            routing(
+                rootPath = rootPath,
+                parent = parent,
+                parentCoroutineContext = coroutineContext,
+                log = log,
+                developmentMode = developmentMode,
+                configuration = configuration,
+            )
+        }
 
     DisposableEffect(routing) {
         onDispose {
@@ -93,6 +95,6 @@ public fun VoyagerRouting(
 }
 
 @Composable
-private fun compositionUniqueId(): String = currentCompositeKeyHash.toString(MaxSupportedRadix)
+private fun compositionUniqueId(): String = currentCompositeKeyHash.toString(MAX_SUPPORTED_RADIX)
 
-private const val MaxSupportedRadix = 36
+private const val MAX_SUPPORTED_RADIX = 36

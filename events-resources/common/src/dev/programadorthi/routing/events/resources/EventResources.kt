@@ -21,12 +21,11 @@ import io.ktor.util.AttributeKey
  */
 public object EventResources :
     BaseApplicationPlugin<Application, EventResourcesConfiguration.Configuration, EventResourcesConfiguration> {
-
     override val key: AttributeKey<EventResourcesConfiguration> = AttributeKey("EventResources")
 
     override fun install(
         pipeline: Application,
-        configure: EventResourcesConfiguration.Configuration.() -> Unit
+        configure: EventResourcesConfiguration.Configuration.() -> Unit,
     ): EventResourcesConfiguration {
         val configuration = EventResourcesConfiguration.Configuration().apply(configure)
         return EventResourcesConfiguration(configuration)

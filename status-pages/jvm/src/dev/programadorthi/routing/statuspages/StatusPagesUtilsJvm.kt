@@ -6,10 +6,15 @@ package dev.programadorthi.routing.statuspages
 
 import kotlin.reflect.KClass
 
-internal actual fun selectNearestParentClass(cause: Throwable, keys: List<KClass<*>>): KClass<*>? =
-    keys.minByOrNull { distance(cause.javaClass, it.java) }
+internal actual fun selectNearestParentClass(
+    cause: Throwable,
+    keys: List<KClass<*>>,
+): KClass<*>? = keys.minByOrNull { distance(cause.javaClass, it.java) }
 
-private fun distance(child: Class<*>, parent: Class<*>): Int {
+private fun distance(
+    child: Class<*>,
+    parent: Class<*>,
+): Int {
     var result = 0
     var current = child
     while (current != parent) {

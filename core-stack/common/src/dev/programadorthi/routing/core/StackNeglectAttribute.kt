@@ -7,8 +7,9 @@ internal val StackNeglectAttributeKey: AttributeKey<Unit> = AttributeKey("StackN
 
 public var ApplicationCall.neglect: Boolean
     get() = attributes.contains(StackNeglectAttributeKey)
-    internal set(value) = if (value) {
-        attributes.put(StackNeglectAttributeKey, Unit)
-    } else {
-        attributes.remove(StackNeglectAttributeKey)
-    }
+    internal set(value) =
+        if (value) {
+            attributes.put(StackNeglectAttributeKey, Unit)
+        } else {
+            attributes.remove(StackNeglectAttributeKey)
+        }

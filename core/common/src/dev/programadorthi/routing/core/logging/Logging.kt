@@ -22,11 +22,17 @@ public interface MDCProvider {
     /**
      * Executes [block] with [MDC] setup
      */
-    public suspend fun withMDCBlock(call: ApplicationCall, block: suspend () -> Unit)
+    public suspend fun withMDCBlock(
+        call: ApplicationCall,
+        block: suspend () -> Unit,
+    )
 }
 
 private object EmptyMDCProvider : MDCProvider {
-    override suspend fun withMDCBlock(call: ApplicationCall, block: suspend () -> Unit) = block()
+    override suspend fun withMDCBlock(
+        call: ApplicationCall,
+        block: suspend () -> Unit,
+    ) = block()
 }
 
 /**
@@ -35,6 +41,7 @@ private object EmptyMDCProvider : MDCProvider {
  */
 public val Application.mdcProvider: MDCProvider
     @Suppress("UNCHECKED_CAST")
-    get() = pluginRegistry.allKeys
-        .firstNotNullOfOrNull { pluginRegistry.getOrNull(it as AttributeKey<Any>) as? MDCProvider }
-        ?: EmptyMDCProvider
+    get() =
+        pluginRegistry.allKeys
+            .firstNotNullOfOrNull { pluginRegistry.getOrNull(it as AttributeKey<Any>) as? MDCProvider }
+            ?: EmptyMDCProvider

@@ -25,7 +25,8 @@ import kotlinx.coroutines.ExperimentalCoroutinesApi
 public interface Plugin<
     in TPipeline : Pipeline<*, ApplicationCall>,
     out TConfiguration : Any,
-    TPlugin : Any> {
+    TPlugin : Any,
+    > {
     /**
      * A unique key that identifies a plugin.
      */
@@ -34,7 +35,10 @@ public interface Plugin<
     /**
      * A plugin's installation script.
      */
-    public fun install(pipeline: TPipeline, configure: TConfiguration.() -> Unit): TPlugin
+    public fun install(
+        pipeline: TPipeline,
+        configure: TConfiguration.() -> Unit,
+    ): TPlugin
 }
 
 /**
@@ -46,7 +50,8 @@ public interface Plugin<
 public interface BaseApplicationPlugin<
     in TPipeline : Pipeline<*, ApplicationCall>,
     out TConfiguration : Any,
-    TPlugin : Any> : Plugin<TPipeline, TConfiguration, TPlugin>
+    TPlugin : Any,
+    > : Plugin<TPipeline, TConfiguration, TPlugin>
 
 /**
  * Defines a [Plugin](https://ktor.io/docs/plugins.html) that is installed into Application.
@@ -89,7 +94,7 @@ public fun <A : Pipeline<*, ApplicationCall>, F : Any> A.pluginOrNull(plugin: Pl
  */
 public fun <P : Pipeline<*, ApplicationCall>, B : Any, F : Any> P.install(
     plugin: Plugin<P, B, F>,
-    configure: B.() -> Unit = {}
+    configure: B.() -> Unit = {},
 ): F {
     if (this is Route && plugin is BaseRouteScopedPlugin) {
         return installIntoRoute(plugin, configure)
@@ -118,7 +123,7 @@ public fun <P : Pipeline<*, ApplicationCall>, B : Any, F : Any> P.install(
         else -> {
             throw DuplicatePluginException(
                 "Please make sure that you use unique name for the plugin and don't install it twice. " +
-                    "Conflicting application plugin is already installed with the same key as `${plugin.key.name}`"
+                    "Conflicting application plugin is already installed with the same key as `${plugin.key.name}`",
             )
         }
     }
@@ -126,26 +131,27 @@ public fun <P : Pipeline<*, ApplicationCall>, B : Any, F : Any> P.install(
 
 private fun <B : Any, F : Any> Route.installIntoRoute(
     plugin: BaseRouteScopedPlugin<B, F>,
-    configure: B.() -> Unit = {}
+    configure: B.() -> Unit = {},
 ): F {
     if (pluginRegistry.getOrNull(plugin.key) != null) {
         throw DuplicatePluginException(
             "Please make sure that you use unique name for the plugin and don't install it twice. " +
-                "Plugin `${plugin.key.name}` is already installed to the pipeline $this"
+                "Plugin `${plugin.key.name}` is already installed to the pipeline $this",
         )
     }
     if (application.pluginRegistry.getOrNull(plugin.key) != null) {
         throw DuplicatePluginException(
             "Installing RouteScopedPlugin to application and route is not supported. " +
-                "Consider moving application level install to routing root."
+                "Consider moving application level install to routing root.",
         )
     }
     // we install plugin into fake pipeline and add interceptors manually
     // to avoid having multiple interceptors after pipelines are merged
-    val fakePipeline = when (this) {
-        is Routing -> Routing(application)
-        else -> Route(parent, selector, developmentMode, environment)
-    }
+    val fakePipeline =
+        when (this) {
+            is Routing -> Routing(application)
+            else -> Route(parent, selector, developmentMode, environment)
+        }
     val installed = plugin.install(fakePipeline, configure)
     pluginRegistry.put(plugin.key, installed)
 
@@ -159,7 +165,7 @@ private fun <B : Any, F : Any> Route.installIntoRoute(
 private fun <B : Any, F : Any, TSubject, TContext, P : Pipeline<TSubject, TContext>> P.addAllInterceptors(
     fakePipeline: P,
     plugin: BaseRouteScopedPlugin<B, F>,
-    pluginInstance: F
+    pluginInstance: F,
 ) {
     items.forEach { phase ->
         fakePipeline.interceptorsForPhase(phase)
@@ -185,11 +191,12 @@ public class DuplicatePluginException(message: String) : Exception(message)
  */
 @OptIn(ExperimentalCoroutinesApi::class)
 public class MissingApplicationPluginException(
-    public val key: AttributeKey<*>
+    public val key: AttributeKey<*>,
 ) : IllegalStateException(), CopyableThrowable<MissingApplicationPluginException> {
     override val message: String get() = "Application plugin ${key.name} is not installed"
 
-    override fun createCopy(): MissingApplicationPluginException = MissingApplicationPluginException(key).also {
-        it.initCauseBridge(this)
-    }
+    override fun createCopy(): MissingApplicationPluginException =
+        MissingApplicationPluginException(key).also {
+            it.initCauseBridge(this)
+        }
 }

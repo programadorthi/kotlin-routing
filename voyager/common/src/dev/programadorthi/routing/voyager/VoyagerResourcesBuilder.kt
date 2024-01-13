@@ -27,9 +27,7 @@ import kotlinx.serialization.serializer
  *
  * @param body receives an instance of the typed resource [T] as the first parameter.
  */
-public inline fun <reified T : Any> Route.screen(
-    noinline body: suspend PipelineContext<Unit, ApplicationCall>.(T) -> Screen
-): Route {
+public inline fun <reified T : Any> Route.screen(noinline body: suspend PipelineContext<Unit, ApplicationCall>.(T) -> Screen): Route {
     val serializer = serializer<T>()
     return screen(serializer) {
         handle(serializer, body)
@@ -52,14 +50,15 @@ public inline fun <reified T : Screen> Route.screen(): Route = screen<T> { scree
  */
 public inline fun <reified T : Any> Route.screen(
     method: RouteMethod,
-    noinline body: suspend PipelineContext<Unit, ApplicationCall>.(T) -> Screen
+    noinline body: suspend PipelineContext<Unit, ApplicationCall>.(T) -> Screen,
 ): Route {
     val serializer = serializer<T>()
     lateinit var builtRoute: Route
     screen(serializer) {
-        builtRoute = method(method) {
-            handle(serializer, body)
-        }
+        builtRoute =
+            method(method) {
+                handle(serializer, body)
+            }
     }
     return builtRoute
 }
@@ -69,9 +68,7 @@ public inline fun <reified T : Any> Route.screen(
  *
  * A class [T] **must** be annotated with [io.ktor.resources.Resource].
  */
-public inline fun <reified T : Screen> Route.screen(
-    method: RouteMethod,
-): Route = screen<T>(method) { screen -> screen }
+public inline fun <reified T : Screen> Route.screen(method: RouteMethod): Route = screen<T>(method) { screen -> screen }
 
 @PublishedApi
 internal val ResourceInstanceKey: AttributeKey<Any> = AttributeKey("ResourceInstance")
@@ -85,7 +82,7 @@ internal val ResourceInstanceKey: AttributeKey<Any> = AttributeKey("ResourceInst
  */
 public fun <T : Any> Route.screen(
     serializer: KSerializer<T>,
-    body: Route.() -> Unit
+    body: Route.() -> Unit,
 ): Route {
     val resources = application.plugin(VoyagerResources)
     val path = resources.resourcesFormat.encodeToPathPattern(serializer)
@@ -93,14 +90,16 @@ public fun <T : Any> Route.screen(
     var route = this
     // Required for register to parents
     route(path = path, name = null) {
-        route = queryParameters.fold(this) { entry, query ->
-            val selector = if (query.isOptional) {
-                OptionalParameterRouteSelector(query.name)
-            } else {
-                ParameterRouteSelector(query.name)
-            }
-            entry.createChild(selector)
-        }.apply(body)
+        route =
+            queryParameters.fold(this) { entry, query ->
+                val selector =
+                    if (query.isOptional) {
+                        OptionalParameterRouteSelector(query.name)
+                    } else {
+                        ParameterRouteSelector(query.name)
+                    }
+                entry.createChild(selector)
+            }.apply(body)
     }
     return route
 }
@@ -114,7 +113,7 @@ public fun <T : Any> Route.screen(
 @PublishedApi
 internal fun <T : Any> Route.handle(
     serializer: KSerializer<T>,
-    body: suspend PipelineContext<Unit, ApplicationCall>.(T) -> Screen
+    body: suspend PipelineContext<Unit, ApplicationCall>.(T) -> Screen,
 ) {
     intercept(ApplicationCallPipeline.Plugins) {
         val resources = application.plugin(VoyagerResources)

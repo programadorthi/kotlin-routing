@@ -44,11 +44,11 @@ import kotlin.coroutines.EmptyCoroutineContext
 public class Routing internal constructor(
     internal val application: Application,
 ) : Route(
-    parent = application.environment.parentRouting,
-    selector = RootRouteSelector(application.environment.rootPath),
-    application.environment.developmentMode,
-    application.environment
-) {
+        parent = application.environment.parentRouting,
+        selector = RootRouteSelector(application.environment.rootPath),
+        application.environment.developmentMode,
+        application.environment,
+    ) {
     private val tracers = mutableListOf<(RoutingResolveTrace) -> Unit>()
     private val namedRoutes = mutableMapOf<String, Route>()
     private var disposed = false
@@ -104,7 +104,10 @@ public class Routing internal constructor(
         environment.safeRiseEvent(ApplicationStopped, application)
     }
 
-    internal fun registerNamed(name: String, route: Route) {
+    internal fun registerNamed(
+        name: String,
+        route: Route,
+    ) {
         check(!namedRoutes.containsKey(name)) {
             "Duplicated named route. Found '$name' to ${namedRoutes[name]} and $route"
         }
@@ -129,14 +132,18 @@ public class Routing internal constructor(
         }
     }
 
-    private fun mapNameToPath(name: String, pathParameters: Parameters): String {
+    private fun mapNameToPath(
+        name: String,
+        pathParameters: Parameters,
+    ): String {
         val namedRoute =
             namedRoutes[name]
                 ?: throw RouteNotFoundException(message = "Named route not found with name: $name")
         val routeSelectors = namedRoute.allSelectors()
-        val skipPathParameters = routeSelectors.run {
-            isEmpty() || all { selector -> selector is PathSegmentConstantRouteSelector }
-        }
+        val skipPathParameters =
+            routeSelectors.run {
+                isEmpty() || all { selector -> selector is PathSegmentConstantRouteSelector }
+            }
         if (skipPathParameters) {
             return namedRoute.toString()
         }
@@ -248,7 +255,7 @@ public class Routing internal constructor(
         if (predicate()) {
             throw MissingRequestParameterException(
                 parameterName = parameterName,
-                message = "Parameter $parameterName is missing to route named '$routeName' and path: $namedRoute"
+                message = "Parameter $parameterName is missing to route named '$routeName' and path: $namedRoute",
             )
         }
     }
@@ -263,43 +270,47 @@ public class Routing internal constructor(
         }
 
         // Transforming a name to a URI
-        val uri = if (call.name.isBlank()) {
-            call.uri
-        } else {
-            mapNameToPath(
-                name = call.name,
-                pathParameters = call.parameters,
-            )
-        }
+        val uri =
+            if (call.name.isBlank()) {
+                call.uri
+            } else {
+                mapNameToPath(
+                    name = call.name,
+                    pathParameters = call.parameters,
+                )
+            }
 
         if (uri.isBlank()) {
             throw BadRequestException("Received call with an empty uri: $call")
         }
 
-        call = ResolveApplicationCall(
-            coroutineContext = context.coroutineContext,
-            previousCall = call,
-            params = call.parameters + queryParameters,
-            uri = uri,
-        )
+        call =
+            ResolveApplicationCall(
+                coroutineContext = context.coroutineContext,
+                previousCall = call,
+                params = call.parameters + queryParameters,
+                uri = uri,
+            )
 
         val resolveContext = RoutingResolveContext(this, call, tracers)
         when (val resolveResult = resolveContext.resolve()) {
             is RoutingResolveResult.Failure -> {
-                val routing = parent?.asRouting
-                    ?: throw RouteNotFoundException(message = resolveResult.reason)
+                val routing =
+                    parent?.asRouting
+                        ?: throw RouteNotFoundException(message = resolveResult.reason)
                 routing.execute(context.call)
             }
 
             is RoutingResolveResult.Success -> {
                 val routingCallPipeline = resolveResult.route.buildPipeline()
-                val routingCall = RoutingApplicationCall(
-                    coroutineContext = context.coroutineContext,
-                    routeMethod = call.routeMethod,
-                    previousCall = call,
-                    route = resolveResult.route,
-                    parameters = resolveResult.parameters,
-                )
+                val routingCall =
+                    RoutingApplicationCall(
+                        coroutineContext = context.coroutineContext,
+                        routeMethod = call.routeMethod,
+                        previousCall = call,
+                        route = resolveResult.route,
+                        parameters = resolveResult.parameters,
+                    )
                 application.environment.monitor.raise(RoutingCallStarted, routingCall)
                 try {
                     routingCallPipeline.execute(routingCall)
@@ -315,7 +326,6 @@ public class Routing internal constructor(
      */
     @Suppress("PublicApiImplicitType")
     public companion object Plugin : BaseApplicationPlugin<Application, Route, Routing> {
-
         /**
          * A definition for an event that is fired when routing-based call processing starts.
          */
@@ -329,7 +339,10 @@ public class Routing internal constructor(
 
         override val key: AttributeKey<Routing> = AttributeKey("Routing")
 
-        override fun install(pipeline: Application, configure: Route.() -> Unit): Routing {
+        override fun install(
+            pipeline: Application,
+            configure: Route.() -> Unit,
+        ): Routing {
             val routing = Routing(pipeline).apply(configure)
             pipeline.intercept(Call) {
                 routing.interceptor(this)
@@ -343,22 +356,25 @@ public class Routing internal constructor(
  * Gets an [Application] for this [Route] by scanning the hierarchy to the root.
  */
 public val Route.application: Application
-    get() = when (this) {
-        is Routing -> application
-        else -> parent?.application ?: throw UnsupportedOperationException(
-            "Cannot retrieve application from unattached routing entry"
-        )
-    }
+    get() =
+        when (this) {
+            is Routing -> application
+            else ->
+                parent?.application ?: throw UnsupportedOperationException(
+                    "Cannot retrieve application from unattached routing entry",
+                )
+        }
 
 public val Route.asRouting: Routing?
-    get() = when (this) {
-        is Routing -> this
-        else -> parent?.asRouting
-    }
+    get() =
+        when (this) {
+            is Routing -> this
+            else -> parent?.asRouting
+        }
 
 public fun <B : Any, F : Any> Route.install(
     plugin: Plugin<Application, B, F>,
-    configure: B.() -> Unit = {}
+    configure: B.() -> Unit = {},
 ): F = application.install(plugin, configure)
 
 public fun Routing.call(
@@ -376,7 +392,7 @@ public fun Routing.call(
             routeMethod = routeMethod,
             attributes = attributes,
             parameters = parameters,
-        )
+        ),
     )
 }
 
@@ -387,19 +403,20 @@ public fun routing(
     parentCoroutineContext: CoroutineContext = EmptyCoroutineContext,
     log: Logger = KtorSimpleLogger("kotlin-routing"),
     developmentMode: Boolean = false,
-    configuration: Route.() -> Unit
+    configuration: Route.() -> Unit,
 ): Routing {
     check(parent == null || rootPath != "/") {
         "Child routing cannot have root path with '/' only. Please, provide a path to your child routing"
     }
-    val environment = ApplicationEnvironment(
-        parentCoroutineContext = parentCoroutineContext,
-        developmentMode = developmentMode,
-        rootPath = rootPath,
-        parentRouting = parent,
-        log = log,
-        monitor = Events()
-    )
+    val environment =
+        ApplicationEnvironment(
+            parentCoroutineContext = parentCoroutineContext,
+            developmentMode = developmentMode,
+            rootPath = rootPath,
+            parentRouting = parent,
+            log = log,
+            monitor = Events(),
+        )
     val application = Application(environment)
     environment.safeRiseEvent(ApplicationStarting, application)
     val instance = application.install(Routing, configuration)
@@ -409,7 +426,7 @@ public fun routing(
 
 private fun ApplicationEnvironment?.safeRiseEvent(
     event: EventDefinition<Application>,
-    application: Application
+    application: Application,
 ) {
     val instance = this ?: return
     runCatching {

@@ -10,9 +10,8 @@ import kotlinx.serialization.modules.SerializersModule
 
 @OptIn(ExperimentalSerializationApi::class)
 internal class ParametersEncoder(
-    override val serializersModule: SerializersModule
+    override val serializersModule: SerializersModule,
 ) : AbstractEncoder() {
-
     private val parametersBuilder = ParametersBuilder()
 
     val parameters: Parameters
@@ -24,14 +23,20 @@ internal class ParametersEncoder(
         parametersBuilder.append(nextElementName, value.toString())
     }
 
-    override fun encodeElement(descriptor: SerialDescriptor, index: Int): Boolean {
+    override fun encodeElement(
+        descriptor: SerialDescriptor,
+        index: Int,
+    ): Boolean {
         if (descriptor.kind != StructureKind.LIST) {
             nextElementName = descriptor.getElementName(index)
         }
         return true
     }
 
-    override fun encodeEnum(enumDescriptor: SerialDescriptor, index: Int) {
+    override fun encodeEnum(
+        enumDescriptor: SerialDescriptor,
+        index: Int,
+    ) {
         encodeValue(enumDescriptor.getElementName(index))
     }
 

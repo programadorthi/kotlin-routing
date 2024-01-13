@@ -12,7 +12,7 @@ public inline fun <reified T : Any> Routing.emitEvent(resource: T) {
     val serializer = serializer<T>()
     emitEvent(
         name = format.encodeToPathPattern(serializer),
-        parameters = format.encodeToParameters(serializer, resource)
+        parameters = format.encodeToParameters(serializer, resource),
     )
 }
 
@@ -21,6 +21,6 @@ public inline fun <reified T : Any> ApplicationCall.redirectTo(resource: T) {
     val serializer = serializer<T>()
     redirectToEvent(
         name = format.encodeToPathPattern(serializer),
-        parameters = format.encodeToParameters(serializer, resource)
+        parameters = format.encodeToParameters(serializer, resource),
     )
 }

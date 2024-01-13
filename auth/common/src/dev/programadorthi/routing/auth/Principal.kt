@@ -24,16 +24,24 @@ internal class CombinedPrincipal : Principal {
     }
 
     @Suppress("UNCHECKED_CAST")
-    fun <T : Principal> get(provider: String?, klass: KClass<T>): T? {
+    fun <T : Principal> get(
+        provider: String?,
+        klass: KClass<T>,
+    ): T? {
         return principals
             .firstOrNull { (name, principal) ->
                 if (provider != null) {
                     name == provider && klass.isInstance(principal)
-                } else klass.isInstance(principal)
+                } else {
+                    klass.isInstance(principal)
+                }
             }?.second as? T
     }
 
-    fun add(provider: String?, principal: Principal) {
+    fun add(
+        provider: String?,
+        principal: Principal,
+    ) {
         principals.add(Pair(provider, principal))
     }
 }

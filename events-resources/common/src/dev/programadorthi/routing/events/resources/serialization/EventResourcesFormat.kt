@@ -16,15 +16,14 @@ import kotlinx.serialization.modules.SerializersModule
  */
 @OptIn(ExperimentalSerializationApi::class)
 public class EventResourcesFormat(
-    override val serializersModule: SerializersModule = EmptySerializersModule()
+    override val serializersModule: SerializersModule = EmptySerializersModule(),
 ) : SerialFormat {
-
     /**
      * A query parameter description
      */
     public data class Parameter(
         val name: String,
-        val isOptional: Boolean
+        val isOptional: Boolean,
     )
 
     /**
@@ -50,7 +49,10 @@ public class EventResourcesFormat(
             .toSet()
     }
 
-    private fun collectAllParameters(descriptor: SerialDescriptor, result: MutableSet<Parameter>) {
+    private fun collectAllParameters(
+        descriptor: SerialDescriptor,
+        result: MutableSet<Parameter>,
+    ) {
         descriptor.elementNames.forEach { name ->
             val index = descriptor.getElementIndex(name)
             val elementDescriptor = descriptor.getElementDescriptor(index)
@@ -65,7 +67,10 @@ public class EventResourcesFormat(
     /**
      * Builds [Parameters] for a resource [T]
      */
-    public fun <T> encodeToParameters(serializer: KSerializer<T>, value: T): Parameters {
+    public fun <T> encodeToParameters(
+        serializer: KSerializer<T>,
+        value: T,
+    ): Parameters {
         val encoder = ParametersEncoder(serializersModule)
         encoder.encodeSerializableValue(serializer, value)
         return encoder.parameters
@@ -74,7 +79,10 @@ public class EventResourcesFormat(
     /**
      * Builds a [T] resource instance from [parameters]
      */
-    public fun <T> decodeFromParameters(deserializer: KSerializer<T>, parameters: Parameters): T {
+    public fun <T> decodeFromParameters(
+        deserializer: KSerializer<T>,
+        parameters: Parameters,
+    ): T {
         val input = ParametersDecoder(serializersModule, parameters, emptyList())
         return input.decodeSerializableValue(deserializer)
     }

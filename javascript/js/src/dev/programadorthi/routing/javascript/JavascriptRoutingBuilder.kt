@@ -27,9 +27,7 @@ public fun Route.jsRoute(
 ): Route = route(path = path, name = name, method = method) { jsRoute(body) }
 
 @KtorDsl
-public fun Route.jsRoute(
-    body: PipelineContext<Unit, ApplicationCall>.() -> Element,
-) {
+public fun Route.jsRoute(body: PipelineContext<Unit, ApplicationCall>.() -> Element) {
     handle {
         call.destination = body(this)
         window.history.pushState(data = call.toData(), title = "", url = call.uri)

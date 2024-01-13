@@ -58,27 +58,28 @@ public var ApplicationCall.previousCall: ApplicationCall?
 /**
  * A plugin that provides a stack manager on each call
  */
-public val StackRouting: ApplicationPlugin<StackRoutingConfig> = createApplicationPlugin(
-    name = "StackRouting",
-    createConfiguration = ::StackRoutingConfig,
-) {
-    val stackManager = StackManager(application, pluginConfig)
+public val StackRouting: ApplicationPlugin<StackRoutingConfig> =
+    createApplicationPlugin(
+        name = "StackRouting",
+        createConfiguration = ::StackRoutingConfig,
+    ) {
+        val stackManager = StackManager(application, pluginConfig)
 
-    application.stackManager = stackManager
+        application.stackManager = stackManager
 
-    on(CallSetup) { call ->
-        if (call.routeMethod.isStackMethod()) {
-            call.application.checkPluginInstalled()
+        on(CallSetup) { call ->
+            if (call.routeMethod.isStackMethod()) {
+                call.application.checkPluginInstalled()
+            }
+            if (call.previousCall == null) {
+                call.previousCall = stackManager.lastOrNull()
+            }
         }
-        if (call.previousCall == null) {
-            call.previousCall = stackManager.lastOrNull()
+
+        on(ResponseSent) { call ->
+            stackManager.update(call)
         }
     }
-
-    on(ResponseSent) { call ->
-        stackManager.update(call)
-    }
-}
 
 @KtorDsl
 public class StackRoutingConfig {
@@ -110,82 +111,86 @@ internal class StackManager(
         }
     }
 
-    suspend fun lastOrNull(): ApplicationCall? = mutex.withLock {
-        stack.lastOrNull()
-    }
-
-    suspend fun toPop(): ApplicationCall? = mutex.withLock {
-        stack.removeLastOrNull()
-    }
-
-    suspend fun update(call: ApplicationCall) = mutex.withLock {
-        // Check if route should be out of the stack
-        if (call.neglect) {
-            return@withLock
+    suspend fun lastOrNull(): ApplicationCall? =
+        mutex.withLock {
+            stack.lastOrNull()
         }
 
-        // State restoration emit last call again
-        if (call.isRestored) {
-            stack += call
-            return@withLock
+    suspend fun toPop(): ApplicationCall? =
+        mutex.withLock {
+            stack.removeLastOrNull()
         }
 
-        when (call.routeMethod) {
-            StackRouteMethod.Push -> {
+    suspend fun update(call: ApplicationCall) =
+        mutex.withLock {
+            // Check if route should be out of the stack
+            if (call.neglect) {
+                return@withLock
+            }
+
+            // State restoration emit last call again
+            if (call.isRestored) {
                 stack += call
+                return@withLock
             }
 
-            StackRouteMethod.Replace -> {
-                stack.removeLastOrNull()?.let { toNotify ->
-                    val notify = toNotify.copy(routeMethod = StackRouteMethod.Pop)
-                    notify.previousCall = call
-                    // Notify previous route that it will be popped
-                    executeCallWithNeglect(call = notify)
+            when (call.routeMethod) {
+                StackRouteMethod.Push -> {
+                    stack += call
                 }
-                stack += call
-            }
 
-            StackRouteMethod.ReplaceAll -> {
-                var previousCall = call
-                while (true) {
-                    val toNotify = stack.removeLastOrNull() ?: break
-                    val notify = toNotify.copy(routeMethod = StackRouteMethod.Pop)
-                    notify.previousCall = previousCall
-                    // Notify previous route that it will be popped
-                    executeCallWithNeglect(call = notify)
-                    previousCall = toNotify
+                StackRouteMethod.Replace -> {
+                    stack.removeLastOrNull()?.let { toNotify ->
+                        val notify = toNotify.copy(routeMethod = StackRouteMethod.Pop)
+                        notify.previousCall = call
+                        // Notify previous route that it will be popped
+                        executeCallWithNeglect(call = notify)
+                    }
+                    stack += call
                 }
-                stack += call
-            }
 
-            StackRouteMethod.Pop -> {
-                // Don't be confused. The real route was popped on pop() function
-                // Here we are notifying previous route with popped parameters ;P
-                stack.lastOrNull()?.let { toNotify ->
-                    val notify = toNotify.copy(parameters = call.parameters)
-                    notify.previousCall = call
-                    executeCallWithNeglect(call = notify)
+                StackRouteMethod.ReplaceAll -> {
+                    var previousCall = call
+                    while (true) {
+                        val toNotify = stack.removeLastOrNull() ?: break
+                        val notify = toNotify.copy(routeMethod = StackRouteMethod.Pop)
+                        notify.previousCall = previousCall
+                        // Notify previous route that it will be popped
+                        executeCallWithNeglect(call = notify)
+                        previousCall = toNotify
+                    }
+                    stack += call
                 }
-            }
 
-            else -> Unit
+                StackRouteMethod.Pop -> {
+                    // Don't be confused. The real route was popped on pop() function
+                    // Here we are notifying previous route with popped parameters ;P
+                    stack.lastOrNull()?.let { toNotify ->
+                        val notify = toNotify.copy(parameters = call.parameters)
+                        notify.previousCall = call
+                        executeCallWithNeglect(call = notify)
+                    }
+                }
+
+                else -> Unit
+            }
         }
-    }
 
     fun toSave(): String = stack.map { it.toState() }.toJson()
 
     fun toRestore(saved: String?) {
         if (saved.isNullOrBlank()) return
 
-        val states = saved.toStateList().map { stackState ->
-            ApplicationCall(
-                application = application,
-                name = stackState.name,
-                uri = stackState.uri,
-                routeMethod = RouteMethod(stackState.routeMethod),
-                parameters = parametersOf(stackState.parameters),
-            )
-        }
+        val states =
+            saved.toStateList().map { stackState ->
+                ApplicationCall(
+                    application = application,
+                    name = stackState.name,
+                    uri = stackState.uri,
+                    routeMethod = RouteMethod(stackState.routeMethod),
+                    parameters = parametersOf(stackState.parameters),
+                )
+            }
 
         stack.clear()
         stack.addAll(states)
@@ -199,7 +204,10 @@ internal class StackManager(
         }
     }
 
-    private fun executeCallWithNeglect(call: ApplicationCall?, neglect: Boolean = true) {
+    private fun executeCallWithNeglect(
+        call: ApplicationCall?,
+        neglect: Boolean = true,
+    ) {
         // We need neglect to avoid put again on the stack
         val callToNeglect = call?.toNeglect(neglect = neglect) ?: return
         application.pluginOrNull(Routing)?.execute(callToNeglect)
@@ -208,22 +216,27 @@ internal class StackManager(
     private fun ApplicationCall.copy(
         parameters: Parameters = this.parameters,
         routeMethod: RouteMethod = this.routeMethod,
-    ): ApplicationCall = ApplicationCall(
-        application = this.application,
-        name = this.name,
-        uri = this.uri,
-        parameters = parameters,
-        routeMethod = routeMethod,
-        attributes = Attributes().apply {
-            putAll(this@copy.attributes)
-        },
-    )
+    ): ApplicationCall =
+        ApplicationCall(
+            application = this.application,
+            name = this.name,
+            uri = this.uri,
+            parameters = parameters,
+            routeMethod = routeMethod,
+            attributes =
+                Attributes().apply {
+                    putAll(this@copy.attributes)
+                },
+        )
 
     internal companion object {
         private val subscriptions = mutableMapOf<String, StackManager>()
         internal var stackManagerNotifier: StackManagerNotifier? = null
 
-        private fun register(providerId: String, stackManager: StackManager) {
+        private fun register(
+            providerId: String,
+            stackManager: StackManager,
+        ) {
             subscriptions += providerId to stackManager
             stackManagerNotifier?.onRegistered(providerId, stackManager)
         }
@@ -233,8 +246,9 @@ internal class StackManager(
             stackManagerNotifier?.onUnRegistered(providerId)
         }
 
-        fun subscriptions(): Map<String, StackManager> = buildMap {
-            putAll(subscriptions)
-        }
+        fun subscriptions(): Map<String, StackManager> =
+            buildMap {
+                putAll(subscriptions)
+            }
     }
 }

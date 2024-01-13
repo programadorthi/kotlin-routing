@@ -16,12 +16,14 @@ import io.ktor.util.collections.ConcurrentMap
 internal class SessionStorageMemory : SessionStorage {
     private val sessions = ConcurrentMap<String, Any>()
 
-    override suspend fun write(id: String, value: Any) {
+    override suspend fun write(
+        id: String,
+        value: Any,
+    ) {
         sessions[id] = value
     }
 
-    override suspend fun read(id: String): Any =
-        sessions[id] ?: throw NoSuchElementException("Session $id not found")
+    override suspend fun read(id: String): Any = sessions[id] ?: throw NoSuchElementException("Session $id not found")
 
     override suspend fun invalidate(id: String) {
         sessions.remove(id)

@@ -29,7 +29,7 @@ internal object AuthenticationHook : Hook<suspend (ApplicationCall) -> Unit> {
 
     override fun install(
         pipeline: ApplicationCallPipeline,
-        handler: suspend (ApplicationCall) -> Unit
+        handler: suspend (ApplicationCall) -> Unit,
     ) {
         pipeline.insertPhaseAfter(ApplicationCallPipeline.Plugins, AuthenticatePhase)
         pipeline.intercept(AuthenticatePhase) { handler(call) }
@@ -46,7 +46,7 @@ public object AuthenticationChecked : Hook<suspend (ApplicationCall) -> Unit> {
 
     override fun install(
         pipeline: ApplicationCallPipeline,
-        handler: suspend (ApplicationCall) -> Unit
+        handler: suspend (ApplicationCall) -> Unit,
     ) {
         pipeline.insertPhaseAfter(ApplicationCallPipeline.Plugins, AuthenticationHook.AuthenticatePhase)
         pipeline.insertPhaseAfter(AuthenticationHook.AuthenticatePhase, AfterAuthenticationPhase)
@@ -57,104 +57,110 @@ public object AuthenticationChecked : Hook<suspend (ApplicationCall) -> Unit> {
 /**
  * A plugin that authenticates calls. Usually used via the [authenticate] function inside routing.
  */
-public val AuthenticationInterceptors: RouteScopedPlugin<RouteAuthenticationConfig> = createRouteScopedPlugin(
-    "AuthenticationInterceptors",
-    ::RouteAuthenticationConfig
-) {
-    val parentConfigs = generateSequence(seed = environment?.parentRouting) { it.parent?.asRouting }
-        .mapNotNull { it.application.pluginOrNull(Authentication)?.config }
-        .toList()
-        .reversed()
+public val AuthenticationInterceptors: RouteScopedPlugin<RouteAuthenticationConfig> =
+    createRouteScopedPlugin(
+        "AuthenticationInterceptors",
+        ::RouteAuthenticationConfig,
+    ) {
+        val parentConfigs =
+            generateSequence(seed = environment?.parentRouting) { it.parent?.asRouting }
+                .mapNotNull { it.application.pluginOrNull(Authentication)?.config }
+                .toList()
+                .reversed()
 
-    val allConfigs = parentConfigs + application.plugin(Authentication).config
-    val configProviders = mutableMapOf<String?, AuthenticationProvider>()
-    allConfigs.forEach { config ->
-        configProviders.putAll(config.providers)
-    }
+        val allConfigs = parentConfigs + application.plugin(Authentication).config
+        val configProviders = mutableMapOf<String?, AuthenticationProvider>()
+        allConfigs.forEach { config ->
+            configProviders.putAll(config.providers)
+        }
 
-    val providers = pluginConfig.providers
-    val authConfig = AuthenticationConfig(providers = configProviders)
+        val providers = pluginConfig.providers
+        val authConfig = AuthenticationConfig(providers = configProviders)
 
-    val requiredProviders = authConfig
-        .findProviders(providers) { it == AuthenticationStrategy.Required }
-    val notRequiredProviders = authConfig
-        .findProviders(providers) { it != AuthenticationStrategy.Required } - requiredProviders
-    val firstSuccessfulProviders = authConfig
-        .findProviders(providers) { it == AuthenticationStrategy.FirstSuccessful } - requiredProviders
-    val optionalProviders = authConfig
-        .findProviders(providers) { it == AuthenticationStrategy.Optional } -
-        requiredProviders - firstSuccessfulProviders
+        val requiredProviders =
+            authConfig
+                .findProviders(providers) { it == AuthenticationStrategy.Required }
+        val notRequiredProviders =
+            authConfig
+                .findProviders(providers) { it != AuthenticationStrategy.Required } - requiredProviders
+        val firstSuccessfulProviders =
+            authConfig
+                .findProviders(providers) { it == AuthenticationStrategy.FirstSuccessful } - requiredProviders
+        val optionalProviders =
+            authConfig
+                .findProviders(providers) { it == AuthenticationStrategy.Optional } -
+                requiredProviders - firstSuccessfulProviders
 
-    on(AuthenticationHook) { call ->
-        val authenticationContext = AuthenticationContext.from(call)
-        if (authenticationContext.principal<Principal>() != null) return@on
+        on(AuthenticationHook) { call ->
+            val authenticationContext = AuthenticationContext.from(call)
+            if (authenticationContext.principal<Principal>() != null) return@on
 
-        val logger = call.application.log
-        var count = 0
-        for (provider in requiredProviders) {
-            if (provider.skipWhen.any { skipCondition -> skipCondition(call) }) {
-                logger.trace("Skipping authentication provider ${provider.name} for ${call.uri}")
-                continue
+            val logger = call.application.log
+            var count = 0
+            for (provider in requiredProviders) {
+                if (provider.skipWhen.any { skipCondition -> skipCondition(call) }) {
+                    logger.trace("Skipping authentication provider ${provider.name} for ${call.uri}")
+                    continue
+                }
+
+                logger.trace("Trying to authenticate ${call.uri} with required ${provider.name}")
+                provider.onAuthenticate(authenticationContext)
+                count++
+                if (authenticationContext.combinedPrincipal.principals.size < count) {
+                    logger.trace("Authentication failed for ${call.uri} with provider $provider")
+                    authenticationContext.checkForChallengeStatus(provider)
+                    // Checking if any challenge has provided a principal to current session
+                    if (authenticationContext.combinedPrincipal.principals.size >= count) {
+                        return@on
+                    }
+                }
+                logger.trace("Authentication succeeded for ${call.uri} with provider $provider")
             }
 
-            logger.trace("Trying to authenticate ${call.uri} with required ${provider.name}")
-            provider.onAuthenticate(authenticationContext)
-            count++
-            if (authenticationContext._principal.principals.size < count) {
-                logger.trace("Authentication failed for ${call.uri} with provider $provider")
-                authenticationContext.checkForChallengeStatus(provider)
-                // Checking if any challenge has provided a principal to current session
-                if (authenticationContext._principal.principals.size >= count) {
-                    return@on
+            for (provider in notRequiredProviders) {
+                if (authenticationContext.combinedPrincipal.principals.isNotEmpty()) {
+                    logger.trace("Authenticate for ${call.uri} succeed. Skipping other providers")
+                    break
+                }
+                if (provider.skipWhen.any { skipCondition -> skipCondition(call) }) {
+                    logger.trace("Skipping authentication provider ${provider.name} for ${call.uri}")
+                    continue
+                }
+
+                logger.trace("Trying to authenticate ${call.uri} with ${provider.name}")
+                provider.onAuthenticate(authenticationContext)
+
+                if (authenticationContext.combinedPrincipal.principals.isNotEmpty()) {
+                    logger.trace("Authentication succeeded for ${call.uri} with provider $provider")
+                } else {
+                    logger.trace("Authentication failed for ${call.uri} with provider $provider")
                 }
             }
-            logger.trace("Authentication succeeded for ${call.uri} with provider $provider")
-        }
 
-        for (provider in notRequiredProviders) {
-            if (authenticationContext._principal.principals.isNotEmpty()) {
-                logger.trace("Authenticate for ${call.uri} succeed. Skipping other providers")
-                break
+            if (authenticationContext.combinedPrincipal.principals.isNotEmpty()) return@on
+            val isOptional =
+                optionalProviders.isNotEmpty() &&
+                    firstSuccessfulProviders.isEmpty() &&
+                    requiredProviders.isEmpty()
+            val isNoInvalidCredentials =
+                authenticationContext.allFailures
+                    .none { it == AuthenticationFailedCause.InvalidCredentials }
+            if (isOptional && isNoInvalidCredentials) {
+                logger.trace("Authentication is optional and no credentials were provided for ${call.uri}")
+                return@on
             }
-            if (provider.skipWhen.any { skipCondition -> skipCondition(call) }) {
-                logger.trace("Skipping authentication provider ${provider.name} for ${call.uri}")
-                continue
-            }
 
-            logger.trace("Trying to authenticate ${call.uri} with ${provider.name}")
-            provider.onAuthenticate(authenticationContext)
-
-            if (authenticationContext._principal.principals.isNotEmpty()) {
-                logger.trace("Authentication succeeded for ${call.uri} with provider $provider")
-            } else {
-                logger.trace("Authentication failed for ${call.uri} with provider $provider")
-            }
+            authenticationContext.checkForChallengeStatus()
         }
-
-        if (authenticationContext._principal.principals.isNotEmpty()) return@on
-        val isOptional = optionalProviders.isNotEmpty() &&
-            firstSuccessfulProviders.isEmpty() &&
-            requiredProviders.isEmpty()
-        val isNoInvalidCredentials = authenticationContext.allFailures
-            .none { it == AuthenticationFailedCause.InvalidCredentials }
-        if (isOptional && isNoInvalidCredentials) {
-            logger.trace("Authentication is optional and no credentials were provided for ${call.uri}")
-            return@on
-        }
-
-        authenticationContext.checkForChallengeStatus()
     }
-}
 
-private suspend fun AuthenticationContext.checkForChallengeStatus(
-    provider: AuthenticationProvider? = null,
-) {
+private suspend fun AuthenticationContext.checkForChallengeStatus(provider: AuthenticationProvider? = null) {
     when (val status = executeChallenges(call)) {
         is ChallengeStatus.Denied -> call.throwNotAuthorized()
 
         // TODO: To stop current flow we need throw an exception. Is there a better way?
         is ChallengeStatus.Redirected -> throw RoutingRedirectToAuthenticateException(
-            message = "Redirecting ${call.uri} to authentication route ${status.destination}"
+            message = "Redirecting ${call.uri} to authentication route ${status.destination}",
         )
 
         is ChallengeStatus.Approved<*> -> principal(provider?.name, status.principal)
@@ -184,7 +190,7 @@ private suspend fun AuthenticationContext.executeChallenges(call: ApplicationCal
 
 private suspend fun AuthenticationContext.executeChallenges(
     challenges: List<ChallengeFunction>,
-    call: ApplicationCall
+    call: ApplicationCall,
 ): ChallengeStatus {
     for (challengeFunction in challenges) {
         val challengeStatus = challengeFunction(challenge, call)
@@ -198,7 +204,7 @@ private suspend fun AuthenticationContext.executeChallenges(
 
 private fun AuthenticationConfig.findProviders(
     configurations: Collection<AuthenticateProvidersRegistration>,
-    filter: (AuthenticationStrategy) -> Boolean
+    filter: (AuthenticationStrategy) -> Boolean,
 ): Set<AuthenticationProvider> {
     return configurations.filter { filter(it.strategy) }
         .flatMap { it.names.map { configurationName -> this.findProvider(configurationName) } }
@@ -211,7 +217,7 @@ private fun AuthenticationConfig.findProvider(configurationName: String?): Authe
             "Default authentication configuration was not found. "
         } else {
             "Authentication configuration with the name $configurationName was not found. "
-        } + "Make sure that you install Authentication plugin before you use it in Routing"
+        } + "Make sure that you install Authentication plugin before you use it in Routing",
     )
 }
 
@@ -240,12 +246,12 @@ public enum class AuthenticationStrategy { Optional, FirstSuccessful, Required }
 public fun Route.authenticate(
     vararg configurations: String? = arrayOfNulls<String>(1),
     optional: Boolean = false,
-    build: Route.() -> Unit
+    build: Route.() -> Unit,
 ): Route {
     return authenticate(
         configurations = configurations,
         strategy = if (optional) AuthenticationStrategy.Optional else AuthenticationStrategy.FirstSuccessful,
-        build = build
+        build = build,
     )
 }
 
@@ -268,7 +274,7 @@ public fun Route.authenticate(
 public fun Route.authenticate(
     vararg configurations: String? = arrayOfNulls<String>(1),
     strategy: AuthenticationStrategy,
-    build: Route.() -> Unit
+    build: Route.() -> Unit,
 ): Route {
     require(configurations.isNotEmpty()) { "At least one configuration name or null for default need to be provided" }
 
@@ -276,12 +282,13 @@ public fun Route.authenticate(
     val authenticatedRoute = createChild(AuthenticationRouteSelector(configurationNames))
     authenticatedRoute.attributes.put(
         AuthenticateProvidersKey,
-        AuthenticateProvidersRegistration(configurationNames, strategy)
+        AuthenticateProvidersRegistration(configurationNames, strategy),
     )
-    val allConfigurations = generateSequence(authenticatedRoute) { it.parent }
-        .mapNotNull { it.attributes.getOrNull(AuthenticateProvidersKey) }
-        .toList()
-        .reversed()
+    val allConfigurations =
+        generateSequence(authenticatedRoute) { it.parent }
+            .mapNotNull { it.attributes.getOrNull(AuthenticateProvidersKey) }
+            .toList()
+            .reversed()
 
     authenticatedRoute.install(AuthenticationInterceptors) {
         this.providers = allConfigurations
@@ -306,7 +313,10 @@ public class RouteAuthenticationConfig {
  * @param names of authentication providers to be applied to this route.
  */
 public class AuthenticationRouteSelector(public val names: List<String?>) : RouteSelector() {
-    override fun evaluate(context: RoutingResolveContext, segmentIndex: Int): RouteSelectorEvaluation {
+    override fun evaluate(
+        context: RoutingResolveContext,
+        segmentIndex: Int,
+    ): RouteSelectorEvaluation {
         return RouteSelectorEvaluation.Transparent
     }
 
@@ -315,7 +325,7 @@ public class AuthenticationRouteSelector(public val names: List<String?>) : Rout
 
 internal class AuthenticateProvidersRegistration(
     val names: List<String?>,
-    val strategy: AuthenticationStrategy
+    val strategy: AuthenticationStrategy,
 )
 
 private val AuthenticateProvidersKey = AttributeKey<AuthenticateProvidersRegistration>("AuthenticateProviderNamesKey")

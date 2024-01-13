@@ -14,7 +14,6 @@ internal class RedirectApplicationCall(
     private val previousCall: ApplicationCall,
     parameters: Parameters,
 ) : ApplicationCall, CoroutineScope {
-
     override val application: Application get() = previousCall.application
 
     override val attributes: Attributes get() = previousCall.attributes

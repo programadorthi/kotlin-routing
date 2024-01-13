@@ -17,9 +17,10 @@ import io.ktor.util.logging.Logger
 import kotlin.coroutines.CoroutineContext
 import kotlin.coroutines.EmptyCoroutineContext
 
-public val LocalRouting: ProvidableCompositionLocal<Routing> = staticCompositionLocalOf {
-    error("Composition local LocalRouting not found")
-}
+public val LocalRouting: ProvidableCompositionLocal<Routing> =
+    staticCompositionLocalOf {
+        error("Composition local LocalRouting not found")
+    }
 
 @Composable
 public fun Routing(
@@ -47,16 +48,17 @@ public fun Routing(
     configuration: Route.() -> Unit,
     initial: Content,
 ) {
-    val routing = remember {
-        routing(
-            rootPath = rootPath,
-            parent = parent,
-            parentCoroutineContext = coroutineContext,
-            log = log,
-            developmentMode = developmentMode,
-            configuration = configuration,
-        )
-    }
+    val routing =
+        remember {
+            routing(
+                rootPath = rootPath,
+                parent = parent,
+                parentCoroutineContext = coroutineContext,
+                log = log,
+                developmentMode = developmentMode,
+                configuration = configuration,
+            )
+        }
 
     DisposableEffect(routing) {
         onDispose {

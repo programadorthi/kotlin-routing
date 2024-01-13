@@ -48,12 +48,11 @@ import io.ktor.resources.Resources as ResourcesCore
  */
 public object VoyagerResources :
     BaseApplicationPlugin<Application, ResourcesCore.Configuration, ResourcesCore> {
-
     override val key: AttributeKey<ResourcesCore> = AttributeKey("VoyagerResources")
 
     override fun install(
         pipeline: Application,
-        configure: ResourcesCore.Configuration.() -> Unit
+        configure: ResourcesCore.Configuration.() -> Unit,
     ): ResourcesCore {
         val configuration = ResourcesCore.Configuration().apply(configure)
         return ResourcesCore(configuration)
@@ -74,6 +73,9 @@ public inline fun <reified T : Any> Application.href(resource: T): String {
  *
  * The class of the [resource] instance **must** be annotated with [Resource].
  */
-public inline fun <reified T : Any> Application.href(resource: T, urlBuilder: URLBuilder) {
+public inline fun <reified T : Any> Application.href(
+    resource: T,
+    urlBuilder: URLBuilder,
+) {
     href(plugin(VoyagerResources).resourcesFormat, resource, urlBuilder)
 }

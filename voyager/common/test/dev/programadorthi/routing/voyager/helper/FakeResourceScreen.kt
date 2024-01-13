@@ -12,12 +12,11 @@ import kotlin.random.Random
 
 @Serializable
 data class VoyagerResult(
-    val content: String
+    val content: String,
 )
 
 @Resource("/fakescreen")
 class FakeResourceScreen<T> : Screen, VoyagerRoutingPopResult<T> {
-
     var composed = ""
         private set
 

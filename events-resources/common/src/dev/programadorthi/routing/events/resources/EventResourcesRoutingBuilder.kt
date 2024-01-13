@@ -28,32 +28,33 @@ internal val EventResourceInstanceKey: AttributeKey<Any> = AttributeKey("EventRe
  *
  * @param body receives an instance of the typed resource [T] as the first parameter.
  */
-public inline fun <reified T : Any> Route.event(
-    noinline body: suspend PipelineContext<Unit, ApplicationCall>.(T) -> Unit
-): Route {
+public inline fun <reified T : Any> Route.event(noinline body: suspend PipelineContext<Unit, ApplicationCall>.(T) -> Unit): Route {
     val serializer = serializer<T>()
     val resources = application.plugin(EventResources)
     val path = resources.resourcesFormat.encodeToPathPattern(serializer)
     val queryParameters = resources.resourcesFormat.encodeToQueryParameters(serializer)
     val route = createRouteFromPath(path = path, name = null)
 
-    val routeWithQueryParameters = queryParameters.fold(route) { entry, query ->
-        val selector = if (query.isOptional) {
-            OptionalParameterRouteSelector(query.name)
-        } else {
-            ParameterRouteSelector(query.name)
+    val routeWithQueryParameters =
+        queryParameters.fold(route) { entry, query ->
+            val selector =
+                if (query.isOptional) {
+                    OptionalParameterRouteSelector(query.name)
+                } else {
+                    ParameterRouteSelector(query.name)
+                }
+            entry.createChild(selector)
         }
-        entry.createChild(selector)
-    }
 
     return routeWithQueryParameters.method(EventRouteMethod) {
         intercept(ApplicationCallPipeline.Plugins) {
             val resourcesPlugin = application.plugin(EventResources)
             runCatching {
-                val resource = resourcesPlugin.resourcesFormat.decodeFromParameters(
-                    serializer,
-                    call.parameters
-                )
+                val resource =
+                    resourcesPlugin.resourcesFormat.decodeFromParameters(
+                        serializer,
+                        call.parameters,
+                    )
                 call.attributes.put(EventResourceInstanceKey, resource)
             }.getOrElse { cause ->
                 throw BadRequestException("Can't transform call to resource", cause)

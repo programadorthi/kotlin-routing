@@ -13,7 +13,6 @@ internal data class ResolveApplicationCall(
     private val previousCall: ApplicationCall,
     private val params: Parameters,
 ) : ApplicationCall, CoroutineScope {
-
     override val application: Application get() = previousCall.application
 
     override val attributes: Attributes get() = previousCall.attributes

@@ -12,7 +12,6 @@ import io.ktor.util.AttributeKey
  **/
 public abstract class RouteScopedPluginBuilder<PluginConfig : Any>(key: AttributeKey<PluginInstance>) :
     PluginBuilder<PluginConfig>(key) {
-
     /**
      * A [Route] to which this plugin was installed. Can be `null` if plugin in installed into [Application].
      **/

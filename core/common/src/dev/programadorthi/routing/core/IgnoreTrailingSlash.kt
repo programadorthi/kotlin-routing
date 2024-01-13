@@ -13,18 +13,20 @@ private val IgnoreTrailingSlashAttributeKey: AttributeKey<Unit> = AttributeKey("
 
 internal var ApplicationCall.ignoreTrailingSlash: Boolean
     get() = attributes.contains(IgnoreTrailingSlashAttributeKey)
-    private set(value) = if (value) {
-        attributes.put(IgnoreTrailingSlashAttributeKey, Unit)
-    } else {
-        attributes.remove(IgnoreTrailingSlashAttributeKey)
-    }
+    private set(value) =
+        if (value) {
+            attributes.put(IgnoreTrailingSlashAttributeKey, Unit)
+        } else {
+            attributes.remove(IgnoreTrailingSlashAttributeKey)
+        }
 
 /**
  * A plugin that enables ignoring a trailing slash when resolving URLs.
  * @see [Application.routing]
  */
-public val IgnoreTrailingSlash: ApplicationPlugin<Unit> = createApplicationPlugin("IgnoreTrailingSlash") {
-    onCall { call ->
-        call.ignoreTrailingSlash = true
+public val IgnoreTrailingSlash: ApplicationPlugin<Unit> =
+    createApplicationPlugin("IgnoreTrailingSlash") {
+        onCall { call ->
+            call.ignoreTrailingSlash = true
+        }
     }
-}

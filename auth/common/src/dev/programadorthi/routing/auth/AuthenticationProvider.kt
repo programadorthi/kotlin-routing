@@ -44,7 +44,6 @@ public abstract class AuthenticationProvider(config: Config) {
      * @property name is the name of the provider, or `null` for a default provider.
      */
     public open class Config protected constructor(public val name: String?) {
-
         /**
          * Authentication filters specifying if authentication is required for a particular [ApplicationCall].
          *

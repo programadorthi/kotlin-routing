@@ -25,14 +25,14 @@ public class SessionsConfig {
         registered.firstOrNull { it.name == provider.name }?.let { alreadyRegistered ->
             throw IllegalArgumentException(
                 "There is already registered session provider with " +
-                    "name ${provider.name}: $alreadyRegistered"
+                    "name ${provider.name}: $alreadyRegistered",
             )
         }
 
         registered.firstOrNull { it.type == provider.type }?.let { alreadyRegistered ->
             throw IllegalArgumentException(
                 "There is already registered session provider for type" +
-                    " ${provider.type}: $alreadyRegistered"
+                    " ${provider.type}: $alreadyRegistered",
             )
         }
 

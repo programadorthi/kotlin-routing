@@ -15,7 +15,10 @@ internal fun PluginBuilder<CallLoggingConfig>.setupMDCProvider() {
 }
 
 internal class KtorMDCProvider(private val entries: List<MDCEntry>) : MDCProvider {
-    override suspend fun withMDCBlock(call: ApplicationCall, block: suspend () -> Unit) {
+    override suspend fun withMDCBlock(
+        call: ApplicationCall,
+        block: suspend () -> Unit,
+    ) {
         withMDC(entries, call, block)
     }
 

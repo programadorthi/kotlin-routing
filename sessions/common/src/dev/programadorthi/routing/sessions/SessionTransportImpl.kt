@@ -5,7 +5,7 @@ import io.ktor.util.AttributeKey
 
 internal class SessionTransportImpl(
     key: String,
-    private val transformers: List<SessionTransportTransformer>
+    private val transformers: List<SessionTransportTransformer>,
 ) : SessionTransport {
     private val transportId: AttributeKey<String> = AttributeKey(key)
 
@@ -13,7 +13,10 @@ internal class SessionTransportImpl(
         return transformers.transformRead(call.attributes.getOrNull(transportId))
     }
 
-    override fun send(call: ApplicationCall, value: String) {
+    override fun send(
+        call: ApplicationCall,
+        value: String,
+    ) {
         call.attributes.put(transportId, transformers.transformWrite(value))
     }
 

@@ -28,13 +28,16 @@ public inline fun <reified T : Any> ApplicationCall.redirectTo(resource: T) {
                 ApplicationCall(
                     application = application,
                     uri = href(resource),
-                )
+                ),
             )
         }
     }
 }
 
-public inline fun <reified T : Any> Routing.push(resource: T, neglect: Boolean = false) {
+public inline fun <reified T : Any> Routing.push(
+    resource: T,
+    neglect: Boolean = false,
+) {
     checkNotNull(application.pluginOrNull(Resources)) {
         "Resources plugin not installed"
     }
@@ -44,7 +47,10 @@ public inline fun <reified T : Any> Routing.push(resource: T, neglect: Boolean =
     )
 }
 
-public inline fun <reified T : Any> Routing.replace(resource: T, neglect: Boolean = false) {
+public inline fun <reified T : Any> Routing.replace(
+    resource: T,
+    neglect: Boolean = false,
+) {
     checkNotNull(application.pluginOrNull(Resources)) {
         "Resources plugin not installed"
     }
@@ -54,7 +60,10 @@ public inline fun <reified T : Any> Routing.replace(resource: T, neglect: Boolea
     )
 }
 
-public inline fun <reified T : Any> Routing.replaceAll(resource: T, neglect: Boolean = false) {
+public inline fun <reified T : Any> Routing.replaceAll(
+    resource: T,
+    neglect: Boolean = false,
+) {
     checkNotNull(application.pluginOrNull(Resources)) {
         "Resources plugin not installed"
     }

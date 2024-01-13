@@ -9,7 +9,6 @@ import io.ktor.http.Parameters
 import kotlin.random.Random
 
 class FakeScreen : Screen, VoyagerRoutingPopResult<Parameters> {
-
     var composed = ""
         private set
 

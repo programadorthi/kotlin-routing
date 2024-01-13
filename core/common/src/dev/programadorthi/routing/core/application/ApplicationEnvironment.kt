@@ -17,29 +17,24 @@ public data class ApplicationEnvironment(
      * Parent coroutine context for an application
      */
     public val parentCoroutineContext: CoroutineContext,
-
     /**
      * Instance of [Logger] to be used for logging.
      */
     public val log: Logger,
-
     /**
      * Indicates if development mode is enabled.
      */
     public val developmentMode: Boolean,
-
     /**
      * Application's root path (prefix, context path in servlet container).
      */
     public val rootPath: String,
-
     /**
      * Application's current [Routing] used to nested routing
      */
     public val parentRouting: Routing?,
-
     /**
      * Provides events on Application lifecycle
      */
-    public val monitor: Events
+    public val monitor: Events,
 )

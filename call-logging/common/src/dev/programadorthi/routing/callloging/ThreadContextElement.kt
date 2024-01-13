@@ -78,5 +78,8 @@ public interface ThreadContextElement<S> : CoroutineContext.Element {
      * @param context the coroutine context.
      * @param oldState the value returned by the previous invocation of [updateThreadContext].
      */
-    public fun restoreThreadContext(context: CoroutineContext, oldState: S)
+    public fun restoreThreadContext(
+        context: CoroutineContext,
+        oldState: S,
+    )
 }

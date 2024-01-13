@@ -20,9 +20,8 @@ import kotlin.coroutines.CoroutineContext
  */
 @KtorDsl
 public class Application(
-    override val environment: ApplicationEnvironment
+    override val environment: ApplicationEnvironment,
 ) : ApplicationCallPipeline(environment.developmentMode, environment), CoroutineScope {
-
     private val applicationJob = SupervisorJob(environment.parentCoroutineContext[Job])
 
     override val coroutineContext: CoroutineContext = environment.parentCoroutineContext + applicationJob

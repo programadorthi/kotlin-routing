@@ -22,256 +22,274 @@ import kotlin.test.assertNotNull
 
 @OptIn(ExperimentalCoroutinesApi::class)
 class EventRoutingTest {
-
     @Test
-    fun shouldRedirectFromAnEventToAnother() = runTest {
-        // GIVEN
-        val job = Job()
-        var result: ApplicationCall? = null
+    fun shouldRedirectFromAnEventToAnother() =
+        runTest {
+            // GIVEN
+            val job = Job()
+            var result: ApplicationCall? = null
 
-        val routing = routing(parentCoroutineContext = coroutineContext + job) {
-            event(name = "event_name") {
-                call.redirectToEvent(name = "event_redirected")
-            }
+            val routing =
+                routing(parentCoroutineContext = coroutineContext + job) {
+                    event(name = "event_name") {
+                        call.redirectToEvent(name = "event_redirected")
+                    }
 
-            event(name = "event_redirected") {
-                result = call
-                job.complete()
-            }
+                    event(name = "event_redirected") {
+                        result = call
+                        job.complete()
+                    }
+                }
+
+            // WHEN
+            routing.emitEvent(name = "event_name")
+            advanceTimeBy(99)
+
+            // THEN
+            assertNotNull(result)
+            assertEquals("event_redirected", "${result?.uri}")
+            assertEquals("", "${result?.name}")
+            assertEquals(EventRouteMethod, result?.routeMethod)
+            assertEquals(Parameters.Empty, result?.parameters)
         }
 
-        // WHEN
-        routing.emitEvent(name = "event_name")
-        advanceTimeBy(99)
-
-        // THEN
-        assertNotNull(result)
-        assertEquals("event_redirected", "${result?.uri}")
-        assertEquals("", "${result?.name}")
-        assertEquals(EventRouteMethod, result?.routeMethod)
-        assertEquals(Parameters.Empty, result?.parameters)
-    }
-
     @Test
-    fun shouldUnregisterEvent() = runTest {
-        // GIVEN
-        val job = Job()
-        var result: ApplicationCall? = null
-        var exception: Throwable? = null
+    fun shouldUnregisterEvent() =
+        runTest {
+            // GIVEN
+            val job = Job()
+            var result: ApplicationCall? = null
+            var exception: Throwable? = null
 
-        val statusPages = createApplicationPlugin("status-pages") {
-            on(CallFailed) { call, cause ->
-                result = call
-                exception = cause
-                job.complete()
-            }
+            val statusPages =
+                createApplicationPlugin("status-pages") {
+                    on(CallFailed) { call, cause ->
+                        result = call
+                        exception = cause
+                        job.complete()
+                    }
+                }
+
+            val routing =
+                routing(parentCoroutineContext = coroutineContext + job) {
+                    install(statusPages)
+
+                    event(name = "event_name") {
+                        error("No reached code")
+                    }
+                }
+
+            // WHEN
+            routing.unregisterEvent(name = "event_name")
+            routing.emitEvent(name = "event_name")
+            advanceTimeBy(99)
+
+            // THEN
+            assertNotNull(result)
+            assertNotNull(exception)
+            assertEquals("event_name", "${result?.uri}")
+            assertEquals("", "${result?.name}")
+            assertEquals(EventRouteMethod, result?.routeMethod)
+            assertEquals(Parameters.Empty, result?.parameters)
+            assertIs<RouteNotFoundException>(exception)
+            assertEquals(
+                "No matched subtrees found for: event_name",
+                exception?.message,
+            )
         }
 
-        val routing = routing(parentCoroutineContext = coroutineContext + job) {
-            install(statusPages)
+    @Test
+    fun shouldHandleAnEvent() =
+        runTest {
+            // GIVEN
+            val job = Job()
+            var result: ApplicationCall? = null
 
-            event(name = "event_name") {
-                error("No reached code")
-            }
+            val routing =
+                routing(parentCoroutineContext = coroutineContext + job) {
+                    event(name = "event_name") {
+                        result = call
+                        job.complete()
+                    }
+                }
+
+            // WHEN
+            routing.emitEvent(name = "event_name")
+            advanceTimeBy(99)
+
+            // THEN
+            assertNotNull(result)
+            assertEquals("event_name", "${result?.uri}")
+            assertEquals("", "${result?.name}")
+            assertEquals(EventRouteMethod, result?.routeMethod)
+            assertEquals(Parameters.Empty, result?.parameters)
         }
 
-        // WHEN
-        routing.unregisterEvent(name = "event_name")
-        routing.emitEvent(name = "event_name")
-        advanceTimeBy(99)
-
-        // THEN
-        assertNotNull(result)
-        assertNotNull(exception)
-        assertEquals("event_name", "${result?.uri}")
-        assertEquals("", "${result?.name}")
-        assertEquals(EventRouteMethod, result?.routeMethod)
-        assertEquals(Parameters.Empty, result?.parameters)
-        assertIs<RouteNotFoundException>(exception)
-        assertEquals(
-            "No matched subtrees found for: event_name",
-            exception?.message
-        )
-    }
-
     @Test
-    fun shouldHandleAnEvent() = runTest {
-        // GIVEN
-        val job = Job()
-        var result: ApplicationCall? = null
+    fun shouldHandleAnEventWithParameters() =
+        runTest {
+            // GIVEN
+            val job = Job()
+            var result: ApplicationCall? = null
 
-        val routing = routing(parentCoroutineContext = coroutineContext + job) {
-            event(name = "event_name") {
-                result = call
-                job.complete()
-            }
+            val routing =
+                routing(parentCoroutineContext = coroutineContext + job) {
+                    event(name = "event_name") {
+                        result = call
+                        job.complete()
+                    }
+                }
+
+            // WHEN
+            routing.emitEvent(
+                name = "event_name",
+                parameters = parametersOf("id", "123"),
+            )
+            advanceTimeBy(99)
+
+            // THEN
+            assertNotNull(result)
+            assertEquals("event_name", "${result?.uri}")
+            assertEquals("", "${result?.name}")
+            assertEquals(EventRouteMethod, result?.routeMethod)
+            assertEquals(parametersOf("id", "123"), result?.parameters)
         }
 
-        // WHEN
-        routing.emitEvent(name = "event_name")
-        advanceTimeBy(99)
-
-        // THEN
-        assertNotNull(result)
-        assertEquals("event_name", "${result?.uri}")
-        assertEquals("", "${result?.name}")
-        assertEquals(EventRouteMethod, result?.routeMethod)
-        assertEquals(Parameters.Empty, result?.parameters)
-    }
-
     @Test
-    fun shouldHandleAnEventWithParameters() = runTest {
-        // GIVEN
-        val job = Job()
-        var result: ApplicationCall? = null
+    fun shouldThrowExceptionPuttingEventAsSubRoute() =
+        runTest {
+            // WHEN
+            val failure =
+                assertFails {
+                    routing {
+                        route(path = "/path") {
+                            event(name = "event_name") { }
+                        }
+                    }
+                }
 
-        val routing = routing(parentCoroutineContext = coroutineContext + job) {
-            event(name = "event_name") {
-                result = call
-                job.complete()
-            }
+            // THEN
+            assertEquals(
+                "An event cannot be a child of other Route",
+                failure.message,
+            )
         }
 
-        // WHEN
-        routing.emitEvent(
-            name = "event_name",
-            parameters = parametersOf("id", "123"),
-        )
-        advanceTimeBy(99)
+    @Test
+    fun shouldHandleAnEventWhenHavingSubRouting() =
+        runTest {
+            // GIVEN
+            val job = Job()
+            var result: ApplicationCall? = null
 
-        // THEN
-        assertNotNull(result)
-        assertEquals("event_name", "${result?.uri}")
-        assertEquals("", "${result?.name}")
-        assertEquals(EventRouteMethod, result?.routeMethod)
-        assertEquals(parametersOf("id", "123"), result?.parameters)
-    }
+            val parent =
+                routing(
+                    rootPath = "/parent",
+                    parentCoroutineContext = coroutineContext + job,
+                ) {
+                    event(name = "event_parent") {}
+                }
+
+            val routing =
+                routing(
+                    rootPath = "/child",
+                    parent = parent,
+                    parentCoroutineContext = coroutineContext + job,
+                ) {
+                    event(name = "event_child") {
+                        result = call
+                        job.complete()
+                    }
+                }
+
+            // WHEN
+            routing.emitEvent(name = "event_child")
+            advanceTimeBy(99)
+
+            // THEN
+            assertNotNull(result)
+            assertEquals("event_child", "${result?.uri}")
+            assertEquals("", "${result?.name}")
+            assertEquals(EventRouteMethod, result?.routeMethod)
+            assertEquals(Parameters.Empty, result?.parameters)
+        }
 
     @Test
-    fun shouldThrowExceptionPuttingEventAsSubRoute() = runTest {
-        // WHEN
-        val failure = assertFails {
-            routing {
-                route(path = "/path") {
-                    event(name = "event_name") { }
+    fun shouldHandleParentEventWhenCallingFromChild() =
+        runTest {
+            // GIVEN
+            val job = Job()
+            var result: ApplicationCall? = null
+
+            val parent =
+                routing(
+                    rootPath = "/parent",
+                    parentCoroutineContext = coroutineContext + job,
+                ) {
+                    event(name = "event_parent") {
+                        result = call
+                        job.complete()
+                    }
+                }
+
+            val routing =
+                routing(
+                    rootPath = "/child",
+                    parent = parent,
+                    parentCoroutineContext = coroutineContext + job,
+                ) {
+                    event(name = "event_child") {
+                    }
+                }
+
+            // WHEN
+            routing.emitEvent(name = "event_parent")
+            advanceTimeBy(99)
+
+            // THEN
+            assertNotNull(result)
+            assertEquals("event_parent", "${result?.uri}")
+            assertEquals("", "${result?.name}")
+            assertEquals(EventRouteMethod, result?.routeMethod)
+            assertEquals(Parameters.Empty, result?.parameters)
+        }
+
+    @Test
+    fun shouldHandleChildEventWhenCallingFromParent() =
+        runTest {
+            // GIVEN
+            val job = Job()
+            var result: ApplicationCall? = null
+
+            val parent =
+                routing(
+                    rootPath = "/parent",
+                    parentCoroutineContext = coroutineContext + job,
+                ) {
+                    event(name = "event_parent") {
+                    }
+                }
+
+            routing(
+                rootPath = "/child",
+                parent = parent,
+                parentCoroutineContext = coroutineContext + job,
+            ) {
+                event(name = "event_child") {
+                    result = call
+                    job.complete()
                 }
             }
+
+            // WHEN
+            parent.emitEvent(name = "/child/event_child")
+            advanceTimeBy(99)
+
+            // THEN
+            assertNotNull(result)
+            assertEquals("/child/event_child", "${result?.uri}")
+            assertEquals("", "${result?.name}")
+            assertEquals(EventRouteMethod, result?.routeMethod)
+            assertEquals(Parameters.Empty, result?.parameters)
         }
-
-        // THEN
-        assertEquals(
-            "An event cannot be a child of other Route",
-            failure.message,
-        )
-    }
-
-    @Test
-    fun shouldHandleAnEventWhenHavingSubRouting() = runTest {
-        // GIVEN
-        val job = Job()
-        var result: ApplicationCall? = null
-
-        val parent = routing(
-            rootPath = "/parent",
-            parentCoroutineContext = coroutineContext + job
-        ) {
-            event(name = "event_parent") {}
-        }
-
-        val routing = routing(
-            rootPath = "/child",
-            parent = parent,
-            parentCoroutineContext = coroutineContext + job
-        ) {
-            event(name = "event_child") {
-                result = call
-                job.complete()
-            }
-        }
-
-        // WHEN
-        routing.emitEvent(name = "event_child")
-        advanceTimeBy(99)
-
-        // THEN
-        assertNotNull(result)
-        assertEquals("event_child", "${result?.uri}")
-        assertEquals("", "${result?.name}")
-        assertEquals(EventRouteMethod, result?.routeMethod)
-        assertEquals(Parameters.Empty, result?.parameters)
-    }
-
-    @Test
-    fun shouldHandleParentEventWhenCallingFromChild() = runTest {
-        // GIVEN
-        val job = Job()
-        var result: ApplicationCall? = null
-
-        val parent = routing(
-            rootPath = "/parent",
-            parentCoroutineContext = coroutineContext + job
-        ) {
-            event(name = "event_parent") {
-                result = call
-                job.complete()
-            }
-        }
-
-        val routing = routing(
-            rootPath = "/child",
-            parent = parent,
-            parentCoroutineContext = coroutineContext + job
-        ) {
-            event(name = "event_child") {
-            }
-        }
-
-        // WHEN
-        routing.emitEvent(name = "event_parent")
-        advanceTimeBy(99)
-
-        // THEN
-        assertNotNull(result)
-        assertEquals("event_parent", "${result?.uri}")
-        assertEquals("", "${result?.name}")
-        assertEquals(EventRouteMethod, result?.routeMethod)
-        assertEquals(Parameters.Empty, result?.parameters)
-    }
-
-    @Test
-    fun shouldHandleChildEventWhenCallingFromParent() = runTest {
-        // GIVEN
-        val job = Job()
-        var result: ApplicationCall? = null
-
-        val parent = routing(
-            rootPath = "/parent",
-            parentCoroutineContext = coroutineContext + job
-        ) {
-            event(name = "event_parent") {
-            }
-        }
-
-        routing(
-            rootPath = "/child",
-            parent = parent,
-            parentCoroutineContext = coroutineContext + job
-        ) {
-            event(name = "event_child") {
-                result = call
-                job.complete()
-            }
-        }
-
-        // WHEN
-        parent.emitEvent(name = "/child/event_child")
-        advanceTimeBy(99)
-
-        // THEN
-        assertNotNull(result)
-        assertEquals("/child/event_child", "${result?.uri}")
-        assertEquals("", "${result?.name}")
-        assertEquals(EventRouteMethod, result?.routeMethod)
-        assertEquals(Parameters.Empty, result?.parameters)
-    }
 }

@@ -25,9 +25,7 @@ public fun Route.screen(
 ): Route = route(path = path, name = name, method = method) { screen(body) }
 
 @KtorDsl
-public fun Route.screen(
-    body: suspend PipelineContext<Unit, ApplicationCall>.() -> Screen,
-) {
+public fun Route.screen(body: suspend PipelineContext<Unit, ApplicationCall>.() -> Screen) {
     handle {
         screen {
             body(this)
@@ -35,17 +33,16 @@ public fun Route.screen(
     }
 }
 
-public suspend fun PipelineContext<Unit, ApplicationCall>.screen(
-    body: suspend () -> Screen,
-) {
+public suspend fun PipelineContext<Unit, ApplicationCall>.screen(body: suspend () -> Screen) {
     val navigator = call.voyagerNavigator
     when (call.routeMethod) {
         VoyagerRouteMethod.Push -> navigator.push(body())
         VoyagerRouteMethod.Replace -> navigator.replace(body())
         VoyagerRouteMethod.ReplaceAll -> navigator.replaceAll(body())
-        else -> error(
-            "Voyager needs a stack route method to work. You called a screen ${call.uri} using " +
-                "route method ${call.routeMethod} that is not supported by Voyager"
-        )
+        else ->
+            error(
+                "Voyager needs a stack route method to work. You called a screen ${call.uri} using " +
+                    "route method ${call.routeMethod} that is not supported by Voyager",
+            )
     }
 }

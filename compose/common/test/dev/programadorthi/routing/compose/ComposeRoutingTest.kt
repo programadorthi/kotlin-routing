@@ -26,7 +26,6 @@ import kotlin.test.assertNotNull
 
 @OptIn(ExperimentalCoroutinesApi::class)
 internal class ComposeRoutingTest {
-
     @Test
     fun shouldInvokeInitialContentWhenThereIsNoEmittedComposable() =
         runComposeTest { coroutineContext, composition, clock ->
@@ -56,12 +55,13 @@ internal class ComposeRoutingTest {
             // GIVEN
             val fakeContent = FakeContent()
 
-            val routing = routing(parentCoroutineContext = coroutineContext) {
-                composable(path = "/path") {
-                    fakeContent.content = "I'm the path based content"
-                    fakeContent.Composable()
+            val routing =
+                routing(parentCoroutineContext = coroutineContext) {
+                    composable(path = "/path") {
+                        fakeContent.content = "I'm the path based content"
+                        fakeContent.Composable()
+                    }
                 }
-            }
 
             composition.setContent {
                 Routing(
@@ -88,12 +88,13 @@ internal class ComposeRoutingTest {
             // GIVEN
             val fakeContent = FakeContent()
 
-            val routing = routing(parentCoroutineContext = coroutineContext) {
-                composable(path = "/path", name = "path") {
-                    fakeContent.content = "I'm the name based content"
-                    fakeContent.Composable()
+            val routing =
+                routing(parentCoroutineContext = coroutineContext) {
+                    composable(path = "/path", name = "path") {
+                        fakeContent.content = "I'm the name based content"
+                        fakeContent.Composable()
+                    }
                 }
-            }
 
             composition.setContent {
                 Routing(
@@ -120,12 +121,13 @@ internal class ComposeRoutingTest {
             // GIVEN
             val fakeContent = FakeContent()
 
-            val routing = routing(parentCoroutineContext = coroutineContext) {
-                composable(path = "/path", method = RouteMethod.Empty) {
-                    fakeContent.content = "I'm the route method based content"
-                    fakeContent.Composable()
+            val routing =
+                routing(parentCoroutineContext = coroutineContext) {
+                    composable(path = "/path", method = RouteMethod.Empty) {
+                        fakeContent.content = "I'm the route method based content"
+                        fakeContent.Composable()
+                    }
                 }
-            }
 
             composition.setContent {
                 Routing(
@@ -152,14 +154,15 @@ internal class ComposeRoutingTest {
             // GIVEN
             val fakeContent = FakeContent()
 
-            val routing = routing(parentCoroutineContext = coroutineContext) {
-                route(path = "/any") {
-                    composable {
-                        fakeContent.content = "I'm the generic based content"
-                        fakeContent.Composable()
+            val routing =
+                routing(parentCoroutineContext = coroutineContext) {
+                    route(path = "/any") {
+                        composable {
+                            fakeContent.content = "I'm the generic based content"
+                            fakeContent.Composable()
+                        }
                     }
                 }
-            }
 
             composition.setContent {
                 Routing(
@@ -187,15 +190,16 @@ internal class ComposeRoutingTest {
             val fakeContent = FakeContent()
             var result: ApplicationCall? = null
 
-            val routing = routing(parentCoroutineContext = coroutineContext) {
-                install(StackRouting)
+            val routing =
+                routing(parentCoroutineContext = coroutineContext) {
+                    install(StackRouting)
 
-                composable(path = "/path") {
-                    result = call
-                    fakeContent.content = "I'm the push based content"
-                    fakeContent.Composable()
+                    composable(path = "/path") {
+                        result = call
+                        fakeContent.content = "I'm the push based content"
+                        fakeContent.Composable()
+                    }
                 }
-            }
 
             composition.setContent {
                 Routing(
@@ -229,19 +233,20 @@ internal class ComposeRoutingTest {
             val replaceContent = FakeContent()
             var result: ApplicationCall? = null
 
-            val routing = routing(parentCoroutineContext = coroutineContext) {
-                install(StackRouting)
+            val routing =
+                routing(parentCoroutineContext = coroutineContext) {
+                    install(StackRouting)
 
-                composable(path = "/push") {
-                    pushContent.content = "I'm the push based content"
-                    pushContent.Composable()
+                    composable(path = "/push") {
+                        pushContent.content = "I'm the push based content"
+                        pushContent.Composable()
+                    }
+                    composable(path = "/replace") {
+                        result = call
+                        replaceContent.content = "I'm the replace based content"
+                        replaceContent.Composable()
+                    }
                 }
-                composable(path = "/replace") {
-                    result = call
-                    replaceContent.content = "I'm the replace based content"
-                    replaceContent.Composable()
-                }
-            }
 
             composition.setContent {
                 Routing(
@@ -280,19 +285,20 @@ internal class ComposeRoutingTest {
             val replaceContent = FakeContent()
             var result: ApplicationCall? = null
 
-            val routing = routing(parentCoroutineContext = coroutineContext) {
-                install(StackRouting)
+            val routing =
+                routing(parentCoroutineContext = coroutineContext) {
+                    install(StackRouting)
 
-                composable(path = "/push") {
-                    pushContent.content = "I'm the push based content"
-                    pushContent.Composable()
+                    composable(path = "/push") {
+                        pushContent.content = "I'm the push based content"
+                        pushContent.Composable()
+                    }
+                    composable(path = "/replace") {
+                        result = call
+                        replaceContent.content = "I'm the replace all based content"
+                        replaceContent.Composable()
+                    }
                 }
-                composable(path = "/replace") {
-                    result = call
-                    replaceContent.content = "I'm the replace all based content"
-                    replaceContent.Composable()
-                }
-            }
 
             composition.setContent {
                 Routing(
@@ -331,23 +337,24 @@ internal class ComposeRoutingTest {
             var result: ApplicationCall? = null
             var pushedCounter = 0
 
-            val routing = routing(parentCoroutineContext = coroutineContext) {
-                install(StackRouting)
+            val routing =
+                routing(parentCoroutineContext = coroutineContext) {
+                    install(StackRouting)
 
-                composable(path = "/push") {
-                    pushedCounter += 1
-                }
-                composable(path = "/pop") {
-                    result = call
-                    if (call.isPop()) {
-                        error("I will never be called in a composable with a pop call")
+                    composable(path = "/push") {
+                        pushedCounter += 1
+                    }
+                    composable(path = "/pop") {
+                        result = call
+                        if (call.isPop()) {
+                            error("I will never be called in a composable with a pop call")
+                        }
+                    }
+
+                    handle(path = "/pop") {
+                        poppedCall = call
                     }
                 }
-
-                handle(path = "/pop") {
-                    poppedCall = call
-                }
-            }
 
             composition.setContent {
                 Routing(

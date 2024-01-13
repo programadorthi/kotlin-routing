@@ -8,13 +8,19 @@ import io.ktor.util.debug.plugins.PluginTraceElement
 import io.ktor.util.debug.plugins.PluginsTrace
 import io.ktor.util.debug.useContextElementInDebugMode
 
-internal suspend fun ijDebugReportHandlerStarted(pluginName: String, handler: String) {
+internal suspend fun ijDebugReportHandlerStarted(
+    pluginName: String,
+    handler: String,
+) {
     useContextElementInDebugMode(PluginsTrace) { trace ->
         trace.eventOrder.add(PluginTraceElement(pluginName, handler, PluginTraceElement.PluginEvent.STARTED))
     }
 }
 
-internal suspend fun ijDebugReportHandlerFinished(pluginName: String, handler: String) {
+internal suspend fun ijDebugReportHandlerFinished(
+    pluginName: String,
+    handler: String,
+) {
     useContextElementInDebugMode(PluginsTrace) { trace ->
         trace.eventOrder.add(PluginTraceElement(pluginName, handler, PluginTraceElement.PluginEvent.FINISHED))
     }

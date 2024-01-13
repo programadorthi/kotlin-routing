@@ -19,14 +19,14 @@ import kotlin.test.assertIs
 @Suppress("UNCHECKED_CAST")
 @OptIn(ExperimentalCoroutinesApi::class)
 internal class VoyagerResourcesRoutingTest {
-
     @Test
     fun shouldThrowExceptionWhenThePluginIsNotInstalled() {
-        val exception = assertFails {
-            routing {
-                screen<FakeResourceScreen<VoyagerResult>>()
+        val exception =
+            assertFails {
+                routing {
+                    screen<FakeResourceScreen<VoyagerResult>>()
+                }
             }
-        }
         assertIs<MissingApplicationPluginException>(exception)
         assertEquals("Application plugin VoyagerResources is not installed", exception.message)
     }
@@ -37,11 +37,12 @@ internal class VoyagerResourcesRoutingTest {
             // GIVEN
             var navigator: Navigator? = null
 
-            val routing = routing(parentCoroutineContext = coroutineContext) {
-                install(VoyagerResources)
+            val routing =
+                routing(parentCoroutineContext = coroutineContext) {
+                    install(VoyagerResources)
 
-                screen<FakeResourceScreen<VoyagerResult>>()
-            }
+                    screen<FakeResourceScreen<VoyagerResult>>()
+                }
 
             composition.setContent {
                 VoyagerRouting(
@@ -55,9 +56,10 @@ internal class VoyagerResourcesRoutingTest {
 
             // WHEN
             routing.push(
-                resource = FakeResourceScreen<VoyagerResult>().apply {
-                    content = "Hey, I am the pushed screen"
-                }
+                resource =
+                    FakeResourceScreen<VoyagerResult>().apply {
+                        content = "Hey, I am the pushed screen"
+                    },
             )
             advanceTimeBy(99) // Ask for routing
             clock.sendFrame(0L) // Ask for recomposition
@@ -74,15 +76,16 @@ internal class VoyagerResourcesRoutingTest {
             // GIVEN
             var navigator: Navigator? = null
 
-            val routing = routing(parentCoroutineContext = coroutineContext) {
-                install(VoyagerResources)
+            val routing =
+                routing(parentCoroutineContext = coroutineContext) {
+                    install(VoyagerResources)
 
-                screen<Path> {
-                    FakeResourceScreen<VoyagerResult>().apply {
-                        content = "Hey, I am the pushed screen"
+                    screen<Path> {
+                        FakeResourceScreen<VoyagerResult>().apply {
+                            content = "Hey, I am the pushed screen"
+                        }
                     }
                 }
-            }
 
             composition.setContent {
                 VoyagerRouting(
@@ -111,11 +114,12 @@ internal class VoyagerResourcesRoutingTest {
             // GIVEN
             var navigator: Navigator? = null
 
-            val routing = routing(parentCoroutineContext = coroutineContext) {
-                install(VoyagerResources)
+            val routing =
+                routing(parentCoroutineContext = coroutineContext) {
+                    install(VoyagerResources)
 
-                screen<FakeResourceScreen<VoyagerResult>>()
-            }
+                    screen<FakeResourceScreen<VoyagerResult>>()
+                }
 
             composition.setContent {
                 VoyagerRouting(
@@ -129,18 +133,20 @@ internal class VoyagerResourcesRoutingTest {
 
             // WHEN
             routing.push(
-                resource = FakeResourceScreen<VoyagerResult>().apply {
-                    content = "Hey, I am the pushed screen"
-                }
+                resource =
+                    FakeResourceScreen<VoyagerResult>().apply {
+                        content = "Hey, I am the pushed screen"
+                    },
             )
             advanceTimeBy(99) // Ask for routing
             clock.sendFrame(0L) // Ask for recomposition
             val pushedScreen = navigator?.lastItemOrNull as? FakeResourceScreen<VoyagerResult>
 
             routing.replace(
-                resource = FakeResourceScreen<VoyagerResult>().apply {
-                    content = "Hey, I am the replaced screen"
-                }
+                resource =
+                    FakeResourceScreen<VoyagerResult>().apply {
+                        content = "Hey, I am the replaced screen"
+                    },
             )
             advanceTimeBy(99) // Ask for routing
             clock.sendFrame(0L) // Ask for recomposition
@@ -159,21 +165,22 @@ internal class VoyagerResourcesRoutingTest {
             // GIVEN
             var navigator: Navigator? = null
 
-            val routing = routing(parentCoroutineContext = coroutineContext) {
-                install(VoyagerResources)
+            val routing =
+                routing(parentCoroutineContext = coroutineContext) {
+                    install(VoyagerResources)
 
-                screen<Path> {
-                    FakeResourceScreen<VoyagerResult>().apply {
-                        content = "Hey, I am the pushed screen"
+                    screen<Path> {
+                        FakeResourceScreen<VoyagerResult>().apply {
+                            content = "Hey, I am the pushed screen"
+                        }
+                    }
+
+                    screen<Path.Id> {
+                        FakeResourceScreen<VoyagerResult>().apply {
+                            content = "Hey, I am the replaced screen"
+                        }
                     }
                 }
-
-                screen<Path.Id> {
-                    FakeResourceScreen<VoyagerResult>().apply {
-                        content = "Hey, I am the replaced screen"
-                    }
-                }
-            }
 
             composition.setContent {
                 VoyagerRouting(
@@ -210,11 +217,12 @@ internal class VoyagerResourcesRoutingTest {
             var counter = 1
             var navigator: Navigator? = null
 
-            val routing = routing(parentCoroutineContext = coroutineContext) {
-                install(VoyagerResources)
+            val routing =
+                routing(parentCoroutineContext = coroutineContext) {
+                    install(VoyagerResources)
 
-                screen<FakeResourceScreen<VoyagerResult>>()
-            }
+                    screen<FakeResourceScreen<VoyagerResult>>()
+                }
 
             composition.setContent {
                 VoyagerRouting(
@@ -228,27 +236,30 @@ internal class VoyagerResourcesRoutingTest {
 
             // WHEN
             routing.push(
-                resource = FakeResourceScreen<VoyagerResult>().apply {
-                    content = "Hey, I am the pushed screen number ${counter++}"
-                }
+                resource =
+                    FakeResourceScreen<VoyagerResult>().apply {
+                        content = "Hey, I am the pushed screen number ${counter++}"
+                    },
             )
             advanceTimeBy(99) // Ask for routing
             clock.sendFrame(0L) // Ask for recomposition
             val firstPushedScreen = navigator?.lastItemOrNull as? FakeResourceScreen<VoyagerResult>
 
             routing.push(
-                resource = FakeResourceScreen<VoyagerResult>().apply {
-                    content = "Hey, I am the pushed screen number ${counter++}"
-                }
+                resource =
+                    FakeResourceScreen<VoyagerResult>().apply {
+                        content = "Hey, I am the pushed screen number ${counter++}"
+                    },
             )
             advanceTimeBy(99) // Ask for routing
             clock.sendFrame(0L) // Ask for recomposition
             val secondPushedScreen = navigator?.lastItemOrNull as? FakeResourceScreen<VoyagerResult>
 
             routing.replaceAll(
-                resource = FakeResourceScreen<VoyagerResult>().apply {
-                    content = "Hey, I am the replaced all screen"
-                }
+                resource =
+                    FakeResourceScreen<VoyagerResult>().apply {
+                        content = "Hey, I am the replaced all screen"
+                    },
             )
             advanceTimeBy(99) // Ask for routing
             clock.sendFrame(0L) // Ask for recomposition
@@ -259,19 +270,19 @@ internal class VoyagerResourcesRoutingTest {
             assertEquals(
                 true,
                 firstPushedScreen?.disposed,
-                "First pushed screen should be disposed"
+                "First pushed screen should be disposed",
             )
             assertEquals("Hey, I am the pushed screen number 2", secondPushedScreen?.composed)
             assertEquals(
                 true,
                 secondPushedScreen?.disposed,
-                "Second pushed screen should be disposed"
+                "Second pushed screen should be disposed",
             )
             assertEquals("Hey, I am the replaced all screen", replacedAllScreen?.composed)
             assertEquals(
                 false,
                 replacedAllScreen?.disposed,
-                "Replaced all screen should not be disposed"
+                "Replaced all screen should not be disposed",
             )
         }
 
@@ -282,27 +293,28 @@ internal class VoyagerResourcesRoutingTest {
             var counter = 1
             var navigator: Navigator? = null
 
-            val routing = routing(parentCoroutineContext = coroutineContext) {
-                install(VoyagerResources)
+            val routing =
+                routing(parentCoroutineContext = coroutineContext) {
+                    install(VoyagerResources)
 
-                screen<Path> {
-                    FakeResourceScreen<VoyagerResult>().apply {
-                        content = "Hey, I am the pushed screen number ${counter++}"
+                    screen<Path> {
+                        FakeResourceScreen<VoyagerResult>().apply {
+                            content = "Hey, I am the pushed screen number ${counter++}"
+                        }
+                    }
+
+                    screen<Path.Id> {
+                        FakeResourceScreen<VoyagerResult>().apply {
+                            content = "Hey, I am the pushed screen number ${counter++}"
+                        }
+                    }
+
+                    screen<Path.Name> {
+                        FakeResourceScreen<VoyagerResult>().apply {
+                            content = "Hey, I am the replaced all screen"
+                        }
                     }
                 }
-
-                screen<Path.Id> {
-                    FakeResourceScreen<VoyagerResult>().apply {
-                        content = "Hey, I am the pushed screen number ${counter++}"
-                    }
-                }
-
-                screen<Path.Name> {
-                    FakeResourceScreen<VoyagerResult>().apply {
-                        content = "Hey, I am the replaced all screen"
-                    }
-                }
-            }
 
             composition.setContent {
                 VoyagerRouting(
@@ -335,19 +347,19 @@ internal class VoyagerResourcesRoutingTest {
             assertEquals(
                 true,
                 firstPushedScreen?.disposed,
-                "First pushed screen should be disposed"
+                "First pushed screen should be disposed",
             )
             assertEquals("Hey, I am the pushed screen number 2", secondPushedScreen?.composed)
             assertEquals(
                 true,
                 secondPushedScreen?.disposed,
-                "Second pushed screen should be disposed"
+                "Second pushed screen should be disposed",
             )
             assertEquals("Hey, I am the replaced all screen", replacedAllScreen?.composed)
             assertEquals(
                 false,
                 replacedAllScreen?.disposed,
-                "Replaced all screen should not be disposed"
+                "Replaced all screen should not be disposed",
             )
         }
 
@@ -357,18 +369,20 @@ internal class VoyagerResourcesRoutingTest {
             // GIVEN
             var navigator: Navigator? = null
 
-            val routing = routing(parentCoroutineContext = coroutineContext) {
-                install(VoyagerResources)
+            val routing =
+                routing(parentCoroutineContext = coroutineContext) {
+                    install(VoyagerResources)
 
-                screen<FakeResourceScreen<String>>()
-            }
+                    screen<FakeResourceScreen<String>>()
+                }
 
             composition.setContent {
                 VoyagerRouting(
                     routing = routing,
-                    initialScreen = FakeResourceScreen<VoyagerResult>().apply {
-                        content = "I am the initial screen"
-                    },
+                    initialScreen =
+                        FakeResourceScreen<VoyagerResult>().apply {
+                            content = "I am the initial screen"
+                        },
                 ) { nav ->
                     navigator = nav
                     CurrentScreen()
@@ -399,18 +413,20 @@ internal class VoyagerResourcesRoutingTest {
             // GIVEN
             var navigator: Navigator? = null
 
-            val routing = routing(parentCoroutineContext = coroutineContext) {
-                install(VoyagerResources)
+            val routing =
+                routing(parentCoroutineContext = coroutineContext) {
+                    install(VoyagerResources)
 
-                screen<FakeResourceScreen<VoyagerResult>>()
-            }
+                    screen<FakeResourceScreen<VoyagerResult>>()
+                }
 
             composition.setContent {
                 VoyagerRouting(
                     routing = routing,
-                    initialScreen = FakeResourceScreen<VoyagerResult>().apply {
-                        content = "I am the initial screen"
-                    },
+                    initialScreen =
+                        FakeResourceScreen<VoyagerResult>().apply {
+                            content = "I am the initial screen"
+                        },
                 ) { nav ->
                     navigator = nav
                     CurrentScreen()
@@ -434,7 +450,7 @@ internal class VoyagerResourcesRoutingTest {
             // THEN
             assertEquals(
                 VoyagerResult("This is the result provided by pop call"),
-                firstPushedScreen?.parameters
+                firstPushedScreen?.parameters,
             )
         }
 }

@@ -18,7 +18,7 @@ public class SessionProvider<S : Any>(
     public val name: String,
     public val type: KClass<S>,
     public val transport: SessionTransport,
-    public val tracker: SessionTracker<S>
+    public val tracker: SessionTracker<S>,
 ) {
     override fun toString(): String {
         return "SessionProvider(name = $name, type = $type, transport = $transport, tracker = $tracker)"

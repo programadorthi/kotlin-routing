@@ -35,17 +35,18 @@ import io.ktor.util.AttributeKey
 public fun <PluginConfigT : Any> createApplicationPlugin(
     name: String,
     createConfiguration: () -> PluginConfigT,
-    body: PluginBuilder<PluginConfigT>.() -> Unit
-): ApplicationPlugin<PluginConfigT> = object : ApplicationPlugin<PluginConfigT> {
-    override val key: AttributeKey<PluginInstance> = AttributeKey(name)
+    body: PluginBuilder<PluginConfigT>.() -> Unit,
+): ApplicationPlugin<PluginConfigT> =
+    object : ApplicationPlugin<PluginConfigT> {
+        override val key: AttributeKey<PluginInstance> = AttributeKey(name)
 
-    override fun install(
-        pipeline: Application,
-        configure: PluginConfigT.() -> Unit
-    ): PluginInstance {
-        return createPluginInstance(pipeline, pipeline, body, createConfiguration, configure)
+        override fun install(
+            pipeline: Application,
+            configure: PluginConfigT.() -> Unit,
+        ): PluginInstance {
+            return createPluginInstance(pipeline, pipeline, body, createConfiguration, configure)
+        }
     }
-}
 
 /**
  * Creates a [RouteScopedPlugin] that can be installed into a [Route].
@@ -76,24 +77,25 @@ public fun <PluginConfigT : Any> createApplicationPlugin(
 public fun <PluginConfigT : Any> createRouteScopedPlugin(
     name: String,
     createConfiguration: () -> PluginConfigT,
-    body: RouteScopedPluginBuilder<PluginConfigT>.() -> Unit
-): RouteScopedPlugin<PluginConfigT> = object : RouteScopedPlugin<PluginConfigT> {
+    body: RouteScopedPluginBuilder<PluginConfigT>.() -> Unit,
+): RouteScopedPlugin<PluginConfigT> =
+    object : RouteScopedPlugin<PluginConfigT> {
+        override val key: AttributeKey<PluginInstance> = AttributeKey(name)
 
-    override val key: AttributeKey<PluginInstance> = AttributeKey(name)
+        override fun install(
+            pipeline: ApplicationCallPipeline,
+            configure: PluginConfigT.() -> Unit,
+        ): PluginInstance {
+            val application =
+                when (pipeline) {
+                    is Route -> pipeline.application
+                    is Application -> pipeline
+                    else -> error("Unsupported pipeline type: ${pipeline::class}")
+                }
 
-    override fun install(
-        pipeline: ApplicationCallPipeline,
-        configure: PluginConfigT.() -> Unit
-    ): PluginInstance {
-        val application = when (pipeline) {
-            is Route -> pipeline.application
-            is Application -> pipeline
-            else -> error("Unsupported pipeline type: ${pipeline::class}")
+            return createRouteScopedPluginInstance(application, pipeline, body, createConfiguration, configure)
         }
-
-        return createRouteScopedPluginInstance(application, pipeline, body, createConfiguration, configure)
     }
-}
 
 /**
  * Creates an [ApplicationPlugin] that can be installed into an [Application].
@@ -118,7 +120,7 @@ public fun <PluginConfigT : Any> createRouteScopedPlugin(
  **/
 public fun createApplicationPlugin(
     name: String,
-    body: PluginBuilder<Unit>.() -> Unit
+    body: PluginBuilder<Unit>.() -> Unit,
 ): ApplicationPlugin<Unit> = createApplicationPlugin(name, {}, body)
 
 /**
@@ -146,27 +148,28 @@ public fun createApplicationPlugin(
  **/
 public fun createRouteScopedPlugin(
     name: String,
-    body: RouteScopedPluginBuilder<Unit>.() -> Unit
+    body: RouteScopedPluginBuilder<Unit>.() -> Unit,
 ): RouteScopedPlugin<Unit> = createRouteScopedPlugin(name, {}, body)
 
 private fun <
     PipelineT : ApplicationCallPipeline,
-    PluginConfigT : Any
+    PluginConfigT : Any,
     > Plugin<PipelineT, PluginConfigT, PluginInstance>.createPluginInstance(
     application: Application,
     pipeline: ApplicationCallPipeline,
     body: PluginBuilder<PluginConfigT>.() -> Unit,
     createConfiguration: () -> PluginConfigT,
-    configure: PluginConfigT.() -> Unit
+    configure: PluginConfigT.() -> Unit,
 ): PluginInstance {
     val config = createConfiguration().apply(configure)
 
     val currentPlugin = this
-    val pluginBuilder = object : PluginBuilder<PluginConfigT>(currentPlugin.key) {
-        override val application: Application = application
-        override val pipeline: ApplicationCallPipeline = pipeline
-        override val pluginConfig: PluginConfigT = config
-    }
+    val pluginBuilder =
+        object : PluginBuilder<PluginConfigT>(currentPlugin.key) {
+            override val application: Application = application
+            override val pipeline: ApplicationCallPipeline = pipeline
+            override val pluginConfig: PluginConfigT = config
+        }
 
     pluginBuilder.setupPlugin(body)
     return PluginInstance(pluginBuilder)
@@ -174,31 +177,30 @@ private fun <
 
 private fun <
     PipelineT : ApplicationCallPipeline,
-    PluginConfigT : Any
+    PluginConfigT : Any,
     > Plugin<PipelineT, PluginConfigT, PluginInstance>.createRouteScopedPluginInstance(
     application: Application,
     pipeline: ApplicationCallPipeline,
     body: RouteScopedPluginBuilder<PluginConfigT>.() -> Unit,
     createConfiguration: () -> PluginConfigT,
-    configure: PluginConfigT.() -> Unit
+    configure: PluginConfigT.() -> Unit,
 ): PluginInstance {
     val config = createConfiguration().apply(configure)
 
     val currentPlugin = this
-    val pluginBuilder = object : RouteScopedPluginBuilder<PluginConfigT>(currentPlugin.key) {
-        override val application: Application = application
-        override val pipeline: ApplicationCallPipeline = pipeline
-        override val pluginConfig: PluginConfigT = config
-        override val route: Route? = pipeline as? Route
-    }
+    val pluginBuilder =
+        object : RouteScopedPluginBuilder<PluginConfigT>(currentPlugin.key) {
+            override val application: Application = application
+            override val pipeline: ApplicationCallPipeline = pipeline
+            override val pluginConfig: PluginConfigT = config
+            override val route: Route? = pipeline as? Route
+        }
 
     pluginBuilder.setupPlugin(body)
     return PluginInstance(pluginBuilder)
 }
 
-private fun <Configuration : Any, Builder : PluginBuilder<Configuration>> Builder.setupPlugin(
-    body: Builder.() -> Unit
-) {
+private fun <Configuration : Any, Builder : PluginBuilder<Configuration>> Builder.setupPlugin(body: Builder.() -> Unit) {
     apply(body)
 
     callInterceptions.forEach {

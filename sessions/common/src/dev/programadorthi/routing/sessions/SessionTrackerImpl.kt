@@ -13,7 +13,10 @@ public class SessionTrackerImpl<S : Any>(
     private val sessionIdKey: AttributeKey<String> = AttributeKey("$type")
 
     @Suppress("UNCHECKED_CAST")
-    override suspend fun load(call: ApplicationCall, transport: String?): S? {
+    override suspend fun load(
+        call: ApplicationCall,
+        transport: String?,
+    ): S? {
         require(storage is SessionStorageMemory || serializer != null) {
             "To persist a session you must use InMemory SessionStorage or provide a custom SessionSerializer"
         }
@@ -51,7 +54,10 @@ public class SessionTrackerImpl<S : Any>(
         }
     }
 
-    override suspend fun store(call: ApplicationCall, value: S): String {
+    override suspend fun store(
+        call: ApplicationCall,
+        value: S,
+    ): String {
         require(storage is SessionStorageMemory || serializer != null) {
             "To persist a session you must use InMemory SessionStorage or provide a custom SessionSerializer"
         }

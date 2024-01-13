@@ -30,9 +30,7 @@ public fun Route.composable(
 ): Route = route(path = path, name = name, method = method) { composable(body) }
 
 @KtorDsl
-public fun Route.composable(
-    body: @Composable PipelineContext<Unit, ApplicationCall>.() -> Unit,
-) {
+public fun Route.composable(body: @Composable PipelineContext<Unit, ApplicationCall>.() -> Unit) {
     handle {
         composable {
             body(this)
@@ -41,36 +39,34 @@ public fun Route.composable(
 }
 
 @KtorDsl
-public inline fun <reified T : Any> Route.composable(
-    noinline body: @Composable PipelineContext<Unit, ApplicationCall>.(T) -> Unit
-): Route = resource<T> {
-    handle(serializer<T>()) { value ->
-        composable {
-            body(value)
+public inline fun <reified T : Any> Route.composable(noinline body: @Composable PipelineContext<Unit, ApplicationCall>.(T) -> Unit): Route =
+    resource<T> {
+        handle(serializer<T>()) { value ->
+            composable {
+                body(value)
+            }
         }
     }
-}
 
 public inline fun <reified T : Any> Route.composable(
     method: RouteMethod,
-    noinline body: @Composable PipelineContext<Unit, ApplicationCall>.(T) -> Unit
+    noinline body: @Composable PipelineContext<Unit, ApplicationCall>.(T) -> Unit,
 ): Route {
     lateinit var builtRoute: Route
     resource<T> {
-        builtRoute = method(method) {
-            handle(serializer<T>()) { value ->
-                composable {
-                    body(value)
+        builtRoute =
+            method(method) {
+                handle(serializer<T>()) { value ->
+                    composable {
+                        body(value)
+                    }
                 }
             }
-        }
     }
     return builtRoute
 }
 
-public fun PipelineContext<Unit, ApplicationCall>.composable(
-    body: @Composable () -> Unit,
-) {
+public fun PipelineContext<Unit, ApplicationCall>.composable(body: @Composable () -> Unit) {
     // Avoiding recompose same content on a popped call
     if (call.isPop()) return
 

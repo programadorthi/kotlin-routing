@@ -9,7 +9,6 @@ import kotlinx.serialization.modules.SerializersModule
  * Event Resources plugin instance.
  */
 public class EventResourcesConfiguration(configuration: Configuration) {
-
     /**
      * The format instance used to (de)serialize resources instances
      */
@@ -20,7 +19,6 @@ public class EventResourcesConfiguration(configuration: Configuration) {
      */
     @KtorDsl
     public class Configuration {
-
         /**
          * [SerializersModule] used to (de)serialize the Resource instances.
          */

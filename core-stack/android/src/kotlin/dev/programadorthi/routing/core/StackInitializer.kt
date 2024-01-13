@@ -14,7 +14,6 @@ internal class StackInitializer :
     Initializer<Unit>,
     Application.ActivityLifecycleCallbacks,
     StackManagerNotifier {
-
     private val lock = Any()
     private var currentActivity = WeakReference<ComponentActivity?>(null)
 
@@ -32,7 +31,10 @@ internal class StackInitializer :
     //endregion
 
     //region Application.ActivityLifecycleCallbacks
-    override fun onActivityCreated(activity: Activity, bundle: Bundle?) {
+    override fun onActivityCreated(
+        activity: Activity,
+        bundle: Bundle?,
+    ) {
         updateCurrentActivity(activity = activity)
     }
 
@@ -41,14 +43,24 @@ internal class StackInitializer :
     }
 
     override fun onActivityResumed(p0: Activity) {}
+
     override fun onActivityPaused(p0: Activity) {}
+
     override fun onActivityStopped(p0: Activity) {}
-    override fun onActivitySaveInstanceState(p0: Activity, p1: Bundle) {}
+
+    override fun onActivitySaveInstanceState(
+        p0: Activity,
+        p1: Bundle,
+    ) {}
+
     override fun onActivityDestroyed(p0: Activity) {}
     //endregion
 
     //region StackManagerNotifier
-    override fun onRegistered(providerId: String, stackManager: StackManager) = synchronized(lock) {
+    override fun onRegistered(
+        providerId: String,
+        stackManager: StackManager,
+    ) = synchronized(lock) {
         val registry = currentActivity.get()?.savedStateRegistry ?: return
         processRegistry(
             registry = registry,
@@ -57,30 +69,32 @@ internal class StackInitializer :
         )
     }
 
-    override fun onUnRegistered(providerId: String) = synchronized(lock) {
-        val registry = currentActivity.get()?.savedStateRegistry ?: return
-        registry.unregisterSavedStateProvider(providerId)
-    }
+    override fun onUnRegistered(providerId: String) =
+        synchronized(lock) {
+            val registry = currentActivity.get()?.savedStateRegistry ?: return
+            registry.unregisterSavedStateProvider(providerId)
+        }
     //endregion
 
-    private fun updateCurrentActivity(activity: Activity) = synchronized(lock) {
-        if (activity !is ComponentActivity) {
-            Log.w(
-                "kotlin-routing",
-                "Your activity must be an androidx.activity.ComponentActivity. Current is: $activity"
-            )
-            return
+    private fun updateCurrentActivity(activity: Activity) =
+        synchronized(lock) {
+            if (activity !is ComponentActivity) {
+                Log.w(
+                    "kotlin-routing",
+                    "Your activity must be an androidx.activity.ComponentActivity. Current is: $activity",
+                )
+                return
+            }
+            currentActivity = WeakReference(activity)
+            val registry = activity.savedStateRegistry
+            StackManager.subscriptions().forEach { (providerId, stackManager) ->
+                processRegistry(
+                    registry = registry,
+                    providerId = providerId,
+                    stackManager = stackManager,
+                )
+            }
         }
-        currentActivity = WeakReference(activity)
-        val registry = activity.savedStateRegistry
-        StackManager.subscriptions().forEach { (providerId, stackManager) ->
-            processRegistry(
-                registry = registry,
-                providerId = providerId,
-                stackManager = stackManager,
-            )
-        }
-    }
 
     private fun processRegistry(
         registry: SavedStateRegistry,

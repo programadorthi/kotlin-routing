@@ -8,7 +8,6 @@ package dev.programadorthi.routing.auth
  * A configuration that creates a provider based on the [AuthenticationConfig.provider] block.
  */
 public class DynamicProviderConfig(name: String?) : AuthenticationProvider.Config(name) {
-
     private lateinit var authenticateFunction: (context: AuthenticationContext) -> Unit
 
     public fun authenticate(block: (context: AuthenticationContext) -> Unit) {

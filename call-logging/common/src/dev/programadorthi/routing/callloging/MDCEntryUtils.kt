@@ -12,7 +12,7 @@ internal class MDCEntry(val name: String, val provider: (ApplicationCall) -> Str
 internal suspend inline fun withMDC(
     mdcEntries: List<MDCEntry>,
     call: ApplicationCall,
-    crossinline block: suspend () -> Unit
+    crossinline block: suspend () -> Unit,
 ) {
     withContext(MDCContext(mdcEntries.setup(call))) {
         try {

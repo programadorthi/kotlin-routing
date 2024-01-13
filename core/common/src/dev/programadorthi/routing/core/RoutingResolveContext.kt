@@ -23,7 +23,7 @@ private const val MIN_QUALITY = -Double.MAX_VALUE
 public class RoutingResolveContext(
     public val routing: Routing,
     public val call: ApplicationCall,
-    private val tracers: List<(RoutingResolveTrace) -> Unit>
+    private val tracers: List<(RoutingResolveTrace) -> Unit>,
 ) {
     /**
      * List of path segments parsed out of a [call]
@@ -96,7 +96,7 @@ public class RoutingResolveContext(
         entry: Route,
         segmentIndex: Int,
         trait: ArrayList<RoutingResolveResult.Success>,
-        matchedQuality: Double
+        matchedQuality: Double,
     ): Double {
         val evaluation = entry.selector.evaluate(this, segmentIndex)
 
@@ -104,7 +104,7 @@ public class RoutingResolveContext(
             trace?.skip(
                 entry,
                 segmentIndex,
-                RoutingResolveResult.Failure(entry, "Selector didn't match")
+                RoutingResolveResult.Failure(entry, "Selector didn't match"),
             )
             if (segmentIndex == segments.size) {
                 updateFailedEvaluation(evaluation, trait)
@@ -120,7 +120,7 @@ public class RoutingResolveContext(
             trace?.skip(
                 entry,
                 segmentIndex,
-                RoutingResolveResult.Failure(entry, "Better match was already found")
+                RoutingResolveResult.Failure(entry, "Better match was already found"),
             )
             return MIN_QUALITY
         }
@@ -132,7 +132,7 @@ public class RoutingResolveContext(
             trace?.skip(
                 entry,
                 newIndex,
-                RoutingResolveResult.Failure(entry, "Not all segments matched")
+                RoutingResolveResult.Failure(entry, "Not all segments matched"),
             )
 
             return MIN_QUALITY
@@ -187,9 +187,12 @@ public class RoutingResolveContext(
             val part = finalResolve[index]
             parameters.appendAll(part.parameters)
 
-            val partQuality = if (part.quality == RouteSelectorEvaluation.qualityTransparent) {
-                RouteSelectorEvaluation.qualityConstant
-            } else part.quality
+            val partQuality =
+                if (part.quality == RouteSelectorEvaluation.qualityTransparent) {
+                    RouteSelectorEvaluation.qualityConstant
+                } else {
+                    part.quality
+                }
 
             quality = minOf(quality, partQuality)
         }
@@ -230,7 +233,7 @@ public class RoutingResolveContext(
 
     private fun updateFailedEvaluation(
         new: RouteSelectorEvaluation.Failure,
-        trait: ArrayList<RoutingResolveResult.Success>
+        trait: ArrayList<RoutingResolveResult.Success>,
     ) {
         val current = failedEvaluation ?: return
         if ((current.quality < new.quality || failedEvaluationDepth < trait.size) &&
@@ -265,6 +268,8 @@ public class RoutingResolveContext(
         return pathValue
     }
 
-    private fun mergeParts(first: List<String>, second: List<String>): String =
-        (first + second).joinToString(separator = "/")
+    private fun mergeParts(
+        first: List<String>,
+        second: List<String>,
+    ): String = (first + second).joinToString(separator = "/")
 }

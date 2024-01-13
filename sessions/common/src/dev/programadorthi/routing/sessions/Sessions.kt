@@ -25,44 +25,47 @@ internal val SessionProvidersKey = AttributeKey<List<SessionProvider<*>>>("Sessi
  * You can learn more from [Sessions](https://ktor.io/docs/sessions.html).
  * @property providers list of session providers
  */
-public val Sessions: RouteScopedPlugin<SessionsConfig> = createRouteScopedPlugin("Sessions", ::SessionsConfig) {
-    val parentProviders = generateSequence(seed = environment?.parentRouting) { it.parent?.asRouting }
-        .mapNotNull { it.application.attributes.getOrNull(SessionProvidersKey) }
-        .flatten()
-        .toList()
-        .reversed()
+public val Sessions: RouteScopedPlugin<SessionsConfig> =
+    createRouteScopedPlugin("Sessions", ::SessionsConfig) {
+        val parentProviders =
+            generateSequence(seed = environment?.parentRouting) { it.parent?.asRouting }
+                .mapNotNull { it.application.attributes.getOrNull(SessionProvidersKey) }
+                .flatten()
+                .toList()
+                .reversed()
 
-    val providers = parentProviders + pluginConfig.providers.toList()
-    val logger = application.log
+        val providers = parentProviders + pluginConfig.providers.toList()
+        val logger = application.log
 
-    application.attributes.put(SessionProvidersKey, providers)
+        application.attributes.put(SessionProvidersKey, providers)
 
-    onCall { call ->
-        // For each call, call each provider and retrieve session data if needed.
-        // Capture data in the attribute's value
-        val providerData = providers.associateBy({ it.name }) {
-            it.receiveSessionData(call)
+        onCall { call ->
+            // For each call, call each provider and retrieve session data if needed.
+            // Capture data in the attribute's value
+            val providerData =
+                providers.associateBy({ it.name }) {
+                    it.receiveSessionData(call)
+                }
+
+            if (providerData.isEmpty()) {
+                logger.trace("No sessions found for ${call.uri}")
+            } else {
+                val sessions = providerData.keys.joinToString()
+                logger.trace("Sessions found for ${call.uri}: $sessions")
+            }
+            val sessionData = SessionData(providerData)
+            call.attributes.put(SessionDataKey, sessionData)
         }
 
-        if (providerData.isEmpty()) {
-            logger.trace("No sessions found for ${call.uri}")
-        } else {
-            val sessions = providerData.keys.joinToString()
-            logger.trace("Sessions found for ${call.uri}: $sessions")
+        // When response is being sent, call each provider to update/remove session data
+        on(ResponseSent) { call ->
+            val sessionData = call.attributes.getOrNull(SessionDataKey) ?: return@on
+
+            sessionData.providerData.values.forEach { data ->
+                logger.trace("Sending session data for ${call.uri}: ${data.provider.name}")
+                data.sendSessionData(call)
+            }
+
+            sessionData.commit()
         }
-        val sessionData = SessionData(providerData)
-        call.attributes.put(SessionDataKey, sessionData)
     }
-
-    // When response is being sent, call each provider to update/remove session data
-    on(ResponseSent) { call ->
-        val sessionData = call.attributes.getOrNull(SessionDataKey) ?: return@on
-
-        sessionData.providerData.values.forEach { data ->
-            logger.trace("Sending session data for ${call.uri}: ${data.provider.name}")
-            data.sendSessionData(call)
-        }
-
-        sessionData.commit()
-    }
-}

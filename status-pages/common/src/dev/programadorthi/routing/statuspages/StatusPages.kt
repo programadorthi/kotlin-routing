@@ -25,49 +25,50 @@ public typealias HandlerFunction = suspend (call: ApplicationCall, cause: Throwa
 /**
  * A plugin that handles exceptions and status codes. Useful to configure default error pages.
  */
-public val StatusPages: ApplicationPlugin<StatusPagesConfig> = createApplicationPlugin(
-    "StatusPages",
-    ::StatusPagesConfig
-) {
-    val statusPageMarker = AttributeKey<Unit>("StatusPagesTriggered")
+public val StatusPages: ApplicationPlugin<StatusPagesConfig> =
+    createApplicationPlugin(
+        "StatusPages",
+        ::StatusPagesConfig,
+    ) {
+        val statusPageMarker = AttributeKey<Unit>("StatusPagesTriggered")
 
-    val exceptions = HashMap(pluginConfig.exceptions)
-    val unhandled = pluginConfig.unhandled
+        val exceptions = HashMap(pluginConfig.exceptions)
+        val unhandled = pluginConfig.unhandled
 
-    fun findHandlerByValue(cause: Throwable): HandlerFunction? {
-        val keys = exceptions.keys.filter { cause.instanceOf(it) }
-        if (keys.isEmpty()) return null
+        fun findHandlerByValue(cause: Throwable): HandlerFunction? {
+            val keys = exceptions.keys.filter { cause.instanceOf(it) }
+            if (keys.isEmpty()) return null
 
-        if (keys.size == 1) {
-            return exceptions[keys.single()]
+            if (keys.size == 1) {
+                return exceptions[keys.single()]
+            }
+
+            val key = selectNearestParentClass(cause, keys)
+            return exceptions[key]
         }
 
-        val key = selectNearestParentClass(cause, keys)
-        return exceptions[key]
-    }
+        on(CallFailed) { call, cause ->
+            if (call.attributes.contains(statusPageMarker)) return@on
 
-    on(CallFailed) { call, cause ->
-        if (call.attributes.contains(statusPageMarker)) return@on
+            LOGGER.trace("Call ${call.uri} failed with cause $cause")
 
-        LOGGER.trace("Call ${call.uri} failed with cause $cause")
+            val handler = findHandlerByValue(cause)
+            if (handler == null) {
+                LOGGER.trace("No handler found for exception: $cause for call ${call.uri}")
+                throw cause
+            }
 
-        val handler = findHandlerByValue(cause)
-        if (handler == null) {
-            LOGGER.trace("No handler found for exception: $cause for call ${call.uri}")
-            throw cause
+            call.attributes.put(statusPageMarker, Unit)
+            call.application.mdcProvider.withMDCBlock(call) {
+                LOGGER.trace("Executing $handler for exception $cause for call ${call.uri}")
+                handler(call, cause)
+            }
         }
 
-        call.attributes.put(statusPageMarker, Unit)
-        call.application.mdcProvider.withMDCBlock(call) {
-            LOGGER.trace("Executing $handler for exception $cause for call ${call.uri}")
-            handler(call, cause)
+        on(BeforeFallback) { call ->
+            unhandled(call)
         }
     }
-
-    on(BeforeFallback) { call ->
-        unhandled(call)
-    }
-}
 
 /**
  * A [StatusPages] plugin configuration.
@@ -84,16 +85,15 @@ public class StatusPagesConfig {
     /**
      * Register an exception [handler] for the exception type [T] and its children.
      */
-    public inline fun <reified T : Throwable> exception(
-        noinline handler: suspend (call: ApplicationCall, cause: T) -> Unit
-    ): Unit = exception(T::class, handler)
+    public inline fun <reified T : Throwable> exception(noinline handler: suspend (call: ApplicationCall, cause: T) -> Unit): Unit =
+        exception(T::class, handler)
 
     /**
      * Register an exception [handler] for the exception class [klass] and its children.
      */
     public fun <T : Throwable> exception(
         klass: KClass<T>,
-        handler: suspend (call: ApplicationCall, T) -> Unit
+        handler: suspend (call: ApplicationCall, T) -> Unit,
     ) {
         @Suppress("UNCHECKED_CAST")
         val cast = handler as suspend (ApplicationCall, Throwable) -> Unit
