@@ -2,11 +2,8 @@ package dev.programadorthi.routing.voyager
 
 import cafe.adriel.voyager.core.screen.Screen
 import cafe.adriel.voyager.navigator.Navigator
-import dev.programadorthi.routing.core.RouteMethod
 import dev.programadorthi.routing.core.Routing
 import dev.programadorthi.routing.core.application
-import dev.programadorthi.routing.core.call
-import io.ktor.http.Parameters
 
 public fun Routing.canPop(): Boolean = application.voyagerNavigator.canPop
 
@@ -25,72 +22,6 @@ public fun Routing.popUntil(
     if (navigator.popUntil(predicate)) {
         navigator.trySendPopResult(result)
     }
-}
-
-public fun Routing.push(
-    path: String,
-    parameters: Parameters = Parameters.Empty,
-) {
-    call(
-        uri = path,
-        parameters = parameters,
-        routeMethod = RouteMethod.Push,
-    )
-}
-
-public fun Routing.pushNamed(
-    name: String,
-    parameters: Parameters = Parameters.Empty,
-) {
-    call(
-        name = name,
-        parameters = parameters,
-        routeMethod = RouteMethod.Push,
-    )
-}
-
-public fun Routing.replace(
-    path: String,
-    parameters: Parameters = Parameters.Empty,
-) {
-    call(
-        uri = path,
-        parameters = parameters,
-        routeMethod = RouteMethod.Replace,
-    )
-}
-
-public fun Routing.replaceNamed(
-    name: String,
-    parameters: Parameters = Parameters.Empty,
-) {
-    call(
-        name = name,
-        parameters = parameters,
-        routeMethod = RouteMethod.Replace,
-    )
-}
-
-public fun Routing.replaceAll(
-    path: String,
-    parameters: Parameters = Parameters.Empty,
-) {
-    call(
-        uri = path,
-        parameters = parameters,
-        routeMethod = RouteMethod.ReplaceAll,
-    )
-}
-
-public fun Routing.replaceAllNamed(
-    name: String,
-    parameters: Parameters = Parameters.Empty,
-) {
-    call(
-        name = name,
-        parameters = parameters,
-        routeMethod = RouteMethod.ReplaceAll,
-    )
 }
 
 @Suppress("UNCHECKED_CAST")

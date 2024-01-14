@@ -13,8 +13,6 @@ import kotlinx.coroutines.test.runTest
 import kotlin.test.BeforeTest
 import kotlin.test.Test
 import kotlin.test.assertEquals
-import kotlin.test.assertFails
-import kotlin.test.assertIs
 import kotlin.test.assertNotNull
 import kotlin.test.assertNull
 
@@ -24,26 +22,6 @@ class StackRoutingTest {
     fun beforeEachTest() {
         StackManager.stackManagerNotifier = null
     }
-
-    @Test
-    fun shouldFailWhenMissingStackPlugin() =
-        runTest {
-            // GIVEN
-            val routing =
-                routing {
-                    route(path = "/path") {}
-                }
-
-            // WHEN
-            val result =
-                assertFails {
-                    routing.push(path = "/path")
-                }
-
-            // THEN
-            assertIs<IllegalStateException>(result)
-            assertEquals("StackRouting plugin not installed", result.message)
-        }
 
     @Test
     fun shouldPushAPath() =
@@ -472,35 +450,6 @@ class StackRoutingTest {
             assertEquals("", "${result?.name}")
             assertEquals(RouteMethod.Push, result?.routeMethod)
             assertEquals(parametersOf("number", "123"), result?.parameters)
-        }
-
-    @Test
-    fun shouldNeglectARouteWhenFlagged() =
-        runTest {
-            // GIVEN
-            val job = Job()
-            var result: ApplicationCall? = null
-
-            val routing =
-                routing(parentCoroutineContext = coroutineContext + job) {
-                    install(StackRouting)
-
-                    handle(path = "/path") {
-                        result = call
-                        job.complete()
-                    }
-                }
-
-            // WHEN
-            routing.push(path = "/path", neglect = true)
-            advanceTimeBy(99)
-
-            // THEN
-            assertNotNull(result)
-            assertEquals("/path", "${result?.uri}")
-            assertEquals("", "${result?.name}")
-            assertEquals(RouteMethod.Push, result?.routeMethod)
-            assertEquals(parametersOf(), result?.parameters)
         }
 
     @Test

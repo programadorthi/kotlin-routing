@@ -1,23 +1,16 @@
 package dev.programadorthi.routing.compose
 
 import androidx.compose.runtime.Composable
-import androidx.compose.runtime.MutableState
-import dev.programadorthi.routing.core.application.Application
-import dev.programadorthi.routing.core.application.ApplicationCall
+import androidx.compose.runtime.snapshots.SnapshotStateList
+import dev.programadorthi.routing.core.Routing
 import io.ktor.util.AttributeKey
 
 public typealias Content = @Composable () -> Unit
 
-private val ComposeRoutingAttributeKey: AttributeKey<MutableState<Content>> =
+private val ComposeRoutingAttributeKey: AttributeKey<SnapshotStateList<Content>> =
     AttributeKey("ComposeRoutingAttributeKey")
 
-internal var ApplicationCall.content: Content
-    get() = application.contentState.value
-    set(value) {
-        application.contentState.value = value
-    }
-
-internal var Application.contentState: MutableState<Content>
+internal var Routing.contentList: SnapshotStateList<Content>
     get() = attributes[ComposeRoutingAttributeKey]
     set(value) {
         attributes.put(ComposeRoutingAttributeKey, value)

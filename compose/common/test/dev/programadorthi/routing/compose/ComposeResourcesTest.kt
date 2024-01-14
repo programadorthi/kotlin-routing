@@ -3,11 +3,9 @@ package dev.programadorthi.routing.compose
 import dev.programadorthi.routing.compose.helper.FakeContent
 import dev.programadorthi.routing.compose.helper.runComposeTest
 import dev.programadorthi.routing.core.RouteMethod
-import dev.programadorthi.routing.core.StackRouting
 import dev.programadorthi.routing.core.application.ApplicationCall
 import dev.programadorthi.routing.core.application.call
 import dev.programadorthi.routing.core.install
-import dev.programadorthi.routing.core.pop
 import dev.programadorthi.routing.core.routing
 import dev.programadorthi.routing.resources.Resources
 import dev.programadorthi.routing.resources.execute
@@ -43,7 +41,7 @@ class ComposeResourcesTest {
                 routing(parentCoroutineContext = coroutineContext) {
                     install(Resources)
 
-                    composable<Path>(method = RouteMethod.Empty) {
+                    composable<Path>(method = RouteMethod.Push) {
                         result = call
                         path = it
                         fakeContent.content = "I'm the path based content"
@@ -62,7 +60,7 @@ class ComposeResourcesTest {
             }
 
             // WHEN
-            routing.execute(Path())
+            routing.execute(resource = Path(), routeMethod = RouteMethod.Push)
             advanceTimeBy(99) // Ask for routing
             clock.sendFrame(0L) // Ask for recomposition
 
@@ -71,7 +69,7 @@ class ComposeResourcesTest {
             assertEquals("I'm the path based content", fakeContent.result)
             assertEquals("/path", "${result?.uri}")
             assertEquals("", "${result?.name}")
-            assertEquals(RouteMethod.Empty, result?.routeMethod)
+            assertEquals(RouteMethod.Push, result?.routeMethod)
             assertEquals(Parameters.Empty, result?.parameters)
         }
 
@@ -86,7 +84,6 @@ class ComposeResourcesTest {
             val routing =
                 routing(parentCoroutineContext = coroutineContext) {
                     install(Resources)
-                    install(StackRouting)
 
                     composable<Path>(method = RouteMethod.Push) {
                         result = call
@@ -131,7 +128,6 @@ class ComposeResourcesTest {
             val routing =
                 routing(parentCoroutineContext = coroutineContext) {
                     install(Resources)
-                    install(StackRouting)
 
                     composable<Path> {
                         result = call
@@ -176,7 +172,6 @@ class ComposeResourcesTest {
             val routing =
                 routing(parentCoroutineContext = coroutineContext) {
                     install(Resources)
-                    install(StackRouting)
 
                     composable<Path> {
                         result = call
@@ -221,7 +216,6 @@ class ComposeResourcesTest {
             val routing =
                 routing(parentCoroutineContext = coroutineContext) {
                     install(Resources)
-                    install(StackRouting)
 
                     composable<Path.Id> {
                         result = call
@@ -267,7 +261,6 @@ class ComposeResourcesTest {
             val routing =
                 routing(parentCoroutineContext = coroutineContext) {
                     install(Resources)
-                    install(StackRouting)
 
                     composable<Path.Id> {
                         result = call
@@ -313,7 +306,6 @@ class ComposeResourcesTest {
             val routing =
                 routing(parentCoroutineContext = coroutineContext) {
                     install(Resources)
-                    install(StackRouting)
 
                     composable<Path.Id> {
                         result = call
@@ -359,7 +351,6 @@ class ComposeResourcesTest {
             val routing =
                 routing(parentCoroutineContext = coroutineContext) {
                     install(Resources)
-                    install(StackRouting)
 
                     composable<Path.Id> {
                         result = call
@@ -392,24 +383,15 @@ class ComposeResourcesTest {
             routing.pop()
             advanceTimeBy(99)
             clock.sendFrame(0L)
-            routing.pop()
-            advanceTimeBy(99)
-            clock.sendFrame(0L)
-            routing.pop()
-            advanceTimeBy(99) // Ask for routing
-            clock.sendFrame(0L) // Ask for recomposition
 
             // THEN
             assertNotNull(result)
             assertEquals("I'm the reactive based content", fakeContent.result)
-            assertEquals("/path/1", "${result?.uri}")
+            assertEquals("/path/2", "${result?.uri}")
             assertEquals("", "${result?.name}")
             assertEquals(RouteMethod.Push, result?.routeMethod)
-            assertEquals(parametersOf("id", listOf("1")), result?.parameters)
-            // 1, 2, 3 are pushed
-            // 3 is skipped and 2 is called to compose
-            // 2 is skipped and 1 is called to compose
-            assertEquals(listOf(1, 2, 3, 2, 1), ids.map { it.id })
+            assertEquals(parametersOf("id", listOf("2")), result?.parameters)
+            assertEquals(listOf(1, 2, 3, 2), ids.map { it.id })
         }
 
     @Test
@@ -422,7 +404,6 @@ class ComposeResourcesTest {
             val routing =
                 routing(parentCoroutineContext = coroutineContext) {
                     install(Resources)
-                    install(StackRouting)
 
                     composable<Path.Id> {
                         result += call to it
@@ -453,9 +434,6 @@ class ComposeResourcesTest {
             clock.sendFrame(0L) // Ask for recomposition
             routing.replaceAll(Path.Id(id = 4))
             advanceTimeBy(99)
-            clock.sendFrame(0L) // Ask for recomposition
-            routing.pop()
-            advanceTimeBy(99) // Ask for routing
             clock.sendFrame(0L) // Ask for recomposition
 
             // THEN

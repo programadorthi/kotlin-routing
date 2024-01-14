@@ -3,16 +3,14 @@ package dev.programadorthi.routing.compose
 import androidx.compose.runtime.Composable
 import dev.programadorthi.routing.core.Route
 import dev.programadorthi.routing.core.RouteMethod
+import dev.programadorthi.routing.core.Routing
 import dev.programadorthi.routing.core.application.ApplicationCall
 import dev.programadorthi.routing.core.application.call
-import dev.programadorthi.routing.core.isPop
-import dev.programadorthi.routing.core.method
+import dev.programadorthi.routing.core.asRouting
 import dev.programadorthi.routing.core.route
 import dev.programadorthi.routing.resources.handle
-import dev.programadorthi.routing.resources.resource
 import io.ktor.util.pipeline.PipelineContext
 import io.ktor.utils.io.KtorDsl
-import kotlinx.serialization.serializer
 
 @KtorDsl
 public fun Route.composable(
@@ -31,44 +29,56 @@ public fun Route.composable(
 
 @KtorDsl
 public fun Route.composable(body: @Composable PipelineContext<Unit, ApplicationCall>.() -> Unit) {
+    val routing = asRouting ?: error("Your route $this must have a parent Routing")
     handle {
-        composable {
-            body(this)
+        composable(routing) {
+            body()
         }
     }
 }
 
 @KtorDsl
-public inline fun <reified T : Any> Route.composable(noinline body: @Composable PipelineContext<Unit, ApplicationCall>.(T) -> Unit): Route =
-    resource<T> {
-        handle(serializer<T>()) { value ->
-            composable {
-                body(value)
-            }
+public inline fun <reified T : Any> Route.composable(noinline body: @Composable PipelineContext<Unit, ApplicationCall>.(T) -> Unit): Route {
+    val routing = asRouting ?: error("Your route $this must have a parent Routing")
+    return handle<T> { resource ->
+        composable(routing) {
+            body(resource)
         }
     }
+}
 
 public inline fun <reified T : Any> Route.composable(
     method: RouteMethod,
     noinline body: @Composable PipelineContext<Unit, ApplicationCall>.(T) -> Unit,
 ): Route {
-    lateinit var builtRoute: Route
-    resource<T> {
-        builtRoute =
-            method(method) {
-                handle(serializer<T>()) { value ->
-                    composable {
-                        body(value)
-                    }
-                }
-            }
+    val routing = asRouting ?: error("Your route $this must have a parent Routing")
+    return handle<T>(method = method) { resource ->
+        composable(routing) {
+            body(resource)
+        }
     }
-    return builtRoute
 }
 
-public fun PipelineContext<Unit, ApplicationCall>.composable(body: @Composable () -> Unit) {
-    // Avoiding recompose same content on a popped call
-    if (call.isPop()) return
+public fun PipelineContext<Unit, ApplicationCall>.composable(
+    routing: Routing,
+    body: @Composable () -> Unit,
+) {
+    val stateList = routing.contentList
+    when (call.routeMethod) {
+        RouteMethod.Push -> stateList.add(body)
+        RouteMethod.Replace -> {
+            stateList.removeLastOrNull()
+            stateList.add(body)
+        }
+        RouteMethod.ReplaceAll -> {
+            stateList.clear()
+            stateList.add(body)
+        }
 
-    call.content = body
+        else ->
+            error(
+                "Compose needs a stack route method to work. You called a composable ${call.uri} " +
+                    "using route method ${call.routeMethod} that is not supported",
+            )
+    }
 }

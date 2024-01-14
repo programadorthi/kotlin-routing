@@ -3,14 +3,9 @@ package dev.programadorthi.routing.compose
 import dev.programadorthi.routing.compose.helper.FakeContent
 import dev.programadorthi.routing.compose.helper.runComposeTest
 import dev.programadorthi.routing.core.RouteMethod
-import dev.programadorthi.routing.core.StackRouting
 import dev.programadorthi.routing.core.application.ApplicationCall
 import dev.programadorthi.routing.core.application.call
 import dev.programadorthi.routing.core.call
-import dev.programadorthi.routing.core.handle
-import dev.programadorthi.routing.core.install
-import dev.programadorthi.routing.core.isPop
-import dev.programadorthi.routing.core.pop
 import dev.programadorthi.routing.core.push
 import dev.programadorthi.routing.core.replace
 import dev.programadorthi.routing.core.replaceAll
@@ -73,7 +68,7 @@ internal class ComposeRoutingTest {
             }
 
             // WHEN
-            routing.call(uri = "/path")
+            routing.call(uri = "/path", routeMethod = RouteMethod.Push)
             advanceTimeBy(99) // Ask for routing
             clock.sendFrame(0L) // Ask for recomposition
 
@@ -106,45 +101,12 @@ internal class ComposeRoutingTest {
             }
 
             // WHEN
-            routing.call(name = "path")
+            routing.call(name = "path", routeMethod = RouteMethod.Push)
             advanceTimeBy(99) // Ask for routing
             clock.sendFrame(0L) // Ask for recomposition
 
             // THEN
             assertEquals("I'm the name based content", fakeContent.result)
-        }
-
-    @Test
-    fun shouldComposeByCustomRouteMethod() =
-        runComposeTest { coroutineContext, composition, clock ->
-            // GIVEN
-            val fakeContent = FakeContent()
-
-            val routing =
-                routing(parentCoroutineContext = coroutineContext) {
-                    composable(path = "/path", method = RouteMethod.Empty) {
-                        fakeContent.content = "I'm the route method based content"
-                        fakeContent.Composable()
-                    }
-                }
-
-            composition.setContent {
-                Routing(
-                    routing = routing,
-                    initial = {
-                        fakeContent.content = "I'm the initial content"
-                        fakeContent.Composable()
-                    },
-                )
-            }
-
-            // WHEN
-            routing.call(uri = "/path", routeMethod = RouteMethod.Empty)
-            advanceTimeBy(99) // Ask for routing
-            clock.sendFrame(0L) // Ask for recomposition
-
-            // THEN
-            assertEquals("I'm the route method based content", fakeContent.result)
         }
 
     @Test
@@ -174,7 +136,7 @@ internal class ComposeRoutingTest {
             }
 
             // WHEN
-            routing.call(uri = "/any")
+            routing.call(uri = "/any", routeMethod = RouteMethod.Push)
             advanceTimeBy(99) // Ask for routing
             clock.sendFrame(0L) // Ask for recomposition
 
@@ -191,8 +153,6 @@ internal class ComposeRoutingTest {
 
             val routing =
                 routing(parentCoroutineContext = coroutineContext) {
-                    install(StackRouting)
-
                     composable(path = "/path") {
                         result = call
                         fakeContent.content = "I'm the push based content"
@@ -234,8 +194,6 @@ internal class ComposeRoutingTest {
 
             val routing =
                 routing(parentCoroutineContext = coroutineContext) {
-                    install(StackRouting)
-
                     composable(path = "/push") {
                         pushContent.content = "I'm the push based content"
                         pushContent.Composable()
@@ -286,8 +244,6 @@ internal class ComposeRoutingTest {
 
             val routing =
                 routing(parentCoroutineContext = coroutineContext) {
-                    install(StackRouting)
-
                     composable(path = "/push") {
                         pushContent.content = "I'm the push based content"
                         pushContent.Composable()
@@ -332,26 +288,12 @@ internal class ComposeRoutingTest {
     fun shouldPopAComposable() =
         runComposeTest { coroutineContext, composition, clock ->
             // GIVEN
-            var poppedCall: ApplicationCall? = null
-            var result: ApplicationCall? = null
-            var pushedCounter = 0
+            var composedCounter = 0
 
             val routing =
                 routing(parentCoroutineContext = coroutineContext) {
-                    install(StackRouting)
-
                     composable(path = "/push") {
-                        pushedCounter += 1
-                    }
-                    composable(path = "/pop") {
-                        result = call
-                        if (call.isPop()) {
-                            error("I will never be called in a composable with a pop call")
-                        }
-                    }
-
-                    handle(path = "/pop") {
-                        poppedCall = call
+                        composedCounter += 1
                     }
                 }
 
@@ -367,7 +309,7 @@ internal class ComposeRoutingTest {
             advanceTimeBy(99) // Ask for routing
             clock.sendFrame(0L) // Ask for recomposition
 
-            routing.push(path = "/pop")
+            routing.push(path = "/push")
             advanceTimeBy(99) // Ask for routing
             clock.sendFrame(0L) // Ask for recomposition
 
@@ -376,14 +318,6 @@ internal class ComposeRoutingTest {
             clock.sendFrame(0L) // Ask for recomposition
 
             // THEN
-            assertEquals(2, pushedCounter)
-            assertEquals("/pop", "${result?.uri}")
-            assertEquals("", "${result?.name}")
-            assertEquals(RouteMethod.Push, result?.routeMethod)
-            assertEquals(Parameters.Empty, result?.parameters)
-            assertEquals("/pop", "${poppedCall?.uri}")
-            assertEquals("", "${poppedCall?.name}")
-            assertEquals(RouteMethod.Pop, poppedCall?.routeMethod)
-            assertEquals(Parameters.Empty, poppedCall?.parameters)
+            assertEquals(3, composedCounter)
         }
 }

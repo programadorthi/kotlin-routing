@@ -13,7 +13,6 @@ kotlin {
     sourceSets {
         commonMain {
             dependencies {
-                api(projects.coreStack)
                 api(projects.resources)
                 implementation(libs.compose.runtime)
             }

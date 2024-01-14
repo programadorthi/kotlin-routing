@@ -4,13 +4,11 @@ import androidx.compose.runtime.Composable
 import androidx.compose.runtime.CompositionLocalProvider
 import androidx.compose.runtime.DisposableEffect
 import androidx.compose.runtime.ProvidableCompositionLocal
-import androidx.compose.runtime.getValue
-import androidx.compose.runtime.mutableStateOf
+import androidx.compose.runtime.mutableStateListOf
 import androidx.compose.runtime.remember
 import androidx.compose.runtime.staticCompositionLocalOf
 import dev.programadorthi.routing.core.Route
 import dev.programadorthi.routing.core.Routing
-import dev.programadorthi.routing.core.application
 import dev.programadorthi.routing.core.routing
 import io.ktor.util.logging.KtorSimpleLogger
 import io.ktor.util.logging.Logger
@@ -28,13 +26,13 @@ public fun Routing(
     initial: Content,
 ) {
     CompositionLocalProvider(LocalRouting provides routing) {
-        val composable by remember(routing) {
-            mutableStateOf(initial).also {
-                routing.application.contentState = it
+        val stateList =
+            remember(routing) {
+                mutableStateListOf<Content>().apply {
+                    routing.contentList = this
+                }
             }
-        }
-
-        composable()
+        stateList.lastOrNull()?.invoke() ?: initial()
     }
 }
 

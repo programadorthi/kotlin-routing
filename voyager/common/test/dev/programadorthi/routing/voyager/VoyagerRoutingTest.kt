@@ -8,6 +8,9 @@ import dev.programadorthi.routing.core.application.createApplicationPlugin
 import dev.programadorthi.routing.core.application.hooks.CallFailed
 import dev.programadorthi.routing.core.call
 import dev.programadorthi.routing.core.install
+import dev.programadorthi.routing.core.push
+import dev.programadorthi.routing.core.replace
+import dev.programadorthi.routing.core.replaceAll
 import dev.programadorthi.routing.core.route
 import dev.programadorthi.routing.core.routing
 import dev.programadorthi.routing.voyager.helper.FakeScreen
