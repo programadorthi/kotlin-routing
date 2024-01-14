@@ -32,17 +32,19 @@ public fun Route.jsRoute(body: PipelineContext<Unit, ApplicationCall>.() -> Elem
         application.routingFlow.emit(body(this))
 
         when (call.routeMethod) {
-            RouteMethod.Push -> window.history.pushState(
-                data = call.toData(),
-                title = "",
-                url = call.uri
-            )
+            RouteMethod.Push ->
+                window.history.pushState(
+                    data = call.toData(),
+                    title = "",
+                    url = call.uri,
+                )
 
-            RouteMethod.Replace -> window.history.replaceState(
-                data = call.toData(),
-                title = "",
-                url = call.uri
-            )
+            RouteMethod.Replace ->
+                window.history.replaceState(
+                    data = call.toData(),
+                    title = "",
+                    url = call.uri,
+                )
 
             else -> TODO("Not implemented yet")
         }
