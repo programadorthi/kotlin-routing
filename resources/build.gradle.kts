@@ -12,7 +12,7 @@ kotlin {
     sourceSets {
         commonMain {
             dependencies {
-                api(projects.coreStack)
+                api(projects.core)
                 api(libs.ktor.resources)
                 api(libs.serialization.core)
             }

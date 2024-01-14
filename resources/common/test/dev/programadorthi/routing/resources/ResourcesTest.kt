@@ -9,9 +9,9 @@ import dev.programadorthi.routing.core.call
 import dev.programadorthi.routing.core.errors.RouteNotFoundException
 import dev.programadorthi.routing.core.install
 import dev.programadorthi.routing.core.routing
+import dev.programadorthi.routing.resources.helper.Path
 import io.ktor.http.Parameters
 import io.ktor.http.parametersOf
-import io.ktor.resources.Resource
 import kotlinx.coroutines.ExperimentalCoroutinesApi
 import kotlinx.coroutines.Job
 import kotlinx.coroutines.test.advanceTimeBy
@@ -23,12 +23,6 @@ import kotlin.test.assertNotNull
 
 @OptIn(ExperimentalCoroutinesApi::class)
 class ResourcesTest {
-    @Resource("/path")
-    class Path {
-        @Resource("{id}")
-        class Id(val parent: Path = Path(), val id: Int)
-    }
-
     @Test
     fun shouldExecuteByType() =
         runTest {

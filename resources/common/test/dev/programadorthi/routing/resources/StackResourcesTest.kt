@@ -1,16 +1,13 @@
 package dev.programadorthi.routing.resources
 
 import dev.programadorthi.routing.core.RouteMethod
-import dev.programadorthi.routing.core.StackRouting
 import dev.programadorthi.routing.core.application.ApplicationCall
 import dev.programadorthi.routing.core.application.call
 import dev.programadorthi.routing.core.install
-import dev.programadorthi.routing.core.isPop
-import dev.programadorthi.routing.core.pop
 import dev.programadorthi.routing.core.routing
+import dev.programadorthi.routing.resources.helper.Path
 import io.ktor.http.Parameters
 import io.ktor.http.parametersOf
-import io.ktor.resources.Resource
 import kotlinx.coroutines.ExperimentalCoroutinesApi
 import kotlinx.coroutines.Job
 import kotlinx.coroutines.test.advanceTimeBy
@@ -21,12 +18,6 @@ import kotlin.test.assertNotNull
 
 @OptIn(ExperimentalCoroutinesApi::class)
 class StackResourcesTest {
-    @Resource("/path")
-    class Path {
-        @Resource("{id}")
-        class Id(val parent: Path = Path(), val id: Int)
-    }
-
     @Test
     fun shouldPushByType() =
         runTest {
@@ -38,9 +29,8 @@ class StackResourcesTest {
             val routing =
                 routing(parentCoroutineContext = coroutineContext + job) {
                     install(Resources)
-                    install(StackRouting)
 
-                    handle<Path> {
+                    handle<Path>(method = RouteMethod.Push) {
                         result = call
                         path = it
                         job.complete()
@@ -71,9 +61,8 @@ class StackResourcesTest {
             val routing =
                 routing(parentCoroutineContext = coroutineContext + job) {
                     install(Resources)
-                    install(StackRouting)
 
-                    handle<Path> {
+                    handle<Path>(method = RouteMethod.Replace) {
                         result = call
                         path = it
                         job.complete()
@@ -104,9 +93,8 @@ class StackResourcesTest {
             val routing =
                 routing(parentCoroutineContext = coroutineContext + job) {
                     install(Resources)
-                    install(StackRouting)
 
-                    handle<Path> {
+                    handle<Path>(method = RouteMethod.ReplaceAll) {
                         result = call
                         path = it
                         job.complete()
@@ -137,9 +125,8 @@ class StackResourcesTest {
             val routing =
                 routing(parentCoroutineContext = coroutineContext + job) {
                     install(Resources)
-                    install(StackRouting)
 
-                    handle<Path.Id> {
+                    handle<Path.Id>(method = RouteMethod.Push) {
                         result = call
                         id = it
                         job.complete()
@@ -170,9 +157,8 @@ class StackResourcesTest {
             val routing =
                 routing(parentCoroutineContext = coroutineContext + job) {
                     install(Resources)
-                    install(StackRouting)
 
-                    handle<Path.Id> {
+                    handle<Path.Id>(method = RouteMethod.Replace) {
                         result = call
                         id = it
                         job.complete()
@@ -203,9 +189,8 @@ class StackResourcesTest {
             val routing =
                 routing(parentCoroutineContext = coroutineContext + job) {
                     install(Resources)
-                    install(StackRouting)
 
-                    handle<Path.Id> {
+                    handle<Path.Id>(method = RouteMethod.ReplaceAll) {
                         result = call
                         id = it
                         job.complete()
@@ -226,7 +211,7 @@ class StackResourcesTest {
         }
 
     @Test
-    fun shouldPopAPushedType() =
+    fun shouldPushedTypeMultipleTimes() =
         runTest {
             // GIVEN
             val job = Job()
@@ -236,9 +221,8 @@ class StackResourcesTest {
             val routing =
                 routing(parentCoroutineContext = coroutineContext + job) {
                     install(Resources)
-                    install(StackRouting)
 
-                    handle<Path.Id> {
+                    handle<Path.Id>(method = RouteMethod.Push) {
                         result = call
                         ids += it
                     }
@@ -251,24 +235,14 @@ class StackResourcesTest {
             advanceTimeBy(99)
             routing.push(Path.Id(id = 3))
             advanceTimeBy(99)
-            routing.pop()
-            advanceTimeBy(99)
-            routing.pop()
-            advanceTimeBy(99)
-            routing.pop()
-            advanceTimeBy(99)
 
             // THEN
             assertNotNull(result)
-            assertEquals("/path/1", "${result?.uri}")
+            assertEquals("/path/3", "${result?.uri}")
             assertEquals("", "${result?.name}")
-            assertEquals(RouteMethod.Pop, result?.routeMethod)
-            assertEquals(parametersOf("id", "1"), result?.parameters)
-            // 1, 2, 3 are pushed
-            // 3, 2 are the first pop (notify 3 for pop and 2 for it route method)
-            // 2, 1 are the second pop (notify 2 for pop and 1 for it route method)
-            // 1 is the last pop (notify 1 for pop and there is no more items on the stack)
-            assertEquals(listOf(1, 2, 3, 3, 2, 2, 1, 1), ids.map { it.id })
+            assertEquals(RouteMethod.Push, result?.routeMethod)
+            assertEquals(parametersOf("id", "3"), result?.parameters)
+            assertEquals(listOf(1, 2, 3), ids.map { it.id })
         }
 
     @Test
@@ -281,11 +255,10 @@ class StackResourcesTest {
             val routing =
                 routing(parentCoroutineContext = coroutineContext + job) {
                     install(Resources)
-                    install(StackRouting)
 
                     handle<Path.Id> { id ->
                         result += call to id
-                        if (call.isPop()) {
+                        if (id.id > 3) {
                             job.complete()
                         }
                     }
@@ -300,8 +273,6 @@ class StackResourcesTest {
             advanceTimeBy(99)
             routing.replaceAll(Path.Id(id = 4))
             advanceTimeBy(99)
-            routing.pop()
-            advanceTimeBy(99)
 
             // THEN
             assertEquals(RouteMethod.Push, result[0].first.routeMethod)
@@ -313,19 +284,7 @@ class StackResourcesTest {
             assertEquals(RouteMethod.Replace, result[2].first.routeMethod)
             assertEquals(3, result[2].second.id)
 
-            assertEquals(RouteMethod.Pop, result[3].first.routeMethod)
-            assertEquals(2, result[3].second.id)
-
-            assertEquals(RouteMethod.ReplaceAll, result[4].first.routeMethod)
-            assertEquals(4, result[4].second.id)
-
-            assertEquals(RouteMethod.Pop, result[5].first.routeMethod)
-            assertEquals(3, result[5].second.id)
-
-            assertEquals(RouteMethod.Pop, result[6].first.routeMethod)
-            assertEquals(1, result[6].second.id)
-
-            assertEquals(RouteMethod.Pop, result[7].first.routeMethod)
-            assertEquals(4, result[7].second.id)
+            assertEquals(RouteMethod.ReplaceAll, result[3].first.routeMethod)
+            assertEquals(4, result[3].second.id)
         }
 }

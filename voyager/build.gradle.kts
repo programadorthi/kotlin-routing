@@ -34,9 +34,7 @@ kotlin {
     sourceSets {
         commonMain {
             dependencies {
-                api(projects.core)
-                api(libs.ktor.resources)
-                api(libs.serialization.core)
+                api(projects.resources)
                 api(libs.voyager.navigator)
                 implementation(libs.compose.runtime)
                 implementation(libs.compose.saveable)

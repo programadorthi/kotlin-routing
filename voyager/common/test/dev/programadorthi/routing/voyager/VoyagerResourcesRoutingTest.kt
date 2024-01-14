@@ -5,6 +5,10 @@ import cafe.adriel.voyager.navigator.Navigator
 import dev.programadorthi.routing.core.application.MissingApplicationPluginException
 import dev.programadorthi.routing.core.install
 import dev.programadorthi.routing.core.routing
+import dev.programadorthi.routing.resources.Resources
+import dev.programadorthi.routing.resources.push
+import dev.programadorthi.routing.resources.replace
+import dev.programadorthi.routing.resources.replaceAll
 import dev.programadorthi.routing.voyager.helper.FakeResourceScreen
 import dev.programadorthi.routing.voyager.helper.Path
 import dev.programadorthi.routing.voyager.helper.VoyagerResult
@@ -28,7 +32,7 @@ internal class VoyagerResourcesRoutingTest {
                 }
             }
         assertIs<MissingApplicationPluginException>(exception)
-        assertEquals("Application plugin VoyagerResources is not installed", exception.message)
+        assertEquals("Application plugin Resources is not installed", exception.message)
     }
 
     @Test
@@ -39,7 +43,7 @@ internal class VoyagerResourcesRoutingTest {
 
             val routing =
                 routing(parentCoroutineContext = coroutineContext) {
-                    install(VoyagerResources)
+                    install(Resources)
 
                     screen<FakeResourceScreen<VoyagerResult>>()
                 }
@@ -78,7 +82,7 @@ internal class VoyagerResourcesRoutingTest {
 
             val routing =
                 routing(parentCoroutineContext = coroutineContext) {
-                    install(VoyagerResources)
+                    install(Resources)
 
                     screen<Path> {
                         FakeResourceScreen<VoyagerResult>().apply {
@@ -116,7 +120,7 @@ internal class VoyagerResourcesRoutingTest {
 
             val routing =
                 routing(parentCoroutineContext = coroutineContext) {
-                    install(VoyagerResources)
+                    install(Resources)
 
                     screen<FakeResourceScreen<VoyagerResult>>()
                 }
@@ -167,7 +171,7 @@ internal class VoyagerResourcesRoutingTest {
 
             val routing =
                 routing(parentCoroutineContext = coroutineContext) {
-                    install(VoyagerResources)
+                    install(Resources)
 
                     screen<Path> {
                         FakeResourceScreen<VoyagerResult>().apply {
@@ -219,7 +223,7 @@ internal class VoyagerResourcesRoutingTest {
 
             val routing =
                 routing(parentCoroutineContext = coroutineContext) {
-                    install(VoyagerResources)
+                    install(Resources)
 
                     screen<FakeResourceScreen<VoyagerResult>>()
                 }
@@ -295,7 +299,7 @@ internal class VoyagerResourcesRoutingTest {
 
             val routing =
                 routing(parentCoroutineContext = coroutineContext) {
-                    install(VoyagerResources)
+                    install(Resources)
 
                     screen<Path> {
                         FakeResourceScreen<VoyagerResult>().apply {
@@ -371,7 +375,7 @@ internal class VoyagerResourcesRoutingTest {
 
             val routing =
                 routing(parentCoroutineContext = coroutineContext) {
-                    install(VoyagerResources)
+                    install(Resources)
 
                     screen<FakeResourceScreen<String>>()
                 }
@@ -415,7 +419,7 @@ internal class VoyagerResourcesRoutingTest {
 
             val routing =
                 routing(parentCoroutineContext = coroutineContext) {
-                    install(VoyagerResources)
+                    install(Resources)
 
                     screen<FakeResourceScreen<VoyagerResult>>()
                 }
