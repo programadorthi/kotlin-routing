@@ -2,6 +2,7 @@ package dev.programadorthi.routing.voyager
 
 import cafe.adriel.voyager.core.screen.Screen
 import cafe.adriel.voyager.navigator.Navigator
+import dev.programadorthi.routing.core.RouteMethod
 import dev.programadorthi.routing.core.Routing
 import dev.programadorthi.routing.core.application
 import dev.programadorthi.routing.core.call
@@ -33,7 +34,7 @@ public fun Routing.push(
     call(
         uri = path,
         parameters = parameters,
-        routeMethod = VoyagerRouteMethod.Push,
+        routeMethod = RouteMethod.Push,
     )
 }
 
@@ -44,7 +45,7 @@ public fun Routing.pushNamed(
     call(
         name = name,
         parameters = parameters,
-        routeMethod = VoyagerRouteMethod.Push,
+        routeMethod = RouteMethod.Push,
     )
 }
 
@@ -55,7 +56,7 @@ public fun Routing.replace(
     call(
         uri = path,
         parameters = parameters,
-        routeMethod = VoyagerRouteMethod.Replace,
+        routeMethod = RouteMethod.Replace,
     )
 }
 
@@ -66,7 +67,7 @@ public fun Routing.replaceNamed(
     call(
         name = name,
         parameters = parameters,
-        routeMethod = VoyagerRouteMethod.Replace,
+        routeMethod = RouteMethod.Replace,
     )
 }
 
@@ -77,7 +78,7 @@ public fun Routing.replaceAll(
     call(
         uri = path,
         parameters = parameters,
-        routeMethod = VoyagerRouteMethod.ReplaceAll,
+        routeMethod = RouteMethod.ReplaceAll,
     )
 }
 
@@ -88,7 +89,7 @@ public fun Routing.replaceAllNamed(
     call(
         name = name,
         parameters = parameters,
-        routeMethod = VoyagerRouteMethod.ReplaceAll,
+        routeMethod = RouteMethod.ReplaceAll,
     )
 }
 

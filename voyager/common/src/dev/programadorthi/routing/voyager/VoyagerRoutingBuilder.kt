@@ -36,9 +36,9 @@ public fun Route.screen(body: suspend PipelineContext<Unit, ApplicationCall>.() 
 public suspend fun PipelineContext<Unit, ApplicationCall>.screen(body: suspend () -> Screen) {
     val navigator = call.voyagerNavigator
     when (call.routeMethod) {
-        VoyagerRouteMethod.Push -> navigator.push(body())
-        VoyagerRouteMethod.Replace -> navigator.replace(body())
-        VoyagerRouteMethod.ReplaceAll -> navigator.replaceAll(body())
+        RouteMethod.Push -> navigator.push(body())
+        RouteMethod.Replace -> navigator.replace(body())
+        RouteMethod.ReplaceAll -> navigator.replaceAll(body())
         else ->
             error(
                 "Voyager needs a stack route method to work. You called a screen ${call.uri} using " +

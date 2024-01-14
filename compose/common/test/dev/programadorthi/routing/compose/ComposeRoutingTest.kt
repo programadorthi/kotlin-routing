@@ -3,7 +3,6 @@ package dev.programadorthi.routing.compose
 import dev.programadorthi.routing.compose.helper.FakeContent
 import dev.programadorthi.routing.compose.helper.runComposeTest
 import dev.programadorthi.routing.core.RouteMethod
-import dev.programadorthi.routing.core.StackRouteMethod
 import dev.programadorthi.routing.core.StackRouting
 import dev.programadorthi.routing.core.application.ApplicationCall
 import dev.programadorthi.routing.core.application.call
@@ -221,7 +220,7 @@ internal class ComposeRoutingTest {
             assertEquals("I'm the push based content", fakeContent.result)
             assertEquals("/path", "${result?.uri}")
             assertEquals("", "${result?.name}")
-            assertEquals(StackRouteMethod.Push, result?.routeMethod)
+            assertEquals(RouteMethod.Push, result?.routeMethod)
             assertEquals(Parameters.Empty, result?.parameters)
         }
 
@@ -273,7 +272,7 @@ internal class ComposeRoutingTest {
             assertEquals("I'm the replace based content", replaceContent.result)
             assertEquals("/replace", "${result?.uri}")
             assertEquals("", "${result?.name}")
-            assertEquals(StackRouteMethod.Replace, result?.routeMethod)
+            assertEquals(RouteMethod.Replace, result?.routeMethod)
             assertEquals(Parameters.Empty, result?.parameters)
         }
 
@@ -325,7 +324,7 @@ internal class ComposeRoutingTest {
             assertEquals("I'm the replace all based content", replaceContent.result)
             assertEquals("/replace", "${result?.uri}")
             assertEquals("", "${result?.name}")
-            assertEquals(StackRouteMethod.ReplaceAll, result?.routeMethod)
+            assertEquals(RouteMethod.ReplaceAll, result?.routeMethod)
             assertEquals(Parameters.Empty, result?.parameters)
         }
 
@@ -380,11 +379,11 @@ internal class ComposeRoutingTest {
             assertEquals(2, pushedCounter)
             assertEquals("/pop", "${result?.uri}")
             assertEquals("", "${result?.name}")
-            assertEquals(StackRouteMethod.Push, result?.routeMethod)
+            assertEquals(RouteMethod.Push, result?.routeMethod)
             assertEquals(Parameters.Empty, result?.parameters)
             assertEquals("/pop", "${poppedCall?.uri}")
             assertEquals("", "${poppedCall?.name}")
-            assertEquals(StackRouteMethod.Pop, poppedCall?.routeMethod)
+            assertEquals(RouteMethod.Pop, poppedCall?.routeMethod)
             assertEquals(Parameters.Empty, poppedCall?.parameters)
         }
 }

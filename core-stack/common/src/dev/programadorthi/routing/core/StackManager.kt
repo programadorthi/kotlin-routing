@@ -135,13 +135,13 @@ internal class StackManager(
             }
 
             when (call.routeMethod) {
-                StackRouteMethod.Push -> {
+                RouteMethod.Push -> {
                     stack += call
                 }
 
-                StackRouteMethod.Replace -> {
+                RouteMethod.Replace -> {
                     stack.removeLastOrNull()?.let { toNotify ->
-                        val notify = toNotify.copy(routeMethod = StackRouteMethod.Pop)
+                        val notify = toNotify.copy(routeMethod = RouteMethod.Pop)
                         notify.previousCall = call
                         // Notify previous route that it will be popped
                         executeCallWithNeglect(call = notify)
@@ -149,11 +149,11 @@ internal class StackManager(
                     stack += call
                 }
 
-                StackRouteMethod.ReplaceAll -> {
+                RouteMethod.ReplaceAll -> {
                     var previousCall = call
                     while (true) {
                         val toNotify = stack.removeLastOrNull() ?: break
-                        val notify = toNotify.copy(routeMethod = StackRouteMethod.Pop)
+                        val notify = toNotify.copy(routeMethod = RouteMethod.Pop)
                         notify.previousCall = previousCall
                         // Notify previous route that it will be popped
                         executeCallWithNeglect(call = notify)
@@ -162,7 +162,7 @@ internal class StackManager(
                     stack += call
                 }
 
-                StackRouteMethod.Pop -> {
+                RouteMethod.Pop -> {
                     // Don't be confused. The real route was popped on pop() function
                     // Here we are notifying previous route with popped parameters ;P
                     stack.lastOrNull()?.let { toNotify ->

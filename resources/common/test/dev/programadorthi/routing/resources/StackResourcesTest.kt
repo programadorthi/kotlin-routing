@@ -1,6 +1,6 @@
 package dev.programadorthi.routing.resources
 
-import dev.programadorthi.routing.core.StackRouteMethod
+import dev.programadorthi.routing.core.RouteMethod
 import dev.programadorthi.routing.core.StackRouting
 import dev.programadorthi.routing.core.application.ApplicationCall
 import dev.programadorthi.routing.core.application.call
@@ -56,7 +56,7 @@ class StackResourcesTest {
             assertNotNull(path)
             assertEquals("/path", "${result?.uri}")
             assertEquals("", "${result?.name}")
-            assertEquals(StackRouteMethod.Push, result?.routeMethod)
+            assertEquals(RouteMethod.Push, result?.routeMethod)
             assertEquals(Parameters.Empty, result?.parameters)
         }
 
@@ -89,7 +89,7 @@ class StackResourcesTest {
             assertNotNull(path)
             assertEquals("/path", "${result?.uri}")
             assertEquals("", "${result?.name}")
-            assertEquals(StackRouteMethod.Replace, result?.routeMethod)
+            assertEquals(RouteMethod.Replace, result?.routeMethod)
             assertEquals(Parameters.Empty, result?.parameters)
         }
 
@@ -122,7 +122,7 @@ class StackResourcesTest {
             assertNotNull(path)
             assertEquals("/path", "${result?.uri}")
             assertEquals("", "${result?.name}")
-            assertEquals(StackRouteMethod.ReplaceAll, result?.routeMethod)
+            assertEquals(RouteMethod.ReplaceAll, result?.routeMethod)
             assertEquals(Parameters.Empty, result?.parameters)
         }
 
@@ -155,7 +155,7 @@ class StackResourcesTest {
             assertEquals(123, id?.id)
             assertEquals("/path/123", "${result?.uri}")
             assertEquals("", "${result?.name}")
-            assertEquals(StackRouteMethod.Push, result?.routeMethod)
+            assertEquals(RouteMethod.Push, result?.routeMethod)
             assertEquals(parametersOf("id", "123"), result?.parameters)
         }
 
@@ -188,7 +188,7 @@ class StackResourcesTest {
             assertEquals(123, id?.id)
             assertEquals("/path/123", "${result?.uri}")
             assertEquals("", "${result?.name}")
-            assertEquals(StackRouteMethod.Replace, result?.routeMethod)
+            assertEquals(RouteMethod.Replace, result?.routeMethod)
             assertEquals(parametersOf("id", "123"), result?.parameters)
         }
 
@@ -221,7 +221,7 @@ class StackResourcesTest {
             assertEquals(123, id?.id)
             assertEquals("/path/123", "${result?.uri}")
             assertEquals("", "${result?.name}")
-            assertEquals(StackRouteMethod.ReplaceAll, result?.routeMethod)
+            assertEquals(RouteMethod.ReplaceAll, result?.routeMethod)
             assertEquals(parametersOf("id", "123"), result?.parameters)
         }
 
@@ -262,7 +262,7 @@ class StackResourcesTest {
             assertNotNull(result)
             assertEquals("/path/1", "${result?.uri}")
             assertEquals("", "${result?.name}")
-            assertEquals(StackRouteMethod.Pop, result?.routeMethod)
+            assertEquals(RouteMethod.Pop, result?.routeMethod)
             assertEquals(parametersOf("id", "1"), result?.parameters)
             // 1, 2, 3 are pushed
             // 3, 2 are the first pop (notify 3 for pop and 2 for it route method)
@@ -304,28 +304,28 @@ class StackResourcesTest {
             advanceTimeBy(99)
 
             // THEN
-            assertEquals(StackRouteMethod.Push, result[0].first.routeMethod)
+            assertEquals(RouteMethod.Push, result[0].first.routeMethod)
             assertEquals(1, result[0].second.id)
 
-            assertEquals(StackRouteMethod.Push, result[1].first.routeMethod)
+            assertEquals(RouteMethod.Push, result[1].first.routeMethod)
             assertEquals(2, result[1].second.id)
 
-            assertEquals(StackRouteMethod.Replace, result[2].first.routeMethod)
+            assertEquals(RouteMethod.Replace, result[2].first.routeMethod)
             assertEquals(3, result[2].second.id)
 
-            assertEquals(StackRouteMethod.Pop, result[3].first.routeMethod)
+            assertEquals(RouteMethod.Pop, result[3].first.routeMethod)
             assertEquals(2, result[3].second.id)
 
-            assertEquals(StackRouteMethod.ReplaceAll, result[4].first.routeMethod)
+            assertEquals(RouteMethod.ReplaceAll, result[4].first.routeMethod)
             assertEquals(4, result[4].second.id)
 
-            assertEquals(StackRouteMethod.Pop, result[5].first.routeMethod)
+            assertEquals(RouteMethod.Pop, result[5].first.routeMethod)
             assertEquals(3, result[5].second.id)
 
-            assertEquals(StackRouteMethod.Pop, result[6].first.routeMethod)
+            assertEquals(RouteMethod.Pop, result[6].first.routeMethod)
             assertEquals(1, result[6].second.id)
 
-            assertEquals(StackRouteMethod.Pop, result[7].first.routeMethod)
+            assertEquals(RouteMethod.Pop, result[7].first.routeMethod)
             assertEquals(4, result[7].second.id)
         }
 }

@@ -72,7 +72,7 @@ class StackRoutingTest {
             assertNotNull(result)
             assertEquals("/path", "${result?.uri}")
             assertEquals("", "${result?.name}")
-            assertEquals(StackRouteMethod.Push, result?.routeMethod)
+            assertEquals(RouteMethod.Push, result?.routeMethod)
             assertEquals(Parameters.Empty, result?.parameters)
         }
 
@@ -103,7 +103,7 @@ class StackRoutingTest {
             assertNotNull(result)
             assertEquals("/path", "${result?.uri}")
             assertEquals("", "${result?.name}")
-            assertEquals(StackRouteMethod.Push, result?.routeMethod)
+            assertEquals(RouteMethod.Push, result?.routeMethod)
             assertEquals(parametersOf("key", "value"), result?.parameters)
         }
 
@@ -134,7 +134,7 @@ class StackRoutingTest {
             assertNotNull(result)
             assertEquals("/path", "${result?.uri}")
             assertEquals("path", "${result?.name}")
-            assertEquals(StackRouteMethod.Push, result?.routeMethod)
+            assertEquals(RouteMethod.Push, result?.routeMethod)
             assertEquals(Parameters.Empty, result?.parameters)
         }
 
@@ -165,7 +165,7 @@ class StackRoutingTest {
             assertNotNull(result)
             assertEquals("/path", "${result?.uri}")
             assertEquals("path", "${result?.name}")
-            assertEquals(StackRouteMethod.Push, result?.routeMethod)
+            assertEquals(RouteMethod.Push, result?.routeMethod)
             assertEquals(parametersOf("key", "value"), result?.parameters)
         }
 
@@ -196,7 +196,7 @@ class StackRoutingTest {
             assertNotNull(result)
             assertEquals("/path/123", "${result?.uri}")
             assertEquals("path", "${result?.name}")
-            assertEquals(StackRouteMethod.Push, result?.routeMethod)
+            assertEquals(RouteMethod.Push, result?.routeMethod)
             assertEquals(parametersOf("id", "123"), result?.parameters)
         }
 
@@ -230,12 +230,12 @@ class StackRoutingTest {
             // First handle is a push call
             assertEquals("/path", result[0].uri)
             assertEquals("", result[0].name)
-            assertEquals(StackRouteMethod.Push, result[0].routeMethod)
+            assertEquals(RouteMethod.Push, result[0].routeMethod)
             assertEquals(Parameters.Empty, result[0].parameters)
             // Second handle is a pop call
             assertEquals("/path", result[1].uri)
             assertEquals("", result[1].name)
-            assertEquals(StackRouteMethod.Pop, result[1].routeMethod)
+            assertEquals(RouteMethod.Pop, result[1].routeMethod)
             assertEquals(parametersOf("key", "value"), result[1].parameters)
         }
 
@@ -269,12 +269,12 @@ class StackRoutingTest {
             // First handle is a push call
             assertEquals("/path", result[0].uri)
             assertEquals("path", result[0].name)
-            assertEquals(StackRouteMethod.Push, result[0].routeMethod)
+            assertEquals(RouteMethod.Push, result[0].routeMethod)
             assertEquals(Parameters.Empty, result[0].parameters)
             // Second handle is a pop call
             assertEquals("/path", result[1].uri)
             assertEquals("path", result[1].name)
-            assertEquals(StackRouteMethod.Pop, result[1].routeMethod)
+            assertEquals(RouteMethod.Pop, result[1].routeMethod)
             assertEquals(parametersOf("key", "value"), result[1].parameters)
         }
 
@@ -303,7 +303,7 @@ class StackRoutingTest {
             assertNotNull(result)
             assertEquals("/path", "${result?.uri}")
             assertEquals("", "${result?.name}")
-            assertEquals(StackRouteMethod.Push, result?.routeMethod)
+            assertEquals(RouteMethod.Push, result?.routeMethod)
             assertEquals(Parameters.Empty, result?.parameters)
         }
 
@@ -332,7 +332,7 @@ class StackRoutingTest {
             assertNotNull(result)
             assertEquals("/path", "${result?.uri}")
             assertEquals("", "${result?.name}")
-            assertEquals(StackRouteMethod.Replace, result?.routeMethod)
+            assertEquals(RouteMethod.Replace, result?.routeMethod)
             assertEquals(Parameters.Empty, result?.parameters)
         }
 
@@ -361,7 +361,7 @@ class StackRoutingTest {
             assertNotNull(result)
             assertEquals("/path", "${result?.uri}")
             assertEquals("", "${result?.name}")
-            assertEquals(StackRouteMethod.ReplaceAll, result?.routeMethod)
+            assertEquals(RouteMethod.ReplaceAll, result?.routeMethod)
             assertEquals(Parameters.Empty, result?.parameters)
         }
 
@@ -401,7 +401,7 @@ class StackRoutingTest {
             assertNotNull(result)
             assertEquals("/path2", "${result?.uri}")
             assertEquals("", "${result?.name}")
-            assertEquals(StackRouteMethod.Replace, result?.routeMethod)
+            assertEquals(RouteMethod.Replace, result?.routeMethod)
             assertEquals(Parameters.Empty, result?.parameters)
         }
 
@@ -439,7 +439,7 @@ class StackRoutingTest {
             assertNotNull(result)
             assertEquals("/path2", "${result?.uri}")
             assertEquals("path2", "${result?.name}")
-            assertEquals(StackRouteMethod.Push, result?.routeMethod)
+            assertEquals(RouteMethod.Push, result?.routeMethod)
             assertEquals(Parameters.Empty, result?.parameters)
         }
 
@@ -470,7 +470,7 @@ class StackRoutingTest {
             assertNotNull(result)
             assertEquals("/123/regex", "${result?.uri}")
             assertEquals("", "${result?.name}")
-            assertEquals(StackRouteMethod.Push, result?.routeMethod)
+            assertEquals(RouteMethod.Push, result?.routeMethod)
             assertEquals(parametersOf("number", "123"), result?.parameters)
         }
 
@@ -499,7 +499,7 @@ class StackRoutingTest {
             assertNotNull(result)
             assertEquals("/path", "${result?.uri}")
             assertEquals("", "${result?.name}")
-            assertEquals(StackRouteMethod.Push, result?.routeMethod)
+            assertEquals(RouteMethod.Push, result?.routeMethod)
             assertEquals(parametersOf(), result?.parameters)
         }
 
@@ -528,7 +528,7 @@ class StackRoutingTest {
             assertNotNull(result)
             assertEquals("/path", "${result?.uri}")
             assertEquals("", "${result?.name}")
-            assertEquals(StackRouteMethod.Push, result?.routeMethod)
+            assertEquals(RouteMethod.Push, result?.routeMethod)
             assertEquals(parametersOf(), result?.parameters)
         }
 
@@ -577,7 +577,7 @@ class StackRoutingTest {
             assertNotNull(result)
             assertEquals("/pathParent", "${result?.uri}")
             assertEquals("", "${result?.name}")
-            assertEquals(StackRouteMethod.Push, result?.routeMethod)
+            assertEquals(RouteMethod.Push, result?.routeMethod)
             assertEquals(Parameters.Empty, result?.parameters)
         }
 
@@ -625,7 +625,7 @@ class StackRoutingTest {
             assertNotNull(result)
             assertEquals("/child/pathChild", "${result?.uri}")
             assertEquals("", "${result?.name}")
-            assertEquals(StackRouteMethod.Push, result?.routeMethod)
+            assertEquals(RouteMethod.Push, result?.routeMethod)
             assertEquals(Parameters.Empty, result?.parameters)
         }
 
@@ -689,7 +689,7 @@ class StackRoutingTest {
             assertNotNull(result)
             assertEquals("/path", "${result?.uri}")
             assertEquals("", "${result?.name}")
-            assertEquals(StackRouteMethod.Push, result?.routeMethod)
+            assertEquals(RouteMethod.Push, result?.routeMethod)
             assertEquals(parametersOf(), result?.parameters)
         }
 
@@ -772,7 +772,7 @@ class StackRoutingTest {
             assertEquals(12, result.size)
             // First handle is a push call
             val firstPushCall = result[0]
-            assertEquals(StackRouteMethod.Push, firstPushCall.routeMethod)
+            assertEquals(RouteMethod.Push, firstPushCall.routeMethod)
             assertEquals("", firstPushCall.name)
             assertEquals("/path", firstPushCall.uri)
             assertEquals(Parameters.Empty, firstPushCall.parameters)
@@ -782,7 +782,7 @@ class StackRoutingTest {
             )
             // Second handle is a push call
             val firstPushNamedCall = result[1]
-            assertEquals(StackRouteMethod.Push, firstPushNamedCall.routeMethod)
+            assertEquals(RouteMethod.Push, firstPushNamedCall.routeMethod)
             assertEquals("path", firstPushNamedCall.name)
             assertEquals("/path", firstPushNamedCall.uri)
             assertEquals(Parameters.Empty, firstPushNamedCall.parameters)
@@ -793,7 +793,7 @@ class StackRoutingTest {
             )
             // Third handle is a replace call
             val firstReplaceCall = result[2]
-            assertEquals(StackRouteMethod.Replace, firstReplaceCall.routeMethod)
+            assertEquals(RouteMethod.Replace, firstReplaceCall.routeMethod)
             assertEquals("", firstReplaceCall.name)
             assertEquals("/path", firstReplaceCall.uri)
             assertEquals(Parameters.Empty, firstReplaceCall.parameters)
@@ -804,7 +804,7 @@ class StackRoutingTest {
             )
             // Fourth handle is a pop call emitted by replace
             val firstPopByReplaceCall = result[3]
-            assertEquals(StackRouteMethod.Pop, firstPopByReplaceCall.routeMethod)
+            assertEquals(RouteMethod.Pop, firstPopByReplaceCall.routeMethod)
             assertEquals("path", firstPopByReplaceCall.name)
             assertEquals("/path", firstPopByReplaceCall.uri)
             assertEquals(Parameters.Empty, firstPopByReplaceCall.parameters)
@@ -815,7 +815,7 @@ class StackRoutingTest {
             )
             // Fifth handle is a replace call
             val firstReplaceNamedCall = result[4]
-            assertEquals(StackRouteMethod.Replace, firstReplaceNamedCall.routeMethod)
+            assertEquals(RouteMethod.Replace, firstReplaceNamedCall.routeMethod)
             assertEquals("path", firstReplaceNamedCall.name)
             assertEquals("/path", firstReplaceNamedCall.uri)
             assertEquals(Parameters.Empty, firstReplaceNamedCall.parameters)
@@ -826,7 +826,7 @@ class StackRoutingTest {
             )
             // Sixth handle is a pop call emitted by replace
             val firstPopByReplaceNamedCall = result[5]
-            assertEquals(StackRouteMethod.Pop, firstPopByReplaceNamedCall.routeMethod)
+            assertEquals(RouteMethod.Pop, firstPopByReplaceNamedCall.routeMethod)
             assertEquals("", firstPopByReplaceNamedCall.name)
             assertEquals("/path", firstPopByReplaceNamedCall.uri)
             assertEquals(Parameters.Empty, firstPopByReplaceNamedCall.parameters)
@@ -837,7 +837,7 @@ class StackRoutingTest {
             )
             // Seventh handle is a replace all call
             val firstReplaceAllCall = result[6]
-            assertEquals(StackRouteMethod.ReplaceAll, firstReplaceAllCall.routeMethod)
+            assertEquals(RouteMethod.ReplaceAll, firstReplaceAllCall.routeMethod)
             assertEquals("", firstReplaceAllCall.name)
             assertEquals("/path", firstReplaceAllCall.uri)
             assertEquals(Parameters.Empty, firstReplaceAllCall.parameters)
@@ -848,7 +848,7 @@ class StackRoutingTest {
             )
             // Eighth handle is a pop call emitted by replace all
             val firstPopByReplaceAllCall = result[7]
-            assertEquals(StackRouteMethod.Pop, firstPopByReplaceAllCall.routeMethod)
+            assertEquals(RouteMethod.Pop, firstPopByReplaceAllCall.routeMethod)
             assertEquals("path", firstPopByReplaceAllCall.name)
             assertEquals("/path", firstPopByReplaceAllCall.uri)
             assertEquals(Parameters.Empty, firstPopByReplaceAllCall.parameters)
@@ -859,7 +859,7 @@ class StackRoutingTest {
             )
             // Ninth handle is a pop call emitted by replace all
             val secondPopByReplaceAllCall = result[8]
-            assertEquals(StackRouteMethod.Pop, secondPopByReplaceAllCall.routeMethod)
+            assertEquals(RouteMethod.Pop, secondPopByReplaceAllCall.routeMethod)
             assertEquals("", secondPopByReplaceAllCall.name)
             assertEquals("/path", secondPopByReplaceAllCall.uri)
             assertEquals(Parameters.Empty, secondPopByReplaceAllCall.parameters)
@@ -870,7 +870,7 @@ class StackRoutingTest {
             )
             // Tenth handle is a replace all call
             val firstReplaceAllNamedCall = result[9]
-            assertEquals(StackRouteMethod.ReplaceAll, firstReplaceAllNamedCall.routeMethod)
+            assertEquals(RouteMethod.ReplaceAll, firstReplaceAllNamedCall.routeMethod)
             assertEquals("path", firstReplaceAllNamedCall.name)
             assertEquals("/path", firstReplaceAllNamedCall.uri)
             assertEquals(Parameters.Empty, firstReplaceAllNamedCall.parameters)
@@ -881,7 +881,7 @@ class StackRoutingTest {
             )
             // Eleventh handle is a pop call emitted by replace all
             val firstPopByReplaceAllNamedCall = result[10]
-            assertEquals(StackRouteMethod.Pop, firstPopByReplaceAllNamedCall.routeMethod)
+            assertEquals(RouteMethod.Pop, firstPopByReplaceAllNamedCall.routeMethod)
             assertEquals("", firstPopByReplaceAllNamedCall.name)
             assertEquals("/path", firstPopByReplaceAllNamedCall.uri)
             assertEquals(Parameters.Empty, firstPopByReplaceAllNamedCall.parameters)
@@ -892,7 +892,7 @@ class StackRoutingTest {
             )
             // Twelfth handle is a pop call
             val firstPopCall = result[11]
-            assertEquals(StackRouteMethod.Pop, firstPopCall.routeMethod)
+            assertEquals(RouteMethod.Pop, firstPopCall.routeMethod)
             assertEquals("path", firstPopCall.name)
             assertEquals("/path", firstPopCall.uri)
             assertEquals(parametersOf("key", "value"), firstPopCall.parameters)
@@ -952,12 +952,12 @@ class StackRoutingTest {
 
             assertEquals("/path01", "${result?.previousCall?.uri}")
             assertEquals("named", "${result?.previousCall?.name}")
-            assertEquals(StackRouteMethod.Push, result?.previousCall?.routeMethod)
+            assertEquals(RouteMethod.Push, result?.previousCall?.routeMethod)
             assertEquals(Parameters.Empty, result?.previousCall?.parameters)
 
             assertEquals("/path02", "${result?.uri}")
             assertEquals("", "${result?.name}")
-            assertEquals(StackRouteMethod.Push, result?.routeMethod)
+            assertEquals(RouteMethod.Push, result?.routeMethod)
             assertEquals(parametersOf("key" to listOf("value")), result?.parameters)
         }
 
@@ -1001,7 +1001,7 @@ class StackRoutingTest {
             assertEquals(7, result.size)
             // First handle is a push call
             val firstPushCall = result[0]
-            assertEquals(StackRouteMethod.Push, firstPushCall.routeMethod)
+            assertEquals(RouteMethod.Push, firstPushCall.routeMethod)
             assertEquals("", firstPushCall.name)
             assertEquals("/path1", firstPushCall.uri)
             assertEquals(Parameters.Empty, firstPushCall.parameters)
@@ -1011,7 +1011,7 @@ class StackRoutingTest {
             )
             // Second handle is a push call
             val secondPushCall = result[1]
-            assertEquals(StackRouteMethod.Push, secondPushCall.routeMethod)
+            assertEquals(RouteMethod.Push, secondPushCall.routeMethod)
             assertEquals("", secondPushCall.name)
             assertEquals("/path2", secondPushCall.uri)
             assertEquals(Parameters.Empty, secondPushCall.parameters)
@@ -1022,7 +1022,7 @@ class StackRoutingTest {
             )
             // Third handle is a pop call
             val firstPopCall = result[2]
-            assertEquals(StackRouteMethod.Pop, firstPopCall.routeMethod)
+            assertEquals(RouteMethod.Pop, firstPopCall.routeMethod)
             assertEquals("", firstPopCall.name)
             assertEquals("/path2", firstPopCall.uri)
             assertEquals(Parameters.Empty, firstPopCall.parameters)
@@ -1033,7 +1033,7 @@ class StackRoutingTest {
             )
             // Fourth handle is a push emitted by pop
             val firstPushByPopCall = result[3]
-            assertEquals(StackRouteMethod.Push, firstPushByPopCall.routeMethod)
+            assertEquals(RouteMethod.Push, firstPushByPopCall.routeMethod)
             assertEquals("", firstPushByPopCall.name)
             assertEquals("/path1", firstPushByPopCall.uri)
             assertEquals(Parameters.Empty, firstPushByPopCall.parameters)
@@ -1044,7 +1044,7 @@ class StackRoutingTest {
             )
             // Fifth handle is a replace call
             val thirdPushCall = result[4]
-            assertEquals(StackRouteMethod.Push, thirdPushCall.routeMethod)
+            assertEquals(RouteMethod.Push, thirdPushCall.routeMethod)
             assertEquals("", thirdPushCall.name)
             assertEquals("/path3", thirdPushCall.uri)
             assertEquals(Parameters.Empty, thirdPushCall.parameters)
@@ -1055,7 +1055,7 @@ class StackRoutingTest {
             )
             // Sixth handle is a pop call
             val secondPopCall = result[5]
-            assertEquals(StackRouteMethod.Pop, secondPopCall.routeMethod)
+            assertEquals(RouteMethod.Pop, secondPopCall.routeMethod)
             assertEquals("", secondPopCall.name)
             assertEquals("/path3", secondPopCall.uri)
             assertEquals(Parameters.Empty, secondPopCall.parameters)
@@ -1066,7 +1066,7 @@ class StackRoutingTest {
             )
             // Fourth handle is a push emitted by pop
             val secondPushByPopCall = result[6]
-            assertEquals(StackRouteMethod.Push, secondPushByPopCall.routeMethod)
+            assertEquals(RouteMethod.Push, secondPushByPopCall.routeMethod)
             assertEquals("", secondPushByPopCall.name)
             assertEquals("/path1", secondPushByPopCall.uri)
             assertEquals(Parameters.Empty, secondPushByPopCall.parameters)

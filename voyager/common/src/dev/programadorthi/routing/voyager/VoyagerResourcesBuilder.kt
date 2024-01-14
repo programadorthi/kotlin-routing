@@ -42,7 +42,7 @@ public inline fun <reified T : Any> Route.screen(noinline body: suspend Pipeline
 public inline fun <reified T : Screen> Route.screen(): Route = screen<T> { screen -> screen }
 
 /**
- * Registers a typed handler [body] for a [VoyagerRouteMethod] resource defined by the [T] class.
+ * Registers a typed handler [body] for a [RouteMethod] resource defined by the [T] class.
  *
  * A class [T] **must** be annotated with [io.ktor.resources.Resource].
  *
@@ -64,7 +64,7 @@ public inline fun <reified T : Any> Route.screen(
 }
 
 /**
- * Registers a typed handler for a [VoyagerRouteMethod] [Screen] defined by the [T] class.
+ * Registers a typed handler for a [RouteMethod] [Screen] defined by the [T] class.
  *
  * A class [T] **must** be annotated with [io.ktor.resources.Resource].
  */

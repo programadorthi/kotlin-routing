@@ -3,7 +3,6 @@ package dev.programadorthi.routing.compose
 import dev.programadorthi.routing.compose.helper.FakeContent
 import dev.programadorthi.routing.compose.helper.runComposeTest
 import dev.programadorthi.routing.core.RouteMethod
-import dev.programadorthi.routing.core.StackRouteMethod
 import dev.programadorthi.routing.core.StackRouting
 import dev.programadorthi.routing.core.application.ApplicationCall
 import dev.programadorthi.routing.core.application.call
@@ -89,7 +88,7 @@ class ComposeResourcesTest {
                     install(Resources)
                     install(StackRouting)
 
-                    composable<Path>(method = StackRouteMethod.Push) {
+                    composable<Path>(method = RouteMethod.Push) {
                         result = call
                         path = it
                         fakeContent.content = "I'm the push based content"
@@ -117,7 +116,7 @@ class ComposeResourcesTest {
             assertEquals("I'm the push based content", fakeContent.result)
             assertEquals("/path", "${result?.uri}")
             assertEquals("", "${result?.name}")
-            assertEquals(StackRouteMethod.Push, result?.routeMethod)
+            assertEquals(RouteMethod.Push, result?.routeMethod)
             assertEquals(Parameters.Empty, result?.parameters)
         }
 
@@ -162,7 +161,7 @@ class ComposeResourcesTest {
             assertEquals("I'm the replace based content", fakeContent.result)
             assertEquals("/path", "${result?.uri}")
             assertEquals("", "${result?.name}")
-            assertEquals(StackRouteMethod.Replace, result?.routeMethod)
+            assertEquals(RouteMethod.Replace, result?.routeMethod)
             assertEquals(Parameters.Empty, result?.parameters)
         }
 
@@ -207,7 +206,7 @@ class ComposeResourcesTest {
             assertEquals("I'm the replace all based content", fakeContent.result)
             assertEquals("/path", "${result?.uri}")
             assertEquals("", "${result?.name}")
-            assertEquals(StackRouteMethod.ReplaceAll, result?.routeMethod)
+            assertEquals(RouteMethod.ReplaceAll, result?.routeMethod)
             assertEquals(Parameters.Empty, result?.parameters)
         }
 
@@ -253,7 +252,7 @@ class ComposeResourcesTest {
             assertEquals(123, id?.id)
             assertEquals("/path/123", "${result?.uri}")
             assertEquals("", "${result?.name}")
-            assertEquals(StackRouteMethod.Push, result?.routeMethod)
+            assertEquals(RouteMethod.Push, result?.routeMethod)
             assertEquals(parametersOf("id", "123"), result?.parameters)
         }
 
@@ -299,7 +298,7 @@ class ComposeResourcesTest {
             assertEquals(123, id?.id)
             assertEquals("/path/123", "${result?.uri}")
             assertEquals("", "${result?.name}")
-            assertEquals(StackRouteMethod.Replace, result?.routeMethod)
+            assertEquals(RouteMethod.Replace, result?.routeMethod)
             assertEquals(parametersOf("id", "123"), result?.parameters)
         }
 
@@ -345,7 +344,7 @@ class ComposeResourcesTest {
             assertEquals(123, id?.id)
             assertEquals("/path/123", "${result?.uri}")
             assertEquals("", "${result?.name}")
-            assertEquals(StackRouteMethod.ReplaceAll, result?.routeMethod)
+            assertEquals(RouteMethod.ReplaceAll, result?.routeMethod)
             assertEquals(parametersOf("id", "123"), result?.parameters)
         }
 
@@ -405,7 +404,7 @@ class ComposeResourcesTest {
             assertEquals("I'm the reactive based content", fakeContent.result)
             assertEquals("/path/1", "${result?.uri}")
             assertEquals("", "${result?.name}")
-            assertEquals(StackRouteMethod.Push, result?.routeMethod)
+            assertEquals(RouteMethod.Push, result?.routeMethod)
             assertEquals(parametersOf("id", listOf("1")), result?.parameters)
             // 1, 2, 3 are pushed
             // 3 is skipped and 2 is called to compose
@@ -461,13 +460,13 @@ class ComposeResourcesTest {
 
             // THEN
             assertNotNull(result)
-            assertEquals(StackRouteMethod.Push, result[0].first.routeMethod)
+            assertEquals(RouteMethod.Push, result[0].first.routeMethod)
             assertEquals(1, result[0].second.id)
-            assertEquals(StackRouteMethod.Push, result[1].first.routeMethod)
+            assertEquals(RouteMethod.Push, result[1].first.routeMethod)
             assertEquals(2, result[1].second.id)
-            assertEquals(StackRouteMethod.Replace, result[2].first.routeMethod)
+            assertEquals(RouteMethod.Replace, result[2].first.routeMethod)
             assertEquals(3, result[2].second.id)
-            assertEquals(StackRouteMethod.ReplaceAll, result[3].first.routeMethod)
+            assertEquals(RouteMethod.ReplaceAll, result[3].first.routeMethod)
             assertEquals(4, result[3].second.id)
         }
 }

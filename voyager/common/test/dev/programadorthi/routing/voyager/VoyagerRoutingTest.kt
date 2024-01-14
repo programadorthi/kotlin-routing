@@ -69,7 +69,7 @@ internal class VoyagerRoutingTest {
             }
 
             // WHEN
-            routing.call(uri = "/path", routeMethod = VoyagerRouteMethod.Push)
+            routing.call(uri = "/path", routeMethod = RouteMethod.Push)
             advanceTimeBy(99) // Ask for routing
             clock.sendFrame(0L) // Ask for recomposition
 
@@ -100,7 +100,7 @@ internal class VoyagerRoutingTest {
             }
 
             // WHEN
-            routing.call(name = "path", routeMethod = VoyagerRouteMethod.Push)
+            routing.call(name = "path", routeMethod = RouteMethod.Push)
             advanceTimeBy(99) // Ask for routing
             clock.sendFrame(0L) // Ask for recomposition
 
@@ -184,7 +184,7 @@ internal class VoyagerRoutingTest {
             }
 
             // WHEN
-            routing.call(uri = "/any", routeMethod = VoyagerRouteMethod.Push)
+            routing.call(uri = "/any", routeMethod = RouteMethod.Push)
             advanceTimeBy(99) // Ask for routing
             clock.sendFrame(0L) // Ask for recomposition
 

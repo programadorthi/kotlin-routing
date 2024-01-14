@@ -14,7 +14,7 @@ public fun Routing.pop(parameters: Parameters = Parameters.Empty) {
                 uri = toPop.uri,
                 attributes = attributes,
                 parameters = parameters,
-                routeMethod = StackRouteMethod.Pop,
+                routeMethod = RouteMethod.Pop,
             )
         }
     }
@@ -31,7 +31,7 @@ public fun Routing.push(
             application = application,
             uri = path,
             parameters = parameters,
-            routeMethod = StackRouteMethod.Push,
+            routeMethod = RouteMethod.Push,
         ).toNeglect(neglect),
     )
 }
@@ -47,7 +47,7 @@ public fun Routing.pushNamed(
             application = application,
             name = name,
             parameters = parameters,
-            routeMethod = StackRouteMethod.Push,
+            routeMethod = RouteMethod.Push,
         ).toNeglect(neglect),
     )
 }
@@ -63,7 +63,7 @@ public fun Routing.replace(
             application = application,
             uri = path,
             parameters = parameters,
-            routeMethod = StackRouteMethod.Replace,
+            routeMethod = RouteMethod.Replace,
         ).toNeglect(neglect),
     )
 }
@@ -79,7 +79,7 @@ public fun Routing.replaceAll(
             application = application,
             uri = path,
             parameters = parameters,
-            routeMethod = StackRouteMethod.ReplaceAll,
+            routeMethod = RouteMethod.ReplaceAll,
         ).toNeglect(neglect),
     )
 }
@@ -95,7 +95,7 @@ public fun Routing.replaceNamed(
             application = application,
             name = name,
             parameters = parameters,
-            routeMethod = StackRouteMethod.Replace,
+            routeMethod = RouteMethod.Replace,
         ).toNeglect(neglect),
     )
 }
@@ -111,7 +111,7 @@ public fun Routing.replaceAllNamed(
             application = application,
             name = name,
             parameters = parameters,
-            routeMethod = StackRouteMethod.ReplaceAll,
+            routeMethod = RouteMethod.ReplaceAll,
         ).toNeglect(neglect),
     )
 }
