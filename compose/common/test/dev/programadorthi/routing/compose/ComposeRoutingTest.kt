@@ -320,4 +320,41 @@ internal class ComposeRoutingTest {
             // THEN
             assertEquals(3, composedCounter)
         }
+
+    @Test
+    fun shouldPopAComposableWithResult() =
+        runComposeTest { coroutineContext, composition, clock ->
+            // GIVEN
+            var poppedMessage: String? = null
+
+            val routing =
+                routing(parentCoroutineContext = coroutineContext) {
+                    composable(path = "/push") {
+                        poppedMessage = LocalPopResult.current?.result<String>()
+                    }
+                }
+
+            composition.setContent {
+                Routing(
+                    routing = routing,
+                    initial = {},
+                )
+            }
+
+            // WHEN
+            routing.push(path = "/push")
+            advanceTimeBy(99) // Ask for routing
+            clock.sendFrame(0L) // Ask for recomposition
+
+            routing.push(path = "/push")
+            advanceTimeBy(99) // Ask for routing
+            clock.sendFrame(0L) // Ask for recomposition
+
+            routing.pop(result = "This is the popped message")
+            advanceTimeBy(99) // Ask for routing
+            clock.sendFrame(0L) // Ask for recomposition
+
+            // THEN
+            assertEquals("This is the popped message", poppedMessage)
+        }
 }
