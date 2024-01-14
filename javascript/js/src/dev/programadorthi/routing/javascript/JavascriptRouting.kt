@@ -8,7 +8,6 @@ import kotlinx.coroutines.launch
 import kotlinx.dom.clear
 import org.w3c.dom.Element
 import org.w3c.dom.PopStateEvent
-import toCall
 
 public fun render(
     routing: Routing,
