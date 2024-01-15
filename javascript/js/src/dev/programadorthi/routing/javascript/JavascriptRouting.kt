@@ -1,13 +1,15 @@
 package dev.programadorthi.routing.javascript
 
+import dev.programadorthi.routing.core.RouteMethod
 import dev.programadorthi.routing.core.Routing
 import dev.programadorthi.routing.core.application
+import dev.programadorthi.routing.core.application.ApplicationCall
+import io.ktor.http.parametersOf
 import kotlinx.browser.window
 import kotlinx.coroutines.flow.MutableStateFlow
 import kotlinx.coroutines.launch
 import kotlinx.dom.clear
 import org.w3c.dom.Element
-import org.w3c.dom.PopStateEvent
 
 public fun render(
     routing: Routing,
@@ -25,18 +27,24 @@ public fun render(
         }
     }
 
+    // First time or page refresh we try continue from last state
+    routing.tryNotifyTheRoute(state = window.history.state)
+
     window.onpopstate = { event ->
-        onPopState(routing = routing, event = event)
+        routing.tryNotifyTheRoute(state = event.state)
     }
 }
 
-private fun onPopState(
-    routing: Routing,
-    event: PopStateEvent,
-) {
-    val data = event.state as? String
-    if (data.isNullOrBlank()) return
-
-    val call = data.toCall(routing.application)
-    routing.execute(call)
+private fun Routing.tryNotifyTheRoute(state: Any?) {
+    val javascriptState = state.deserialize() ?: return
+    val call =
+        ApplicationCall(
+            application = application,
+            name = javascriptState.name,
+            uri = javascriptState.uri,
+            routeMethod = RouteMethod.parse(javascriptState.routeMethod),
+            parameters = parametersOf(javascriptState.parameters),
+        )
+    call.neglect = true
+    execute(call)
 }

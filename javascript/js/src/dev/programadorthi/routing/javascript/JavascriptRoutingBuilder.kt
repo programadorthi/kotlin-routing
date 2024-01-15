@@ -31,22 +31,26 @@ public fun Route.jsRoute(body: PipelineContext<Unit, ApplicationCall>.() -> Elem
     handle {
         application.routingFlow.emit(body(this))
 
+        if (call.neglect) {
+            return@handle
+        }
+
         when (call.routeMethod) {
             RouteMethod.Push ->
                 window.history.pushState(
-                    data = call.toData(),
-                    title = "",
+                    title = "routing",
                     url = call.uri,
+                    data = call.serialize(),
                 )
 
             RouteMethod.Replace ->
                 window.history.replaceState(
-                    data = call.toData(),
-                    title = "",
+                    title = "routing",
                     url = call.uri,
+                    data = call.serialize(),
                 )
 
-            else -> TODO("Not implemented yet")
+            // TODO: Add support to replace all route method
         }
     }
 }

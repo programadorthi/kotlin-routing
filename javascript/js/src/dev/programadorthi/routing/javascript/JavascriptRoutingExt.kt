@@ -3,7 +3,7 @@ package dev.programadorthi.routing.javascript
 import dev.programadorthi.routing.core.Routing
 import kotlinx.browser.window
 
+@Suppress("UnusedReceiverParameter")
 public fun Routing.pop() {
-    window.history.replaceState(data = null, title = "", url = null)
-    window.history.back()
+    window.history.go(-1)
 }
