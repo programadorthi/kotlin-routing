@@ -8,7 +8,7 @@ import dev.programadorthi.routing.core.application.call
 import dev.programadorthi.routing.core.install
 import dev.programadorthi.routing.core.routing
 import dev.programadorthi.routing.resources.Resources
-import dev.programadorthi.routing.resources.execute
+import dev.programadorthi.routing.resources.call
 import dev.programadorthi.routing.resources.push
 import dev.programadorthi.routing.resources.replace
 import dev.programadorthi.routing.resources.replaceAll
@@ -60,7 +60,7 @@ class ComposeResourcesTest {
             }
 
             // WHEN
-            routing.execute(resource = Path(), routeMethod = RouteMethod.Push)
+            routing.call(resource = Path(), routeMethod = RouteMethod.Push)
             advanceTimeBy(99) // Ask for routing
             clock.sendFrame(0L) // Ask for recomposition
 

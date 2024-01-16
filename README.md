@@ -13,7 +13,7 @@ Using core module you can:
 
 ```kotlin
 val router = routing {
-    route(path = "/login") {
+    route(path = "/hello") {
         handle {
           // Handle the call to the routing "/login"
         }
@@ -21,64 +21,57 @@ val router = routing {
 }
 
 // And to call login routing...
-router.call(uri = "/login")
+router.call(uri = "/hello")
 ```
 
-## Core-stack module
-
-This module is a core extension providing Stack based behaviors (push, pop, replace, ...)
-So, if you need stack behaviors it is for you.
-
-> Keep reading to see how use stack routing
+> Keep reading to see what kotlin routing can provide
 
 ## Defining routes
 > Based on [Ktor Routing](https://ktor.io/docs/routing-in-ktor.html)
 
+All route definition provided by Ktor Routing is supported by Kotlin Routing.
+
 ```kotlin
 val router = routing {
-    route(path = "/path") {
-        // ...
+    route("/hello", RouteMethod.Empty) {
+        handle {
+            // Well, there is no respond* because we are not a server library
+        }
     }
 }
-
 ```
+
+### Shortly version
+
+```Kotlin
+val router = routing {
+    handle("/hello") {
+        // Handle any call to the "/hello" route
+    }
+}
+```
+
 It's also possible to define a name to navigate instead of using the path value.
 ```Kotlin
-route(path = "/path", name = "path") {
+route(path = "/hello", name = "hello") {
     // ...
 }
 ```
 
 [Type-safe](https://github.com/programadorthi/kotlin-routing/edit/main/README.md#type-safe-routing) navigation is also supported.
 
-## Handling routes
-Since you defined your routes, it's time to handle them. Use the `handle` block to do that.
-```kotlin
-val router = routing {
-    route(path = "/path") {
-        handle {
-            // Handle any call to the "/path" route
-        }
-    }
-}  
-```
-
-### Handling route short version
-
-```Kotlin
-handle(path = "/path3", name = "path3") {
-    
-}
-```
 ### Getting route detail 
-Use `call` inside of handle block to get all details available of a route that was called
+Use `call` inside of handle block to get all route details available
 
 ```Kotlin
-val application = call.application
-val routeMethod = call.routeMethod
-val uri = call.uri
-val attributes = call.attributes
-val parameters = call.parameters // routing parameters (see Routing routes) plus query parameters when provided
+handle(path = "/path") {
+    val application = call.application
+    val routeMethod = call.routeMethod
+    val name = call.name
+    val uri = call.uri
+    val attributes = call.attributes
+    val parameters = call.parameters // routing parameters (see Routing routes) plus query parameters when provided
+}
 ```
 
 ### Redirecting route
@@ -91,101 +84,50 @@ handle(...) {
     call.redirectToName(name = "destination-name")
 }
 ```
-### Regex route
-You can also create a route using regex.
 
-```Kotlin
-handle(path = Regex(...)) {
-    // ...
-}
-```
 ## Routing routes
-
-> There is no behavior in Ktor for that
 
 ```kotlin
 val router = routing {
     // ...
 }
 
-// Pushing a path
-router.push(path = "/path")
+// Routing by uri
+router.call(uri = "/path")
 
-// Pushing a path with parameters
-router.push(path = "/path", parameters = parametersOf("number", "123"))
+// Routing by uri with parameters
+router.call(uri = "/path", parameters = parametersOf("number", listOf("123")))
 
-// Pushing a name
-router.pushNamed(name = "name")
+// Routing by name
+router.call(name = "name")
 
-// Pushing a name with parameters
-router.pushNamed(name = "name", parameters = parametersOf("number", "123"))
+// Routing by name with parameters
+router.call(name = "name", parameters = parametersOf("number", listOf("123")))
 
-// Pushing a name with parameters and path parameters ("/path/{id}")
-router.pushNamed(
-    name = "name",
-    parameters = parametersOf("id", "456"), // It will be used to replace {id} path parameter
-)
-
-// Replacing or replacing all works the same as push but 'replace' instead push :D
-router.replace(...)
-router.replaceAll(...)
-
-// Popping the last pushed or replaced route
-router.pop()
-
-// Popping the last pushed or replaced route with parameters
-router.pop(parameters = parametersOf("number", "123"))
+// Routing by a route method
+router.call(uri = "/path", routeMethod = RouteMethod("custom name"))
 ```
 
-## Route Neglect
-
-In case you need to call a route without put it in the Stack, you can tell to avoid it by calling:
-
-```kotlin
-router.push|replace|replaceAll(..., neglect = true)
-```
-
-## Type-safe routing
+## Type-safe routing (resources module)
 
 > Based on [Ktor Type-safe routing](https://ktor.io/docs/type-safe-routing.html)
->
-> First you have to put module `resources` as a dependency
-> There is a `resources-stack` module with stack behaviors
 
 ```kotlin
-
-@Resource("/articles")
-class Articles {
-
-    @Resource("new")
-    class New(val parent: Articles = Articles())
-
-    @Resource("{id}")
-    class Id(val parent: Articles = Articles(), val id: Long) {
-
-        @Resource("edit")
-        class Edit(val parent: Id)
-    }
-}
-
 val router = routing {
     install(Resources)
 
     handle<Articles> {
         // handle any call to Articles
-        call.redirectTo(...) // If you need to redirect to another resource route
     }
 }
 
 // And do:
-router.execute(Articles())
+router.call(Articles())
 ```
 
-## Exception routing handler
+## Exception routing handler (status-pages module)
 
 > Based on [Ktor Status pages](https://ktor.io/docs/status-pages.html)
->
-> First you have to put module `status-pages` as a dependency
 
 ```kotlin
 val router = routing {
@@ -193,17 +135,16 @@ val router = routing {
         // Catch any exception (change to be specific if you need)
         exception<Throwable> { call, cause ->
             // exception handled
-            // You can redirect from here. See redirecting route above or unit tests
         }
     }
 
-    handle(path = "/path") {
+    handle(path = "/hello") {
         throw IllegalArgumentException("simulating an exception thrown on routing")
     }
 }
 
 // And to simulate
-router.call(uri = "/path")
+router.call(uri = "/hello")
 ```
 
 ## Events module
@@ -241,7 +182,7 @@ val router = routing(
 ) { }
 ```
 
-## Compose Routing
+## Compose Routing (compose module)
 
 Are you using Compose Jetpack or Multiplatform? This module is for you.
 Easily route any composable you have just doing:
@@ -262,10 +203,13 @@ fun MyComposeApp() {
 
 // And in any place that have the routing instance call:
 routing.call(uri = "/login")
-
-// Or easily using core-stack module
-routing.push(path = "/login")
 ```
+
+## Other modules to interest
+
+- `auth` - [Authentication and Authorization](https://ktor.io/docs/authentication.html)
+- `call-logging` - [Call Logging](https://ktor.io/docs/call-logging.html)
+- `sessions` - [Sessions](https://ktor.io/docs/sessions.html)
 
 ## Limitations
 
@@ -286,10 +230,10 @@ val router = routing(
 }
 
 // IT WORKS
-router.execute(Endpoint())
+router.call(Endpoint())
 
 // IT DOES NOT WORK
-parent.execute(Endpoint())
+parent.call(Endpoint())
 
 // IT WORKS
 parent.call(uri = "/child/endpoint")

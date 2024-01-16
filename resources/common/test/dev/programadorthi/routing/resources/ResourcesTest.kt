@@ -43,7 +43,7 @@ class ResourcesTest {
                 }
 
             // WHEN
-            routing.execute(Path())
+            routing.call(Path())
             advanceTimeBy(99)
 
             // THEN
@@ -75,7 +75,7 @@ class ResourcesTest {
                 }
 
             // WHEN
-            routing.execute(Path.Id(id = 123))
+            routing.call(Path.Id(id = 123))
             advanceTimeBy(99)
 
             // THEN
@@ -111,7 +111,7 @@ class ResourcesTest {
                 }
 
             // WHEN
-            routing.execute(Path())
+            routing.call(Path())
             advanceTimeBy(99)
 
             // THEN
@@ -150,7 +150,7 @@ class ResourcesTest {
                 }
 
             // WHEN
-            routing.execute(Path())
+            routing.call(Path())
             advanceTimeBy(99)
 
             // THEN
@@ -197,7 +197,7 @@ class ResourcesTest {
                 }
 
             // WHEN
-            routing.execute(Path.Id(id = 456))
+            routing.call(Path.Id(id = 456))
             advanceTimeBy(99)
 
             // THEN
@@ -282,7 +282,7 @@ class ResourcesTest {
 
             // WHEN
             routing.unregisterResource<Path.Id>()
-            routing.execute(Path.Id(id = 123))
+            routing.call(Path.Id(id = 123))
             advanceTimeBy(99)
 
             // THEN

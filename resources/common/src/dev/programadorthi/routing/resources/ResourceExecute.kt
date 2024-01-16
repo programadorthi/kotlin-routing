@@ -9,7 +9,7 @@ import dev.programadorthi.routing.core.call
 import io.ktor.util.pipeline.execute
 import kotlinx.coroutines.launch
 
-public inline fun <reified T : Any> Routing.execute(
+public inline fun <reified T : Any> Routing.call(
     resource: T,
     routeMethod: RouteMethod = RouteMethod.Empty,
 ) {
@@ -37,13 +37,13 @@ public inline fun <reified T : Any> ApplicationCall.redirectTo(resource: T) {
 }
 
 public inline fun <reified T : Any> Routing.push(resource: T) {
-    execute(resource = resource, routeMethod = RouteMethod.Push)
+    call(resource = resource, routeMethod = RouteMethod.Push)
 }
 
 public inline fun <reified T : Any> Routing.replace(resource: T) {
-    execute(resource = resource, routeMethod = RouteMethod.Replace)
+    call(resource = resource, routeMethod = RouteMethod.Replace)
 }
 
 public inline fun <reified T : Any> Routing.replaceAll(resource: T) {
-    execute(resource = resource, routeMethod = RouteMethod.ReplaceAll)
+    call(resource = resource, routeMethod = RouteMethod.ReplaceAll)
 }
