@@ -17,6 +17,7 @@ import kotlinx.coroutines.test.advanceTimeBy
 import kotlin.test.Test
 import kotlin.test.assertEquals
 import kotlin.test.assertNotNull
+import kotlin.test.assertNull
 
 @OptIn(ExperimentalCoroutinesApi::class)
 internal class ComposeRoutingTest {
@@ -330,7 +331,7 @@ internal class ComposeRoutingTest {
             val routing =
                 routing(parentCoroutineContext = coroutineContext) {
                     composable(path = "/push") {
-                        poppedMessage = LocalPopResult.current?.result<String>()
+                        poppedMessage = LocalRouting.current.popResult<String>()
                     }
                 }
 
@@ -356,5 +357,42 @@ internal class ComposeRoutingTest {
 
             // THEN
             assertEquals("This is the popped message", poppedMessage)
+        }
+
+    @Test
+    fun shouldPopResultBeNullAfterANewRouting() =
+        runComposeTest { coroutineContext, composition, clock ->
+            // GIVEN
+            var poppedMessage: String? = null
+
+            val routing =
+                routing(parentCoroutineContext = coroutineContext) {
+                    composable(path = "/push") {
+                        poppedMessage = LocalRouting.current.popResult<String>()
+                    }
+                }
+
+            composition.setContent {
+                Routing(
+                    routing = routing,
+                    initial = {},
+                )
+            }
+
+            // WHEN
+            routing.push(path = "/push")
+            advanceTimeBy(99) // Ask for routing
+            clock.sendFrame(0L) // Ask for recomposition
+
+            routing.pop(result = "This is the popped message")
+            advanceTimeBy(99) // Ask for routing
+            clock.sendFrame(0L) // Ask for recomposition
+
+            routing.push(path = "/push")
+            advanceTimeBy(99) // Ask for routing
+            clock.sendFrame(0L) // Ask for recomposition
+
+            // THEN
+            assertNull(poppedMessage, "Pop result should be cleared after other routing call")
         }
 }

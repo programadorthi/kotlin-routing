@@ -63,6 +63,7 @@ public fun PipelineContext<Unit, ApplicationCall>.composable(
     routing: Routing,
     body: @Composable () -> Unit,
 ) {
+    routing.popResult = null // Clear pop result after each new routing call
     val stateList = routing.contentList
     when (call.routeMethod) {
         RouteMethod.Push -> stateList.add(body)
