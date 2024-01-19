@@ -184,11 +184,11 @@ val router = routing(
 
 ## Compose Routing (compose module)
 
-Are you using Compose Jetpack or Multiplatform? This module is for you.
+Are you using Jetpack or Multiplatform Compose Runtime only? This module is for you.
 Easily route any composable you have just doing:
 
 ```kotlin
-val routing = routing { 
+val routing = routing {
     composable(path = "/login") {
         // Your composable or any compose behavior here 
     }
@@ -204,6 +204,49 @@ fun MyComposeApp() {
 // And in any place that have the routing instance call:
 routing.call(uri = "/login")
 ```
+
+## Compose Animation Routing (compose animation module)
+
+> At the moment Compose Animation has limited targets and is not available to all routing targets
+> So, this module is a copy of `compose` module with animation support to specific targets
+> Use one or other. NEVER BOTH!
+
+Are you using Jetpack or Multiplatform Compose that requires animation? This module is for you.
+Easily route any composable you have just doing:
+
+```kotlin
+val routing = routing { 
+    // You can override global behaviors to each composable
+    composable(
+        path = "/login",
+        enterTransition = {...},
+        exitTransition = {...},
+        popEnterTransition = {...},
+        popExitTransition = {...},
+    ) {
+        // Your composable or any compose behavior here 
+    }
+}
+
+@Composable
+fun MyComposeApp() {
+    Routing(
+        routing = routing,
+        enterTransition = {...},    // on enter new composable in forward direction
+        exitTransition = {...},     // on exit previous composable in forward direction
+        popEnterTransition = {...}, // on enter previous composable in backward direction
+        popExitTransition = {...},  // on exit current composable in backward direction
+    ) {
+        // Initial content
+    }
+}
+
+// And in any place that have the routing instance call:
+routing.call(uri = "/login")
+```
+
+> The kotlin-routing author is not expert in Compose Animation. So, yes, the behavior here is close 
+> to [Navigation with Compose](https://developer.android.com/jetpack/compose/navigation) and will help people that come from it.
 
 ## Other modules to interest
 

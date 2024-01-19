@@ -35,8 +35,6 @@ plugin-kover = { module = "org.jetbrains.kotlinx:kover-gradle-plugin", version.r
 androidx-activity = { module = "androidx.activity:activity", version.ref = "androidx-activity" }
 androidx-startup = { module = "androidx.startup:startup-runtime", version.ref = "androidx-startup" }
 
-compose-runtime = { module = "org.jetbrains.compose.runtime:runtime", version.ref = "compose" }
-compose-saveable = { module = "org.jetbrains.compose.runtime:runtime-saveable", version.ref = "compose" }
 coroutines-core = { module = "org.jetbrains.kotlinx:kotlinx-coroutines-core", version.ref = "coroutines" }
 ktor-events = { module = "io.ktor:ktor-events", version.ref = "ktor" }
 ktor-http = { module = "io.ktor:ktor-http", version.ref = "ktor" }

@@ -5,6 +5,8 @@ import dev.programadorthi.routing.core.Routing
 public fun Routing.canPop(): Boolean = contentList.size > 1
 
 public fun Routing.pop(result: Any? = null) {
+    if (!canPop()) return
+
     popResult = result
     contentList.removeLastOrNull()
 }

@@ -11,7 +11,7 @@ configureCommon()
 configureJvm()
 setupJvmToolchain()
 
-// TODO: Voyager has targets limitation. That is the reason to duplicate configs below
+// TODO: org.jetbrains.compose.animation has targets limitation. That is the reason to duplicate configs below
 kotlin {
     explicitApi()
 
@@ -35,9 +35,8 @@ kotlin {
         commonMain {
             dependencies {
                 api(projects.resources)
-                api(libs.voyager.navigator)
                 implementation(compose.runtime)
-                implementation(compose.runtimeSaveable)
+                implementation(compose.animation)
             }
         }
 
@@ -53,6 +52,8 @@ kotlin {
                 implementation(libs.test.junit)
                 implementation(libs.test.coroutines.debug)
                 implementation(libs.test.kotlin.test.junit)
+                implementation(compose.desktop.uiTestJUnit4)
+                implementation(compose.desktop.currentOs)
             }
         }
 
