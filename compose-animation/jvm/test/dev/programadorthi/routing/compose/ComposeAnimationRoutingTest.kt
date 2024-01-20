@@ -1,15 +1,13 @@
 package dev.programadorthi.routing.compose
 
+import androidx.compose.animation.fadeIn
+import androidx.compose.animation.fadeOut
 import androidx.compose.ui.test.junit4.createComposeRule
-import dev.programadorthi.routing.compose.helper.FakeContent
+import dev.programadorthi.routing.compose.animation.Routing
+import dev.programadorthi.routing.compose.animation.composable
 import dev.programadorthi.routing.core.RouteMethod
 import dev.programadorthi.routing.core.application.ApplicationCall
-import dev.programadorthi.routing.core.application.call
-import dev.programadorthi.routing.core.call
 import dev.programadorthi.routing.core.push
-import dev.programadorthi.routing.core.replace
-import dev.programadorthi.routing.core.replaceAll
-import dev.programadorthi.routing.core.route
 import dev.programadorthi.routing.core.routing
 import io.ktor.http.Parameters
 import kotlinx.coroutines.ExperimentalCoroutinesApi
@@ -19,8 +17,6 @@ import kotlinx.coroutines.test.runTest
 import org.junit.Rule
 import kotlin.test.Test
 import kotlin.test.assertEquals
-import kotlin.test.assertNotNull
-import kotlin.test.assertNull
 
 @OptIn(ExperimentalCoroutinesApi::class)
 internal class ComposeAnimationRoutingTest {
@@ -28,385 +24,223 @@ internal class ComposeAnimationRoutingTest {
     val rule = createComposeRule()
 
     @Test
-    fun shouldInvokeInitialContentWhenThereIsNoEmittedComposable() {
-        // GIVEN
-        val routing = routing {}
-        val fakeContent = FakeContent()
-
-        // WHEN
-        rule.setContent {
-            Routing(
-                routing = routing,
-                initial = {
-                    fakeContent.content = "I'm the initial content"
-                    fakeContent.Composable()
-                },
-            )
-        }
-        rule.mainClock.advanceTimeBy(0L) // Ask for recomposition
-
-        // THEN
-        assertEquals("I'm the initial content", fakeContent.result)
-    }
-
-    @Test
-    fun shouldComposeByPath() =
+    fun shouldAnimateUsingGlobalEnterAndExitTransitions() =
         runTest {
             // GIVEN
             val job = Job()
-            val fakeContent = FakeContent()
+            var previous: ApplicationCall? = null
+            var next: ApplicationCall? = null
+            var exitPrevious: ApplicationCall? = null
+            var exitNext: ApplicationCall? = null
 
             val routing =
                 routing(parentCoroutineContext = coroutineContext + job) {
                     composable(path = "/path") {
-                        fakeContent.content = "I'm the path based content"
-                        fakeContent.Composable()
                     }
                 }
 
+            // WHEN
             rule.setContent {
                 Routing(
                     routing = routing,
-                    initial = {
-                        fakeContent.content = "I'm the initial content"
-                        fakeContent.Composable()
+                    initial = { },
+                    enterTransition = {
+                        previous = initialState
+                        next = targetState
+                        fadeIn()
+                    },
+                    exitTransition = {
+                        exitPrevious = initialState
+                        exitNext = targetState
+                        fadeOut()
                     },
                 )
             }
 
-            // WHEN
-            routing.call(uri = "/path", routeMethod = RouteMethod.Push)
-            advanceTimeBy(99) // Ask for routing
-            rule.mainClock.advanceTimeBy(0L) // Ask for recomposition
-
-            // THEN
-            assertEquals("I'm the path based content", fakeContent.result)
-        }
-
-    @Test
-    fun shouldComposeByName() =
-        runTest {
-            // GIVEN
-            val job = Job()
-            val fakeContent = FakeContent()
-
-            val routing =
-                routing(parentCoroutineContext = coroutineContext + job) {
-                    composable(path = "/path", name = "path") {
-                        fakeContent.content = "I'm the name based content"
-                        fakeContent.Composable()
-                    }
-                }
-
-            rule.setContent {
-                Routing(
-                    routing = routing,
-                    initial = {
-                        fakeContent.content = "I'm the initial content"
-                        fakeContent.Composable()
-                    },
-                )
-            }
-
-            // WHEN
-            routing.call(name = "path", routeMethod = RouteMethod.Push)
-            advanceTimeBy(99) // Ask for routing
-            rule.mainClock.advanceTimeBy(0L) // Ask for recomposition
-
-            // THEN
-            assertEquals("I'm the name based content", fakeContent.result)
-        }
-
-    @Test
-    fun shouldComposeByAnyRoute() =
-        runTest {
-            // GIVEN
-            val job = Job()
-            val fakeContent = FakeContent()
-
-            val routing =
-                routing(parentCoroutineContext = coroutineContext + job) {
-                    route(path = "/any") {
-                        composable {
-                            fakeContent.content = "I'm the generic based content"
-                            fakeContent.Composable()
-                        }
-                    }
-                }
-
-            rule.setContent {
-                Routing(
-                    routing = routing,
-                    initial = {
-                        fakeContent.content = "I'm the initial content"
-                        fakeContent.Composable()
-                    },
-                )
-            }
-
-            // WHEN
-            routing.call(uri = "/any", routeMethod = RouteMethod.Push)
-            advanceTimeBy(99) // Ask for routing
-            rule.mainClock.advanceTimeBy(0L) // Ask for recomposition
-
-            // THEN
-            assertEquals("I'm the generic based content", fakeContent.result)
-        }
-
-    @Test
-    fun shouldPushAComposable() =
-        runTest {
-            // GIVEN
-            val job = Job()
-            val fakeContent = FakeContent()
-            var result: ApplicationCall? = null
-
-            val routing =
-                routing(parentCoroutineContext = coroutineContext + job) {
-                    composable(path = "/path") {
-                        result = call
-                        fakeContent.content = "I'm the push based content"
-                        fakeContent.Composable()
-                    }
-                }
-
-            rule.setContent {
-                Routing(
-                    routing = routing,
-                    initial = {
-                        fakeContent.content = "I'm the initial content"
-                        fakeContent.Composable()
-                    },
-                )
-            }
-
-            // WHEN
             routing.push(path = "/path")
             advanceTimeBy(99) // Ask for routing
             rule.mainClock.advanceTimeBy(0L) // Ask for recomposition
 
             // THEN
-            assertNotNull(result)
-            assertEquals("I'm the push based content", fakeContent.result)
-            assertEquals("/path", "${result?.uri}")
-            assertEquals("", "${result?.name}")
-            assertEquals(RouteMethod.Push, result?.routeMethod)
-            assertEquals(Parameters.Empty, result?.parameters)
+            assertEquals(previous, exitPrevious)
+            assertEquals(next, exitNext)
+            assertEquals("/", "${previous?.uri}")
+            assertEquals("", "${previous?.name}")
+            assertEquals(RouteMethod.Empty, previous?.routeMethod)
+            assertEquals(Parameters.Empty, previous?.parameters)
+            assertEquals("/path", "${next?.uri}")
+            assertEquals("", "${next?.name}")
+            assertEquals(RouteMethod.Push, next?.routeMethod)
+            assertEquals(Parameters.Empty, next?.parameters)
         }
 
     @Test
-    fun shouldReplaceAComposable() =
+    fun shouldAnimateUsingGlobalPopEnterAndPopExitTransitions() =
         runTest {
             // GIVEN
             val job = Job()
-            val pushContent = FakeContent()
-            val replaceContent = FakeContent()
-            var result: ApplicationCall? = null
+            var previous: ApplicationCall? = null
+            var next: ApplicationCall? = null
+            var exitPrevious: ApplicationCall? = null
+            var exitNext: ApplicationCall? = null
 
             val routing =
                 routing(parentCoroutineContext = coroutineContext + job) {
-                    composable(path = "/push") {
-                        pushContent.content = "I'm the push based content"
-                        pushContent.Composable()
-                    }
-                    composable(path = "/replace") {
-                        result = call
-                        replaceContent.content = "I'm the replace based content"
-                        replaceContent.Composable()
+                    composable(path = "/path") {
                     }
                 }
 
+            // WHEN
             rule.setContent {
                 Routing(
                     routing = routing,
-                    initial = {
-                        replaceContent.content = "I'm the initial content"
-                        replaceContent.Composable()
+                    initial = { },
+                    popEnterTransition = {
+                        previous = initialState
+                        next = targetState
+                        fadeIn()
+                    },
+                    popExitTransition = {
+                        exitPrevious = initialState
+                        exitNext = targetState
+                        fadeOut()
                     },
                 )
             }
 
-            // WHEN
-            routing.push(path = "/push")
+            routing.push(path = "/path")
             advanceTimeBy(99) // Ask for routing
             rule.mainClock.advanceTimeBy(0L) // Ask for recomposition
-
-            routing.replace(path = "/replace")
-            advanceTimeBy(99) // Ask for routing
-            rule.mainClock.advanceTimeBy(0L) // Ask for recomposition
-
-            // THEN
-            assertNotNull(result)
-            assertEquals("I'm the push based content", pushContent.result)
-            assertEquals("I'm the replace based content", replaceContent.result)
-            assertEquals("/replace", "${result?.uri}")
-            assertEquals("", "${result?.name}")
-            assertEquals(RouteMethod.Replace, result?.routeMethod)
-            assertEquals(Parameters.Empty, result?.parameters)
-        }
-
-    @Test
-    fun shouldReplaceAllComposable() =
-        runTest {
-            // GIVEN
-            val job = Job()
-            val pushContent = FakeContent()
-            val replaceContent = FakeContent()
-            var result: ApplicationCall? = null
-
-            val routing =
-                routing(parentCoroutineContext = coroutineContext + job) {
-                    composable(path = "/push") {
-                        pushContent.content = "I'm the push based content"
-                        pushContent.Composable()
-                    }
-                    composable(path = "/replace") {
-                        result = call
-                        replaceContent.content = "I'm the replace all based content"
-                        replaceContent.Composable()
-                    }
-                }
-
-            rule.setContent {
-                Routing(
-                    routing = routing,
-                    initial = {
-                        replaceContent.content = "I'm the initial content"
-                        replaceContent.Composable()
-                    },
-                )
-            }
-
-            // WHEN
-            routing.push(path = "/push")
-            advanceTimeBy(99) // Ask for routing
-            rule.mainClock.advanceTimeBy(0L) // Ask for recomposition
-
-            routing.replaceAll(path = "/replace")
-            advanceTimeBy(99) // Ask for routing
-            rule.mainClock.advanceTimeBy(0L) // Ask for recomposition
-
-            // THEN
-            assertNotNull(result)
-            assertEquals("I'm the push based content", pushContent.result)
-            assertEquals("I'm the replace all based content", replaceContent.result)
-            assertEquals("/replace", "${result?.uri}")
-            assertEquals("", "${result?.name}")
-            assertEquals(RouteMethod.ReplaceAll, result?.routeMethod)
-            assertEquals(Parameters.Empty, result?.parameters)
-        }
-
-    @Test
-    fun shouldPopAComposable() =
-        runTest {
-            // GIVEN
-            val job = Job()
-            var composedCounter = 0
-
-            val routing =
-                routing(parentCoroutineContext = coroutineContext + job) {
-                    composable(path = "/push") {
-                        composedCounter += 1
-                    }
-                }
-
-            rule.setContent {
-                Routing(
-                    routing = routing,
-                    initial = {},
-                )
-            }
-
-            // WHEN
-            routing.push(path = "/push")
-            advanceTimeBy(99) // Ask for routing
-            rule.mainClock.advanceTimeBy(99L) // Ask for recomposition
-
-            routing.push(path = "/push")
-            advanceTimeBy(99) // Ask for routing
-            rule.mainClock.advanceTimeBy(99L) // Ask for recomposition
 
             routing.pop()
-            advanceTimeBy(99) // Ask for routing
             rule.mainClock.advanceTimeBy(0L) // Ask for recomposition
 
             // THEN
-            assertEquals(5, composedCounter)
+            assertEquals(previous, exitPrevious)
+            assertEquals(next, exitNext)
+            assertEquals("/path", "${previous?.uri}")
+            assertEquals("", "${previous?.name}")
+            assertEquals(RouteMethod.Push, previous?.routeMethod)
+            assertEquals(Parameters.Empty, previous?.parameters)
+            assertEquals("/", "${next?.uri}")
+            assertEquals("", "${next?.name}")
+            assertEquals(RouteMethod.Empty, next?.routeMethod)
+            assertEquals(Parameters.Empty, next?.parameters)
+            assertEquals(true, previous?.popped, "Previous call should be popped")
+            assertEquals(
+                routing.poppedCall(),
+                previous,
+                "Previous call should be equals to popped call",
+            )
         }
 
     @Test
-    fun shouldPopAComposableWithResult() =
+    fun shouldAnimateUsingLocalEnterTransitions() =
         runTest {
             // GIVEN
             val job = Job()
-            var poppedMessage: String? = null
+            var previous: ApplicationCall? = null
+            var next: ApplicationCall? = null
+            var exitPrevious: ApplicationCall? = null
+            var exitNext: ApplicationCall? = null
 
             val routing =
                 routing(parentCoroutineContext = coroutineContext + job) {
-                    composable(path = "/push") {
-                        poppedMessage = LocalRouting.current.poppedEntry()?.popResult<String>()
+                    composable(
+                        path = "/path",
+                        enterTransition = {
+                            previous = initialState
+                            next = targetState
+                            fadeIn()
+                        },
+                    ) {
                     }
                 }
 
+            // WHEN
             rule.setContent {
                 Routing(
                     routing = routing,
-                    initial = {},
+                    initial = { },
+                    // Initial screen always uses global enter and exit transition
+                    exitTransition = {
+                        exitPrevious = initialState
+                        exitNext = targetState
+                        fadeOut()
+                    },
                 )
             }
 
-            // WHEN
-            routing.push(path = "/push")
-            advanceTimeBy(99) // Ask for routing
-            rule.mainClock.advanceTimeBy(0L) // Ask for recomposition
-
-            routing.push(path = "/push")
-            advanceTimeBy(99) // Ask for routing
-            rule.mainClock.advanceTimeBy(0L) // Ask for recomposition
-
-            routing.pop(result = "This is the popped message")
+            routing.push(path = "/path")
             advanceTimeBy(99) // Ask for routing
             rule.mainClock.advanceTimeBy(0L) // Ask for recomposition
 
             // THEN
-            assertEquals("This is the popped message", poppedMessage)
+            assertEquals(previous, exitPrevious)
+            assertEquals(next, exitNext)
+            assertEquals("/", "${previous?.uri}")
+            assertEquals("", "${previous?.name}")
+            assertEquals(RouteMethod.Empty, previous?.routeMethod)
+            assertEquals(Parameters.Empty, previous?.parameters)
+            assertEquals("/path", "${next?.uri}")
+            assertEquals("", "${next?.name}")
+            assertEquals(RouteMethod.Push, next?.routeMethod)
+            assertEquals(Parameters.Empty, next?.parameters)
         }
 
     @Test
-    fun shouldPopResultBeNullAfterANewRouting() =
+    fun shouldAnimateUsingLocalEnterAndExitTransitions() =
         runTest {
             // GIVEN
             val job = Job()
-            var poppedMessage: String? = null
+            var previous: ApplicationCall? = null
+            var next: ApplicationCall? = null
+            var exitPrevious: ApplicationCall? = null
+            var exitNext: ApplicationCall? = null
 
             val routing =
                 routing(parentCoroutineContext = coroutineContext + job) {
-                    composable(path = "/push") {
-                        poppedMessage = LocalRouting.current.poppedEntry()?.popResult<String>()
+                    composable(
+                        path = "/path",
+                        enterTransition = {
+                            previous = initialState
+                            next = targetState
+                            fadeIn()
+                        },
+                        exitTransition = {
+                            exitPrevious = initialState
+                            exitNext = targetState
+                            fadeOut()
+                        },
+                    ) {
                     }
                 }
 
+            // WHEN
             rule.setContent {
                 Routing(
                     routing = routing,
-                    initial = {},
+                    initial = { },
                 )
             }
 
-            // WHEN
-            routing.push(path = "/push")
+            routing.push(path = "/path")
             advanceTimeBy(99) // Ask for routing
             rule.mainClock.advanceTimeBy(0L) // Ask for recomposition
 
-            routing.pop(result = "This is the popped message")
-            advanceTimeBy(99) // Ask for routing
-            rule.mainClock.advanceTimeBy(0L) // Ask for recomposition
-
-            routing.push(path = "/push")
-            advanceTimeBy(99) // Ask for routing
+            routing.pop()
             rule.mainClock.advanceTimeBy(0L) // Ask for recomposition
 
             // THEN
-            assertNull(poppedMessage, "Pop result should be cleared after other routing call")
+            assertEquals(previous, exitNext)
+            assertEquals(next, exitPrevious)
+            assertEquals("/", "${exitNext?.uri}")
+            assertEquals("", "${exitNext?.name}")
+            assertEquals(RouteMethod.Empty, exitNext?.routeMethod)
+            assertEquals(Parameters.Empty, exitNext?.parameters)
+            assertEquals("/path", "${exitPrevious?.uri}")
+            assertEquals("", "${exitPrevious?.name}")
+            assertEquals(RouteMethod.Push, exitPrevious?.routeMethod)
+            assertEquals(Parameters.Empty, exitPrevious?.parameters)
         }
 }

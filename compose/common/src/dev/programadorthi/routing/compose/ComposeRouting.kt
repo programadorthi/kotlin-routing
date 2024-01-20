@@ -9,6 +9,8 @@ import androidx.compose.runtime.remember
 import androidx.compose.runtime.staticCompositionLocalOf
 import dev.programadorthi.routing.core.Route
 import dev.programadorthi.routing.core.Routing
+import dev.programadorthi.routing.core.application
+import dev.programadorthi.routing.core.application.ApplicationCall
 import dev.programadorthi.routing.core.routing
 import io.ktor.util.logging.KtorSimpleLogger
 import io.ktor.util.logging.Logger
@@ -21,18 +23,33 @@ public val LocalRouting: ProvidableCompositionLocal<Routing> =
     }
 
 @Composable
+public fun CurrentContent() {
+    val routing = LocalRouting.current
+    val lastCall = routing.callStack.last()
+    lastCall.content?.invoke(lastCall)
+}
+
+@Composable
 public fun Routing(
     routing: Routing,
-    initial: Content,
+    initial: ComposeContent,
+    content: ComposeContent = { CurrentContent() },
 ) {
     CompositionLocalProvider(LocalRouting provides routing) {
-        val stateList =
+        val router =
             remember(routing) {
-                mutableStateListOf<Content>().apply {
-                    routing.contentList = this
-                }
+                val stack = mutableStateListOf<ApplicationCall>()
+                val call =
+                    ApplicationCall(
+                        application = routing.application,
+                        uri = routing.toString(),
+                    )
+                call.content = initial
+                stack += call
+                routing.callStack = stack
+                routing
             }
-        stateList.lastOrNull()?.invoke() ?: initial()
+        content(router.callStack.last())
     }
 }
 
@@ -44,7 +61,8 @@ public fun Routing(
     log: Logger = KtorSimpleLogger("kotlin-routing"),
     developmentMode: Boolean = false,
     configuration: Route.() -> Unit,
-    initial: Content,
+    initial: ComposeContent,
+    content: ComposeContent = { CurrentContent() },
 ) {
     val routing =
         remember {
@@ -67,5 +85,6 @@ public fun Routing(
     Routing(
         routing = routing,
         initial = initial,
+        content = content,
     )
 }

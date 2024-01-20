@@ -315,7 +315,6 @@ internal class ComposeRoutingTest {
             clock.sendFrame(0L) // Ask for recomposition
 
             routing.pop()
-            advanceTimeBy(99) // Ask for routing
             clock.sendFrame(0L) // Ask for recomposition
 
             // THEN
@@ -331,7 +330,7 @@ internal class ComposeRoutingTest {
             val routing =
                 routing(parentCoroutineContext = coroutineContext) {
                     composable(path = "/push") {
-                        poppedMessage = LocalRouting.current.popResult<String>()
+                        poppedMessage = LocalRouting.current.poppedCall?.popResult<String>()
                     }
                 }
 
@@ -368,7 +367,7 @@ internal class ComposeRoutingTest {
             val routing =
                 routing(parentCoroutineContext = coroutineContext) {
                     composable(path = "/push") {
-                        poppedMessage = LocalRouting.current.popResult<String>()
+                        poppedMessage = LocalRouting.current.poppedCall?.popResult<String>()
                     }
                 }
 

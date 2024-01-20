@@ -1,9 +1,10 @@
-package dev.programadorthi.routing.compose
+package dev.programadorthi.routing.compose.animation
 
-import androidx.compose.animation.AnimatedContentScope
 import androidx.compose.animation.EnterTransition
 import androidx.compose.animation.ExitTransition
 import androidx.compose.runtime.Composable
+import dev.programadorthi.routing.compose.ComposeContent
+import dev.programadorthi.routing.compose.composable
 import dev.programadorthi.routing.core.Route
 import dev.programadorthi.routing.core.RouteMethod
 import dev.programadorthi.routing.core.Routing
@@ -131,35 +132,16 @@ public fun <T> PipelineContext<Unit, ApplicationCall>.composable(
     exitTransition: Animation<ExitTransition>? = null,
     popEnterTransition: Animation<EnterTransition>? = enterTransition,
     popExitTransition: Animation<ExitTransition>? = exitTransition,
-    body: @Composable AnimatedContentScope.() -> Unit,
+    body: ComposeContent,
 ) {
-    routing.poppedEntry = null // Removing last popped entry
+    call.enterTransition = enterTransition
+    call.exitTransition = exitTransition
+    call.popEnterTransition = popEnterTransition
+    call.popExitTransition = popExitTransition
 
-    val stateList = routing.contentList
-    val composeEntry =
-        ComposeEntry(
-            call = call,
-            content = body,
-        ).apply {
-            this.resource = resource
-            this.enterTransition = enterTransition
-            this.exitTransition = exitTransition
-            this.popEnterTransition = popEnterTransition
-            this.popExitTransition = popExitTransition
-        }
-
-    when (call.routeMethod) {
-        RouteMethod.Push -> stateList.add(composeEntry)
-        RouteMethod.Replace -> stateList[stateList.lastIndex.coerceAtLeast(0)] = composeEntry
-        RouteMethod.ReplaceAll -> {
-            stateList.clear()
-            stateList.add(composeEntry)
-        }
-
-        else ->
-            error(
-                "Compose needs a stack route method to work. You called a composable ${call.uri} " +
-                    "using route method ${call.routeMethod} that is not supported",
-            )
-    }
+    composable(
+        routing = routing,
+        resource = resource,
+        body = body,
+    )
 }

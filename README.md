@@ -205,11 +205,9 @@ fun MyComposeApp() {
 routing.call(uri = "/login")
 ```
 
-## Compose Animation Routing (compose animation module)
+## Compose Animation (compose animation module)
 
 > At the moment Compose Animation has limited targets and is not available to all routing targets
-> So, this module is a copy of `compose` module with animation support to specific targets
-> Use one or other. NEVER BOTH!
 
 Are you using Jetpack or Multiplatform Compose that requires animation? This module is for you.
 Easily route any composable you have just doing:

@@ -2,18 +2,12 @@ package dev.programadorthi.routing.compose
 
 import dev.programadorthi.routing.core.Routing
 
-public fun Routing.canPop(): Boolean = contentList.size > 1
+public fun Routing.canPop(): Boolean = callStack.size > 1
 
 public fun Routing.pop(result: Any? = null) {
     if (!canPop()) return
 
-    popResult = result
-    contentList.removeLastOrNull()
+    poppedCall = callStack.removeLastOrNull()
+    poppedCall?.popped = true
+    poppedCall?.popResult = result
 }
-
-@Suppress("UNCHECKED_CAST")
-public fun <T> Routing.popResult(): T? = popResult as? T
-
-public fun <T> Routing.popResult(default: T): T = popResult() ?: default
-
-public fun <T> Routing.popResult(default: () -> T): T = popResult() ?: default()

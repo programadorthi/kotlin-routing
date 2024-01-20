@@ -31,7 +31,7 @@ public fun Route.composable(
 public fun Route.composable(body: @Composable PipelineContext<Unit, ApplicationCall>.() -> Unit) {
     val routing = asRouting ?: error("Your route $this must have a parent Routing")
     handle {
-        composable(routing) {
+        composable(routing = routing, resource = null) {
             body()
         }
     }
@@ -41,7 +41,7 @@ public fun Route.composable(body: @Composable PipelineContext<Unit, ApplicationC
 public inline fun <reified T : Any> Route.composable(noinline body: @Composable PipelineContext<Unit, ApplicationCall>.(T) -> Unit): Route {
     val routing = asRouting ?: error("Your route $this must have a parent Routing")
     return handle<T> { resource ->
-        composable(routing) {
+        composable(routing = routing, resource = resource) {
             body(resource)
         }
     }
@@ -53,27 +53,34 @@ public inline fun <reified T : Any> Route.composable(
 ): Route {
     val routing = asRouting ?: error("Your route $this must have a parent Routing")
     return handle<T>(method = method) { resource ->
-        composable(routing) {
+        composable(routing = routing, resource = resource) {
             body(resource)
         }
     }
 }
 
-public fun PipelineContext<Unit, ApplicationCall>.composable(
+public fun <T> PipelineContext<Unit, ApplicationCall>.composable(
     routing: Routing,
-    body: @Composable () -> Unit,
+    resource: T?,
+    body: ComposeContent,
 ) {
-    routing.popResult = null // Clear pop result after each new routing call
-    val stateList = routing.contentList
+    routing.poppedCall = null // Clear pop call after each new routing call
+
+    call.popped = false
+    call.resource = resource
+    call.content = body
+
+    val callStack = routing.callStack
     when (call.routeMethod) {
-        RouteMethod.Push -> stateList.add(body)
+        RouteMethod.Push -> callStack.add(call)
         RouteMethod.Replace -> {
-            stateList.removeLastOrNull()
-            stateList.add(body)
+            callStack.removeLastOrNull()
+            callStack.add(call)
         }
+
         RouteMethod.ReplaceAll -> {
-            stateList.clear()
-            stateList.add(body)
+            callStack.clear()
+            callStack.add(call)
         }
 
         else ->

@@ -1,8 +1,8 @@
-package dev.programadorthi.routing.compose
+package dev.programadorthi.routing.compose.animation
 
 import androidx.compose.animation.AnimatedContent
-import androidx.compose.animation.AnimatedContentScope
 import androidx.compose.animation.AnimatedContentTransitionScope
+import androidx.compose.animation.AnimatedVisibilityScope
 import androidx.compose.animation.ContentTransform
 import androidx.compose.animation.EnterTransition
 import androidx.compose.animation.ExitTransition
@@ -12,15 +12,13 @@ import androidx.compose.animation.fadeOut
 import androidx.compose.animation.scaleIn
 import androidx.compose.animation.togetherWith
 import androidx.compose.runtime.Composable
-import androidx.compose.runtime.CompositionLocalProvider
 import androidx.compose.runtime.DisposableEffect
-import androidx.compose.runtime.ProvidableCompositionLocal
-import androidx.compose.runtime.mutableStateListOf
 import androidx.compose.runtime.remember
-import androidx.compose.runtime.staticCompositionLocalOf
+import dev.programadorthi.routing.compose.CurrentContent
+import dev.programadorthi.routing.compose.Routing
+import dev.programadorthi.routing.compose.popped
 import dev.programadorthi.routing.core.Route
 import dev.programadorthi.routing.core.Routing
-import dev.programadorthi.routing.core.application
 import dev.programadorthi.routing.core.application.ApplicationCall
 import dev.programadorthi.routing.core.routing
 import io.ktor.util.logging.KtorSimpleLogger
@@ -28,10 +26,7 @@ import io.ktor.util.logging.Logger
 import kotlin.coroutines.CoroutineContext
 import kotlin.coroutines.EmptyCoroutineContext
 
-public val LocalRouting: ProvidableCompositionLocal<Routing> =
-    staticCompositionLocalOf {
-        error("Composition local LocalRouting not found")
-    }
+public typealias ComposeAnimatedContent = @Composable AnimatedVisibilityScope.(ApplicationCall) -> Unit
 
 @Composable
 public fun Routing(
@@ -45,32 +40,20 @@ public fun Routing(
     },
     popEnterTransition: Animation<EnterTransition> = enterTransition,
     popExitTransition: Animation<ExitTransition> = exitTransition,
-    initial: @Composable AnimatedContentScope.() -> Unit,
+    initial: ComposeAnimatedContent,
+    content: ComposeAnimatedContent = { CurrentContent() },
 ) {
-    CompositionLocalProvider(LocalRouting provides routing) {
-        val stateList =
-            remember(routing) {
-                mutableStateListOf<ComposeEntry>().apply {
-                    routing.contentList = this
-                    add(
-                        ComposeEntry(
-                            content = initial,
-                            call =
-                                ApplicationCall(
-                                    application = routing.application,
-                                    uri = routing.toString(),
-                                ),
-                        ).apply {
-                            this.enterTransition = enterTransition
-                            this.exitTransition = exitTransition
-                            this.popEnterTransition = popEnterTransition
-                            this.popExitTransition = popExitTransition
-                        },
-                    )
-                }
-            }
+    val routingUri =
+        remember(routing) {
+            routing.toString()
+        }
+
+    Routing(
+        routing = routing,
+        initial = { },
+    ) { stateCall ->
         AnimatedContent(
-            targetState = stateList.last(),
+            targetState = stateCall,
             transitionSpec = {
                 transitionSpec(
                     scope = this,
@@ -80,8 +63,12 @@ public fun Routing(
                     popExitTransition = popExitTransition,
                 )
             },
-            content = { entry ->
-                entry.content(this)
+            content = { call ->
+                if (call.uri == routingUri) {
+                    initial(call)
+                } else {
+                    content(call)
+                }
             },
         )
     }
@@ -104,7 +91,8 @@ public fun Routing(
     popEnterTransition: Animation<EnterTransition> = enterTransition,
     popExitTransition: Animation<ExitTransition> = exitTransition,
     configuration: Route.() -> Unit,
-    initial: @Composable AnimatedContentScope.() -> Unit,
+    initial: ComposeAnimatedContent,
+    content: ComposeAnimatedContent = { CurrentContent() },
 ) {
     val routing =
         remember {
@@ -131,11 +119,12 @@ public fun Routing(
         popEnterTransition = popEnterTransition,
         popExitTransition = popExitTransition,
         initial = initial,
+        content = content,
     )
 }
 
 private fun transitionSpec(
-    scope: AnimatedContentTransitionScope<ComposeEntry>,
+    scope: AnimatedContentTransitionScope<ApplicationCall>,
     enterTransition: Animation<EnterTransition>,
     exitTransition: Animation<ExitTransition>,
     popEnterTransition: Animation<EnterTransition> = enterTransition,
