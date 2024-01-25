@@ -3,7 +3,6 @@ package dev.programadorthi.routing.compose.animation
 import androidx.compose.animation.EnterTransition
 import androidx.compose.animation.ExitTransition
 import androidx.compose.runtime.Composable
-import dev.programadorthi.routing.compose.ComposeContent
 import dev.programadorthi.routing.compose.composable
 import dev.programadorthi.routing.core.Route
 import dev.programadorthi.routing.core.RouteMethod
@@ -73,9 +72,8 @@ public fun Route.composable(
             popEnterTransition = popEnterTransition,
             popExitTransition = popExitTransition,
             routing = routing,
-        ) {
-            body()
-        }
+            bodyComposable = body,
+        )
     }
 }
 
@@ -85,7 +83,7 @@ public inline fun <reified T : Any> Route.composable(
     noinline exitTransition: Animation<ExitTransition>? = null,
     noinline popEnterTransition: Animation<EnterTransition>? = enterTransition,
     noinline popExitTransition: Animation<ExitTransition>? = exitTransition,
-    noinline body: @Composable PipelineContext<Unit, ApplicationCall>.(T) -> Unit,
+    crossinline body: @Composable PipelineContext<Unit, ApplicationCall>.(T) -> Unit,
 ): Route {
     val routing = asRouting ?: error("Your route $this must have a parent Routing")
     return handle<T> { resource ->
@@ -108,7 +106,7 @@ public inline fun <reified T : Any> Route.composable(
     noinline exitTransition: Animation<ExitTransition>? = null,
     noinline popEnterTransition: Animation<EnterTransition>? = enterTransition,
     noinline popExitTransition: Animation<ExitTransition>? = exitTransition,
-    noinline body: @Composable PipelineContext<Unit, ApplicationCall>.(T) -> Unit,
+    crossinline body: @Composable PipelineContext<Unit, ApplicationCall>.(T) -> Unit,
 ): Route {
     val routing = asRouting ?: error("Your route $this must have a parent Routing")
     return handle<T>(method = method) { resource ->
@@ -132,7 +130,7 @@ public fun <T> PipelineContext<Unit, ApplicationCall>.composable(
     exitTransition: Animation<ExitTransition>? = null,
     popEnterTransition: Animation<EnterTransition>? = enterTransition,
     popExitTransition: Animation<ExitTransition>? = exitTransition,
-    body: ComposeContent,
+    bodyComposable: @Composable PipelineContext<Unit, ApplicationCall>.() -> Unit,
 ) {
     call.enterTransition = enterTransition
     call.exitTransition = exitTransition
@@ -142,6 +140,8 @@ public fun <T> PipelineContext<Unit, ApplicationCall>.composable(
     composable(
         routing = routing,
         resource = resource,
-        body = body,
+        body = {
+            bodyComposable()
+        },
     )
 }

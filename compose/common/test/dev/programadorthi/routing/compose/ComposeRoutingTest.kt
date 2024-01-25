@@ -315,6 +315,7 @@ internal class ComposeRoutingTest {
             clock.sendFrame(0L) // Ask for recomposition
 
             routing.pop()
+            advanceTimeBy(99) // Ask for routing
             clock.sendFrame(0L) // Ask for recomposition
 
             // THEN

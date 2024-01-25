@@ -26,7 +26,7 @@ public val LocalRouting: ProvidableCompositionLocal<Routing> =
 public fun CurrentContent() {
     val routing = LocalRouting.current
     val lastCall = routing.callStack.last()
-    lastCall.content?.invoke(lastCall)
+    lastCall.content(lastCall)
 }
 
 @Composable

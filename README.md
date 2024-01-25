@@ -184,6 +184,9 @@ val router = routing(
 
 ## Compose Routing (compose module)
 
+> This module is just for study or simple compose application. 
+> I recommend use Voyager module for more robust application.
+
 Are you using Jetpack or Multiplatform Compose Runtime only? This module is for you.
 Easily route any composable you have just doing:
 
@@ -191,6 +194,9 @@ Easily route any composable you have just doing:
 val routing = routing {
     composable(path = "/login") {
         // Your composable or any compose behavior here 
+        call.popped // True if it was popped
+        val result = call.popResult<T>() // To get the pop result after pop one composable
+        val typedValue = call.resource<T>() // To get the type-safe navigated value
     }
 }
 
@@ -203,10 +209,15 @@ fun MyComposeApp() {
 
 // And in any place that have the routing instance call:
 routing.call(uri = "/login")
+
+val lastPoppedCall = routing.poppedCall() // The call that was popped after call `routing.pop()`
+val result = lastPoppedCall?.popResult<T>() // To get the result after call `routing.pop(result = T)`
 ```
 
 ## Compose Animation (compose animation module)
 
+> This module is just for study or simple compose application.
+> I recommend use Voyager module for more robust application.
 > At the moment Compose Animation has limited targets and is not available to all routing targets
 
 Are you using Jetpack or Multiplatform Compose that requires animation? This module is for you.
@@ -223,6 +234,7 @@ val routing = routing {
         popExitTransition = {...},
     ) {
         // Your composable or any compose behavior here 
+        call.animatedVisibilityScope // If you need do something during animation
     }
 }
 
@@ -230,8 +242,8 @@ val routing = routing {
 fun MyComposeApp() {
     Routing(
         routing = routing,
-        enterTransition = {...},    // on enter new composable in forward direction
-        exitTransition = {...},     // on exit previous composable in forward direction
+        enterTransition = {...},    // on enter next composable in forward direction
+        exitTransition = {...},     // on exit current composable in forward direction
         popEnterTransition = {...}, // on enter previous composable in backward direction
         popExitTransition = {...},  // on exit current composable in backward direction
     ) {

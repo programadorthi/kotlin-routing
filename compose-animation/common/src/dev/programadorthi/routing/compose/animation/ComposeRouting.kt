@@ -1,9 +1,7 @@
 package dev.programadorthi.routing.compose.animation
 
 import androidx.compose.animation.AnimatedContent
-import androidx.compose.animation.AnimatedContentTransitionScope
 import androidx.compose.animation.AnimatedVisibilityScope
-import androidx.compose.animation.ContentTransform
 import androidx.compose.animation.EnterTransition
 import androidx.compose.animation.ExitTransition
 import androidx.compose.animation.core.tween
@@ -14,8 +12,8 @@ import androidx.compose.animation.togetherWith
 import androidx.compose.runtime.Composable
 import androidx.compose.runtime.DisposableEffect
 import androidx.compose.runtime.remember
-import dev.programadorthi.routing.compose.CurrentContent
 import dev.programadorthi.routing.compose.Routing
+import dev.programadorthi.routing.compose.content
 import dev.programadorthi.routing.compose.popped
 import dev.programadorthi.routing.core.Route
 import dev.programadorthi.routing.core.Routing
@@ -41,34 +39,38 @@ public fun Routing(
     popEnterTransition: Animation<EnterTransition> = enterTransition,
     popExitTransition: Animation<ExitTransition> = exitTransition,
     initial: ComposeAnimatedContent,
-    content: ComposeAnimatedContent = { CurrentContent() },
+    content: ComposeAnimatedContent = { call ->
+        call.content(call)
+    },
 ) {
-    val routingUri =
-        remember(routing) {
-            routing.toString()
-        }
-
     Routing(
         routing = routing,
-        initial = { },
-    ) { stateCall ->
+        initial = { call ->
+            call.animatedVisibilityScope?.initial(call)
+        },
+    ) { call ->
         AnimatedContent(
-            targetState = stateCall,
+            targetState = call,
             transitionSpec = {
-                transitionSpec(
-                    scope = this,
-                    enterTransition = enterTransition,
-                    exitTransition = exitTransition,
-                    popEnterTransition = popEnterTransition,
-                    popExitTransition = popExitTransition,
-                )
+                val previousCall = initialState
+                val nextCall = targetState
+                val enter =
+                    when {
+                        previousCall.popped -> nextCall.popEnterTransition ?: popEnterTransition
+                        else -> nextCall.enterTransition ?: enterTransition
+                    }
+                val exit =
+                    when {
+                        previousCall.popped -> previousCall.popExitTransition ?: popExitTransition
+                        else -> previousCall.exitTransition ?: exitTransition
+                    }
+
+                enter(this) togetherWith exit(this)
             },
-            content = { call ->
-                if (call.uri == routingUri) {
-                    initial(call)
-                } else {
-                    content(call)
-                }
+            content = { animatedCall ->
+                animatedCall.animatedVisibilityScope = this
+
+                content(animatedCall)
             },
         )
     }
@@ -92,7 +94,7 @@ public fun Routing(
     popExitTransition: Animation<ExitTransition> = exitTransition,
     configuration: Route.() -> Unit,
     initial: ComposeAnimatedContent,
-    content: ComposeAnimatedContent = { CurrentContent() },
+    content: ComposeAnimatedContent = { call -> call.content(call) },
 ) {
     val routing =
         remember {
@@ -122,25 +124,3 @@ public fun Routing(
         content = content,
     )
 }
-
-private fun transitionSpec(
-    scope: AnimatedContentTransitionScope<ApplicationCall>,
-    enterTransition: Animation<EnterTransition>,
-    exitTransition: Animation<ExitTransition>,
-    popEnterTransition: Animation<EnterTransition> = enterTransition,
-    popExitTransition: Animation<ExitTransition> = exitTransition,
-): ContentTransform =
-    with(scope) {
-        val previousEntry = initialState
-        val nextEntry = targetState
-
-        if (previousEntry.popped) {
-            val enter = nextEntry.popEnterTransition ?: popEnterTransition
-            val exit = previousEntry.popExitTransition ?: popExitTransition
-            return@with enter(this).togetherWith(exit(this))
-        }
-
-        val enter = nextEntry.enterTransition ?: enterTransition
-        val exit = previousEntry.exitTransition ?: exitTransition
-        return@with enter(this).togetherWith(exit(this))
-    }
