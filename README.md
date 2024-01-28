@@ -182,82 +182,6 @@ val router = routing(
 ) { }
 ```
 
-## Compose Routing (compose module)
-
-> This module is just for study or simple compose application. 
-> I recommend use Voyager module for more robust application.
-
-Are you using Jetpack or Multiplatform Compose Runtime only? This module is for you.
-Easily route any composable you have just doing:
-
-```kotlin
-val routing = routing {
-    composable(path = "/login") {
-        // Your composable or any compose behavior here 
-        call.popped // True if it was popped
-        val result = call.popResult<T>() // To get the pop result after pop one composable
-        val typedValue = call.resource<T>() // To get the type-safe navigated value
-    }
-}
-
-@Composable
-fun MyComposeApp() {
-    Routing(routing = routing) {
-        // Initial content
-    }
-}
-
-// And in any place that have the routing instance call:
-routing.call(uri = "/login")
-
-val lastPoppedCall = routing.poppedCall() // The call that was popped after call `routing.pop()`
-val result = lastPoppedCall?.popResult<T>() // To get the result after call `routing.pop(result = T)`
-```
-
-## Compose Animation (compose animation module)
-
-> This module is just for study or simple compose application.
-> I recommend use Voyager module for more robust application.
-> At the moment Compose Animation has limited targets and is not available to all routing targets
-
-Are you using Jetpack or Multiplatform Compose that requires animation? This module is for you.
-Easily route any composable you have just doing:
-
-```kotlin
-val routing = routing { 
-    // You can override global behaviors to each composable
-    composable(
-        path = "/login",
-        enterTransition = {...},
-        exitTransition = {...},
-        popEnterTransition = {...},
-        popExitTransition = {...},
-    ) {
-        // Your composable or any compose behavior here 
-        call.animatedVisibilityScope // If you need do something during animation
-    }
-}
-
-@Composable
-fun MyComposeApp() {
-    Routing(
-        routing = routing,
-        enterTransition = {...},    // on enter next composable in forward direction
-        exitTransition = {...},     // on exit current composable in forward direction
-        popEnterTransition = {...}, // on enter previous composable in backward direction
-        popExitTransition = {...},  // on exit current composable in backward direction
-    ) {
-        // Initial content
-    }
-}
-
-// And in any place that have the routing instance call:
-routing.call(uri = "/login")
-```
-
-> The kotlin-routing author is not expert in Compose Animation. So, yes, the behavior here is close 
-> to [Navigation with Compose](https://developer.android.com/jetpack/compose/navigation) and will help people that come from it.
-
 ## Other modules to interest
 
 - `auth` - [Authentication and Authorization](https://ktor.io/docs/authentication.html)
@@ -291,3 +215,145 @@ parent.call(Endpoint())
 // IT WORKS
 parent.call(uri = "/child/endpoint")
 ```
+
+## Integration modules
+
+> These kind of modules are inspirations showing how do you own integration with the target framework.
+
+### Compose Routing (compose module)
+
+> This module is just for study or simple compose application.
+> I recommend use Voyager module for more robust application.
+
+Are you using Jetpack or Multiplatform Compose Runtime only? This module is for you.
+Easily route any composable you have just doing:
+
+```kotlin
+val routing = routing {
+    composable(path = "/login") {
+        // Your composable or any compose behavior here 
+        call.popped // True if it was popped
+        val result = call.popResult<T>() // To get the pop result after pop one composable
+        val typedValue = call.resource<T>() // To get the type-safe navigated value
+    }
+}
+
+@Composable
+fun MyComposeApp() {
+    Routing(routing = routing, initial = {
+        // Initial content
+        LocalRouting.current // Available inside compositions to do routing
+    })
+}
+
+// And in any place that have the routing instance call:
+routing.push(path = "/login")
+
+val lastPoppedCall = routing.poppedCall() // The call that was popped after call `routing.pop()`
+val result = lastPoppedCall?.popResult<T>() // To get the result after call `routing.pop(result = T)`
+```
+
+### Compose Animation (compose-animation module)
+
+> This module is just for study or simple compose application.
+> I recommend use Voyager module for more robust application.
+> At the moment Compose Multiplatform Animation (not the routing module) has limited targets and it 
+> is not available to all routing targets
+
+Are you using Jetpack or Multiplatform Compose that requires animation? This module is for you.
+Easily route any composable you have just doing:
+
+```kotlin
+val routing = routing { 
+    // You can override global behaviors to each composable
+    composable(
+        path = "/login",
+        enterTransition = {...},
+        exitTransition = {...},
+        popEnterTransition = {...},
+        popExitTransition = {...},
+    ) {
+        // Your composable or any compose behavior here 
+        call.animatedVisibilityScope // If you need do something during animation
+    }
+}
+
+@Composable
+fun MyComposeApp() {
+    Routing(
+        routing = routing,
+        enterTransition = {...},    // on enter next composable in forward direction
+        exitTransition = {...},     // on exit current composable in forward direction
+        popEnterTransition = {...}, // on enter previous composable in backward direction
+        popExitTransition = {...},  // on exit current composable in backward direction
+        initial = {
+        // Initial animated content
+    })
+}
+
+// And in any place that have the routing instance call:
+routing.push(path = "/login")
+```
+
+> The kotlin-routing author is not expert in Compose Animation. So, yes, the behavior here is close
+> to [Navigation with Compose](https://developer.android.com/jetpack/compose/navigation) and will help people that come from it.
+
+### Web Routing (javascript module still in development)
+
+> Are you building a DOM application? This module is for you.
+
+```kotlin
+val routing = routing {
+    jsRoute(path = "/page1") {
+        // create and return your DOM Element
+    }
+    jsRoute(path = "/page2") {
+        // create and return your DOM Element
+    }
+}
+
+fun main() {
+    render(
+        routing = routing,
+        root = document.getElementById("root") ?: document.create.div(),
+        initial = document.create.h1 {
+            +"I am the initial content"
+            onClickFunction = {
+                routing.push(path = "/page1")
+            }
+        }
+    )
+}
+
+// And in any place that have the routing instance call:
+routing.push(path = "/page2")
+```
+
+### Voyager Routing (voyager module)
+
+> Are you building a Voyager application and need routing support? This module is for you.
+
+```kotlin
+val routing = routing { 
+    screen(path = "/page1") {
+        // create and return your Screen instance
+    }
+}
+
+@Composable
+fun App() {
+    VoyagerRouting(
+        routing = routing,
+        initialScreen = SplashScreen() // The first screen rendered
+        ... // Any other Voyager related config
+    )
+}
+
+// And in any place that have the routing instance call:
+routing.push(path = "/page1")
+```
+
+Voyager is a screen based library. So the result put in a pop call is passed to the screen and not
+to the composition. And here it is different from `compose` module. To get the result after a pop call 
+do the previous screen implement `VoyagerRoutingPopResult<T>`. Its `onResult` function will be called 
+on any successfully `pop()` or `popUntil()` to the previous screen.

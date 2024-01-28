@@ -34,7 +34,7 @@ kotlin {
     sourceSets {
         commonMain {
             dependencies {
-                api(projects.compose)
+                api(projects.integration.compose)
                 implementation(compose.runtime)
                 implementation(compose.animation)
             }

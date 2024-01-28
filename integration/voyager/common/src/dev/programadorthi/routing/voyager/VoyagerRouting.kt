@@ -23,9 +23,9 @@ import io.ktor.util.logging.Logger
 import kotlin.coroutines.CoroutineContext
 import kotlin.coroutines.EmptyCoroutineContext
 
-public val LocalRouting: ProvidableCompositionLocal<Routing> =
+public val LocalVoyagerRouting: ProvidableCompositionLocal<Routing> =
     staticCompositionLocalOf {
-        error("Composition local LocalRouting not found")
+        error("Composition local LocalVoyagerRouting not found")
     }
 
 @Composable
@@ -37,7 +37,7 @@ public fun VoyagerRouting(
     key: String = compositionUniqueId(),
     content: NavigatorContent = { CurrentScreen() },
 ) {
-    CompositionLocalProvider(LocalRouting provides routing) {
+    CompositionLocalProvider(LocalVoyagerRouting provides routing) {
         Navigator(
             screen = initialScreen,
             disposeBehavior = disposeBehavior,

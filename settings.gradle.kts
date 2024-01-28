@@ -22,16 +22,17 @@ rootProject.name = "kotlin-routing"
 
 include(":auth")
 include(":call-logging")
-include(":compose")
-include(":compose-animation")
 include(":core")
 include(":events")
 include(":events-resources")
-include(":javascript")
 include(":resources")
 include(":sessions")
 include(":status-pages")
-include(":voyager")
+
+include(":integration:compose")
+include(":integration:compose-animation")
+include(":integration:javascript")
+include(":integration:voyager")
 
 // Samples are disabled by default to avoid sync their.
 //include(":samples:android-sample")
