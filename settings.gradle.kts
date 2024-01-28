@@ -29,6 +29,7 @@ include(":resources")
 include(":sessions")
 include(":status-pages")
 
+include(":integration:android")
 include(":integration:compose")
 include(":integration:compose-animation")
 include(":integration:javascript")
