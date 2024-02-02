@@ -5,9 +5,8 @@ import dev.programadorthi.routing.core.Routing
 import dev.programadorthi.routing.core.application
 import dev.programadorthi.routing.core.application.ApplicationCall
 import dev.programadorthi.routing.core.application.pluginOrNull
+import dev.programadorthi.routing.core.application.redirectToPath
 import dev.programadorthi.routing.core.call
-import io.ktor.util.pipeline.execute
-import kotlinx.coroutines.launch
 
 public inline fun <reified T : Any> Routing.call(
     resource: T,
@@ -23,17 +22,7 @@ public inline fun <reified T : Any> ApplicationCall.redirectTo(resource: T) {
     checkNotNull(application.pluginOrNull(Resources)) {
         "Resources plugin not installed"
     }
-    with(application) {
-        launch {
-            execute(
-                ApplicationCall(
-                    application = application,
-                    uri = href(resource),
-                    routeMethod = routeMethod,
-                ),
-            )
-        }
-    }
+    redirectToPath(path = application.href(resource))
 }
 
 public inline fun <reified T : Any> Routing.push(resource: T) {

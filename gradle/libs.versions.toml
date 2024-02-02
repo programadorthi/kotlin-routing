@@ -1,5 +1,5 @@
 [versions]
-plugin-android = "8.2.1"
+plugin-android = "8.2.2"
 plugin-kover = "0.7.5"
 plugin-ktlint = "12.1.0"
 plugin-maven = "0.27.0"
@@ -17,6 +17,7 @@ slf4j = "2.0.4"
 voyager = "1.0.0"
 
 junit = "4.13.2"
+robolectric = "4.11.1"
 
 # SAMPLE VERSIONS #
 core-ktx = "1.9.0"
@@ -28,6 +29,7 @@ compose-bom = "2022.10.00"
 # SAMPLE VERSIONS #
 
 [libraries]
+plugin-android = { module = "com.android.tools.build:gradle", version.ref = "plugin-android" }
 plugin-kotlin = { module = "org.jetbrains.kotlin:kotlin-gradle-plugin", version.ref = "kotlin" }
 plugin-kover = { module = "org.jetbrains.kotlinx:kover-gradle-plugin", version.ref = "plugin-kover"}
 
@@ -48,6 +50,7 @@ test-coroutines = { module = "org.jetbrains.kotlinx:kotlinx-coroutines-test", ve
 test-coroutines-debug = { module = "org.jetbrains.kotlinx:kotlinx-coroutines-debug", version.ref = "coroutines" }
 test-junit = { module = "junit:junit", version.ref = "junit" }
 test-kotlin-test-junit = { module = "org.jetbrains.kotlin:kotlin-test-junit", version.ref = "kotlin" }
+test-robolectric = { module = "org.robolectric:robolectric", version.ref = "robolectric" }
 
 # SAMPLE LIBRARIES #
 core-ktx = { group = "androidx.core", name = "core-ktx", version.ref = "core-ktx" }
@@ -68,8 +71,6 @@ material3 = { group = "androidx.compose.material3", name = "material3" }
 # SAMPLE LIBRARIES #
 
 [plugins]
-android-application = { id = "com.android.application", version.ref = "plugin-android" }
-android-library = { id = "com.android.library", version.ref = "plugin-android" }
 jetbrains-compose = { id = "org.jetbrains.compose", version.ref = "compose" }
 kotlin-serialization = { id = "org.jetbrains.kotlin.plugin.serialization", version.ref = "kotlin"}
 ktlint = { id = "org.jlleitschuh.gradle.ktlint", version.ref = "plugin-ktlint"}
