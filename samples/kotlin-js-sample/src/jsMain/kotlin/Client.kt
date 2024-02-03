@@ -20,6 +20,10 @@ val router = routing {
     jsRoute(path = "/page3") {
         page3
     }
+
+    jsRoute(path = "/page4") {
+        page4
+    }
 }
 
 fun main() {

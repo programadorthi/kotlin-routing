@@ -25,6 +25,12 @@ val page2: HTMLElement = createPage(
 
 val page3: HTMLElement = createPage(
     h1Text = "You are on the page 3",
+    nextPageName = "page 4",
+    nextPath = "/page4",
+)
+
+val page4: HTMLElement = createPage(
+    h1Text = "You are on the page 4",
     nextPageName = "page 1",
     nextPath = "/page1",
 )

@@ -1,7 +1,6 @@
 package dev.programadorthi.routing.callloging
 
 public actual object MDC {
-    // TODO: Is javascript multi thread? I don't know
     private val current = mutableMapOf<String, String>()
 
     public actual fun clear() {
@@ -9,7 +8,7 @@ public actual object MDC {
     }
 
     public actual fun getCopyOfContextMap(): Map<String, String>? {
-        return current
+        return current.toMap()
     }
 
     public actual fun remove(key: String) {

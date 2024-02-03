@@ -27,6 +27,11 @@ internal fun ApplicationCall.serialize(): String {
 
 internal fun Any?.deserialize(): JavascriptRoutingState? =
     when (this) {
-        is String -> Json.decodeFromString(this)
+        is String -> toState()
         else -> null
     }
+
+private fun String.toState(): JavascriptRoutingState? =
+    runCatching {
+        Json.decodeFromString<JavascriptRoutingState>(this)
+    }.getOrNull()

@@ -5,6 +5,7 @@ import dev.programadorthi.routing.core.RouteMethod
 import dev.programadorthi.routing.core.application.ApplicationCall
 import dev.programadorthi.routing.core.application.application
 import dev.programadorthi.routing.core.application.call
+import dev.programadorthi.routing.core.asRouting
 import dev.programadorthi.routing.core.route
 import io.ktor.util.pipeline.PipelineContext
 import io.ktor.utils.io.KtorDsl
@@ -28,6 +29,8 @@ public fun Route.jsRoute(
 
 @KtorDsl
 public fun Route.jsRoute(body: PipelineContext<Unit, ApplicationCall>.() -> Element) {
+    val routing = asRouting ?: error("A route must be a Routing child")
+
     handle {
         application.routingFlow.emit(body(this))
 
@@ -50,7 +53,7 @@ public fun Route.jsRoute(body: PipelineContext<Unit, ApplicationCall>.() -> Elem
                     data = call.serialize(),
                 )
 
-            // TODO: Add support to replace all route method
+            RouteMethod.ReplaceAll -> JavascriptRoutingStateManager.replaceAll(call, routing)
         }
     }
 }

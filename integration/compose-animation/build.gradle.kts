@@ -11,7 +11,6 @@ configureCommon()
 configureJvm()
 setupJvmToolchain()
 
-// TODO: org.jetbrains.compose.animation has targets limitation. That is the reason to duplicate configs below
 kotlin {
     explicitApi()
 

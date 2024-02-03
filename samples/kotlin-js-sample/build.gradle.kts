@@ -17,7 +17,7 @@ kotlin {
     sourceSets {
         val jsMain by getting {
             dependencies {
-                implementation(projects.javascript)
+                implementation(projects.integration.javascript)
                 
                 implementation("org.jetbrains.kotlinx:kotlinx-html-js:0.10.1")
                 implementation(libs.serialization.json)

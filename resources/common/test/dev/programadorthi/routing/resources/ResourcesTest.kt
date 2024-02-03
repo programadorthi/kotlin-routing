@@ -241,7 +241,6 @@ class ResourcesTest {
             }
 
             // WHEN
-            // TODO: For now, parent looking for child is not supported using the type. We need to use path based
             parent.call(uri = "/resources/path")
             advanceTimeBy(99)
 

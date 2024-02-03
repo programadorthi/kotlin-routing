@@ -279,7 +279,6 @@ class EventResourcesRoutingTest {
             }
 
             // WHEN
-            // TODO: For now, typed event is not supported by parent looking for child. We need to use path based
             parent.emitEvent(name = "/child/event_child")
             advanceTimeBy(99)
 
