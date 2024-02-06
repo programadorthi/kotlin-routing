@@ -1,6 +1,5 @@
 package dev.programadorthi.routing.android
 
-import android.app.Activity
 import android.content.Intent
 import dev.programadorthi.routing.core.Route
 import dev.programadorthi.routing.core.RouteMethod
@@ -34,30 +33,6 @@ public fun Route.activity(body: PipelineContext<Unit, ApplicationCall>.() -> Int
 }
 
 @KtorDsl
-public inline fun <reified A : Activity> Route.activity(
-    path: String,
-    name: String? = null,
-    crossinline body: PipelineContext<Unit, ApplicationCall>.(Intent) -> Unit = {},
-): Route = route(path = path, name = name) { activity<A>(body) }
-
-@KtorDsl
-public inline fun <reified A : Activity> Route.activity(
-    path: String,
-    method: RouteMethod,
-    name: String? = null,
-    crossinline body: PipelineContext<Unit, ApplicationCall>.(Intent) -> Unit = {},
-): Route = route(path = path, name = name, method = method) { activity<A>(body) }
-
-@KtorDsl
-public inline fun <reified A : Activity> Route.activity(crossinline body: PipelineContext<Unit, ApplicationCall>.(Intent) -> Unit = {}) {
-    handle {
-        val intent = Intent(call.currentActivity, A::class.java)
-        body(this, intent)
-        call.activityManager.start(this, intent)
-    }
-}
-
-@KtorDsl
 public inline fun <reified T : Any> Route.activity(noinline body: PipelineContext<Unit, ApplicationCall>.(T) -> Intent): Route {
     return handle<T> { resource ->
         call.activityManager.start(this, body(this, resource))
@@ -71,28 +46,5 @@ public inline fun <reified T : Any> Route.activity(
 ): Route {
     return handle<T>(method = method) { resource ->
         call.activityManager.start(this, body(this, resource))
-    }
-}
-
-@KtorDsl
-public inline fun <reified T : Any, reified A : Activity> Route.activity(
-    noinline body: PipelineContext<Unit, ApplicationCall>.(T, Intent) -> Unit = { _, _ -> },
-): Route {
-    return handle<T> { resource ->
-        val intent = Intent(call.currentActivity, A::class.java)
-        body(this, resource, intent)
-        call.activityManager.start(this, intent)
-    }
-}
-
-@KtorDsl
-public inline fun <reified T : Any, reified A : Activity> Route.activity(
-    method: RouteMethod,
-    noinline body: PipelineContext<Unit, ApplicationCall>.(T, Intent) -> Unit = { _, _ -> },
-): Route {
-    return handle<T>(method = method) { resource ->
-        val intent = Intent(call.currentActivity, A::class.java)
-        body(this, resource, intent)
-        call.activityManager.start(this, intent)
     }
 }

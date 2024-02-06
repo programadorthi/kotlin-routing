@@ -36,6 +36,7 @@ include(":integration:javascript")
 include(":integration:voyager")
 
 // Samples are disabled by default to avoid sync their.
+//include(":samples:android-activity")
 //include(":samples:android-sample")
 //include(":samples:multiplatform-voyager")
 //include(":samples:kotlin-js-sample")

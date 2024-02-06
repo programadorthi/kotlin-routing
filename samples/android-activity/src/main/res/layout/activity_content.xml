@@ -1,0 +1,75 @@
+<?xml version="1.0" encoding="utf-8"?>
+<LinearLayout xmlns:android="http://schemas.android.com/apk/res/android"
+        xmlns:tools="http://schemas.android.com/tools"
+        android:id="@+id/main"
+        android:layout_width="match_parent"
+        android:layout_height="match_parent"
+        android:orientation="vertical"
+        android:padding="20dp"
+        tools:context=".MainActivity">
+
+    <TextView
+            android:id="@+id/screenTitle"
+            android:layout_width="match_parent"
+            android:layout_height="wrap_content"
+            style="@android:style/TextAppearance.Holo.Large"
+            android:gravity="center"
+            tools:text="Title" />
+
+    <View
+            android:layout_width="match_parent"
+            android:layout_height="20dp" />
+
+    <Button
+            android:id="@+id/pushButton"
+            android:layout_width="match_parent"
+            android:layout_height="wrap_content" />
+
+    <View
+            android:layout_width="match_parent"
+            android:layout_height="20dp" />
+
+    <Button
+            android:id="@+id/pushForResultButton"
+            android:layout_width="match_parent"
+            android:layout_height="wrap_content" />
+
+    <View
+            android:layout_width="match_parent"
+            android:layout_height="20dp" />
+
+    <Button
+            android:id="@+id/replaceButton"
+            android:layout_width="match_parent"
+            android:layout_height="wrap_content" />
+
+    <View
+            android:layout_width="match_parent"
+            android:layout_height="20dp" />
+
+    <Button
+            android:id="@+id/replaceAllButton"
+            android:layout_width="match_parent"
+            android:layout_height="wrap_content" />
+
+    <View
+            android:layout_width="match_parent"
+            android:layout_height="20dp" />
+
+    <Button
+            android:id="@+id/popButton"
+            android:layout_width="match_parent"
+            android:layout_height="wrap_content"
+            android:text="Pop"/>
+
+    <View
+            android:layout_width="match_parent"
+            android:layout_height="20dp" />
+
+    <Button
+            android:id="@+id/popWithResultButton"
+            android:layout_width="match_parent"
+            android:layout_height="wrap_content"
+            android:text="Pop with Result"/>
+
+</LinearLayout>
