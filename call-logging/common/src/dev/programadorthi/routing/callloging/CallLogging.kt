@@ -12,7 +12,7 @@ import dev.programadorthi.routing.core.application.PluginBuilder
 import dev.programadorthi.routing.core.application.createApplicationPlugin
 import dev.programadorthi.routing.core.application.hooks.CallSetup
 import dev.programadorthi.routing.core.application.hooks.ResponseSent
-import dev.programadorthi.routing.core.application.log
+import dev.programadorthi.routing.core.application.logger
 import io.ktor.events.Events
 import io.ktor.util.AttributeKey
 import io.ktor.util.date.getTimeMillis
@@ -39,18 +39,18 @@ public val CallLogging: ApplicationPlugin<CallLoggingConfig> =
         "CallLogging",
         ::CallLoggingConfig,
     ) {
-        val log = pluginConfig.logger ?: application.log
+        val log = pluginConfig.logger ?: application.logger
         val filters = pluginConfig.filters
         val formatCall = pluginConfig.formatCall
         val clock = pluginConfig.clock
 
         fun log(message: String) =
             when (pluginConfig.level) {
-                CallLevel.ERROR -> log.error(message)
-                CallLevel.WARN -> log.warn(message)
-                CallLevel.INFO -> log.info(message)
-                CallLevel.DEBUG -> log.debug(message)
-                CallLevel.TRACE -> log.trace(message)
+                CallLevel.ERROR -> log?.error(message)
+                CallLevel.WARN -> log?.warn(message)
+                CallLevel.INFO -> log?.info(message)
+                CallLevel.DEBUG -> log?.debug(message)
+                CallLevel.TRACE -> log?.trace(message)
             }
 
         fun logSuccess(call: ApplicationCall) {

@@ -101,7 +101,7 @@ public fun <P : Pipeline<*, ApplicationCall>, B : Any, F : Any> P.install(
     }
 
     val registry = pluginRegistry
-    val log = (this as? ApplicationCallPipeline)?.environment?.log
+    val log = (this as? ApplicationCallPipeline)?.environment?.logger
     return when (val installedPlugin = registry.getOrNull(plugin.key)) {
         null -> {
             try {

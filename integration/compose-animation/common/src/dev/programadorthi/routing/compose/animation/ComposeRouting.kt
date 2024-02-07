@@ -102,7 +102,7 @@ public fun Routing(
                 rootPath = rootPath,
                 parent = parent,
                 parentCoroutineContext = coroutineContext,
-                log = log,
+                logger = log,
                 developmentMode = developmentMode,
                 configuration = configuration,
             )

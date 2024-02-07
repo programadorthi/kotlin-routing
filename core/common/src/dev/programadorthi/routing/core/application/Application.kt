@@ -37,4 +37,4 @@ public class Application(
 /**
  * Convenience property to access log from application
  */
-public val Application.log: Logger get() = environment.log
+public val Application.logger: Logger? get() = environment.logger

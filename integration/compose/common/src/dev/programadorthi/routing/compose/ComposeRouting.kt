@@ -12,10 +12,8 @@ import dev.programadorthi.routing.core.Routing
 import dev.programadorthi.routing.core.application
 import dev.programadorthi.routing.core.application.ApplicationCall
 import dev.programadorthi.routing.core.routing
-import io.ktor.util.logging.KtorSimpleLogger
 import io.ktor.util.logging.Logger
 import kotlin.coroutines.CoroutineContext
-import kotlin.coroutines.EmptyCoroutineContext
 
 public val LocalRouting: ProvidableCompositionLocal<Routing> =
     staticCompositionLocalOf {
@@ -57,8 +55,8 @@ public fun Routing(
 public fun Routing(
     rootPath: String = "/",
     parent: Routing? = null,
-    coroutineContext: CoroutineContext = EmptyCoroutineContext,
-    log: Logger = KtorSimpleLogger("kotlin-routing"),
+    parentCoroutineContext: CoroutineContext? = null,
+    logger: Logger? = null,
     developmentMode: Boolean = false,
     configuration: Route.() -> Unit,
     initial: ComposeContent,
@@ -69,8 +67,8 @@ public fun Routing(
             routing(
                 rootPath = rootPath,
                 parent = parent,
-                parentCoroutineContext = coroutineContext,
-                log = log,
+                parentCoroutineContext = parentCoroutineContext,
+                logger = logger,
                 developmentMode = developmentMode,
                 configuration = configuration,
             )

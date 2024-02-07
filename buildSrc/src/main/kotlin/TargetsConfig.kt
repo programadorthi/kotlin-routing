@@ -24,6 +24,9 @@ val Project.hasJvm: Boolean get() = hasCommon || hasJvmAndNix || files.any { it.
 val Project.hasNative: Boolean get() = hasCommon || hasNix || hasPosix || hasDarwin || hasDesktop || hasWindows
 
 fun Project.configureTargets() {
+    val projectName = name
+    val specialCharacters = """\W""".toRegex()
+
     configureCommon()
     if (hasJvm) configureJvm()
 
@@ -35,6 +38,26 @@ fun Project.configureTargets() {
             }
 
             configureJs()
+        }
+
+        if (hasDarwin) {
+            listOf(
+                macosX64(),
+                macosArm64(),
+                iosX64(),
+                iosArm64(),
+                iosSimulatorArm64(),
+            ).forEach { iosTarget ->
+                val moduleName = projectName
+                    .lowercase()
+                    .split(specialCharacters)
+                    .joinToString(separator = "") { splitName ->
+                        splitName.replaceFirstChar { it.uppercase() }
+                    }
+                iosTarget.binaries.framework {
+                    baseName = "${moduleName}Shared"
+                }
+            }
         }
 
         if (hasPosix || hasDarwin || hasWindows) extra.set("hasNative", true)

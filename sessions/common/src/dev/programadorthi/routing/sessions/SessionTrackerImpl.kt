@@ -1,7 +1,7 @@
 package dev.programadorthi.routing.sessions
 
 import dev.programadorthi.routing.core.application.ApplicationCall
-import dev.programadorthi.routing.core.application.log
+import dev.programadorthi.routing.core.application.logger
 import io.ktor.util.AttributeKey
 import kotlin.reflect.KClass
 
@@ -32,7 +32,7 @@ public class SessionTrackerImpl<S : Any>(
                 serializer.deserialize(content)
             }
         }.getOrElse { ex ->
-            call.application.log.debug("Failed to deserialize session: $sessionId", ex)
+            call.application.logger?.debug("Failed to deserialize session: $sessionId", ex)
 
             // Remove the wrong session identifier if no related session was found
             call.attributes.remove(sessionIdKey)

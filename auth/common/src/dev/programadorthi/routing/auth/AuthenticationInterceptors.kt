@@ -16,7 +16,7 @@ import dev.programadorthi.routing.core.application.RouteScopedPlugin
 import dev.programadorthi.routing.core.application.call
 import dev.programadorthi.routing.core.application.createRouteScopedPlugin
 import dev.programadorthi.routing.core.application.install
-import dev.programadorthi.routing.core.application.log
+import dev.programadorthi.routing.core.application.logger
 import dev.programadorthi.routing.core.application.plugin
 import dev.programadorthi.routing.core.application.pluginOrNull
 import dev.programadorthi.routing.core.asRouting
@@ -95,45 +95,45 @@ public val AuthenticationInterceptors: RouteScopedPlugin<RouteAuthenticationConf
             val authenticationContext = AuthenticationContext.from(call)
             if (authenticationContext.principal<Principal>() != null) return@on
 
-            val logger = call.application.log
+            val logger = call.application.logger
             var count = 0
             for (provider in requiredProviders) {
                 if (provider.skipWhen.any { skipCondition -> skipCondition(call) }) {
-                    logger.trace("Skipping authentication provider ${provider.name} for ${call.uri}")
+                    logger?.trace("Skipping authentication provider ${provider.name} for ${call.uri}")
                     continue
                 }
 
-                logger.trace("Trying to authenticate ${call.uri} with required ${provider.name}")
+                logger?.trace("Trying to authenticate ${call.uri} with required ${provider.name}")
                 provider.onAuthenticate(authenticationContext)
                 count++
                 if (authenticationContext.combinedPrincipal.principals.size < count) {
-                    logger.trace("Authentication failed for ${call.uri} with provider $provider")
+                    logger?.trace("Authentication failed for ${call.uri} with provider $provider")
                     authenticationContext.checkForChallengeStatus(provider)
                     // Checking if any challenge has provided a principal to current session
                     if (authenticationContext.combinedPrincipal.principals.size >= count) {
                         return@on
                     }
                 }
-                logger.trace("Authentication succeeded for ${call.uri} with provider $provider")
+                logger?.trace("Authentication succeeded for ${call.uri} with provider $provider")
             }
 
             for (provider in notRequiredProviders) {
                 if (authenticationContext.combinedPrincipal.principals.isNotEmpty()) {
-                    logger.trace("Authenticate for ${call.uri} succeed. Skipping other providers")
+                    logger?.trace("Authenticate for ${call.uri} succeed. Skipping other providers")
                     break
                 }
                 if (provider.skipWhen.any { skipCondition -> skipCondition(call) }) {
-                    logger.trace("Skipping authentication provider ${provider.name} for ${call.uri}")
+                    logger?.trace("Skipping authentication provider ${provider.name} for ${call.uri}")
                     continue
                 }
 
-                logger.trace("Trying to authenticate ${call.uri} with ${provider.name}")
+                logger?.trace("Trying to authenticate ${call.uri} with ${provider.name}")
                 provider.onAuthenticate(authenticationContext)
 
                 if (authenticationContext.combinedPrincipal.principals.isNotEmpty()) {
-                    logger.trace("Authentication succeeded for ${call.uri} with provider $provider")
+                    logger?.trace("Authentication succeeded for ${call.uri} with provider $provider")
                 } else {
-                    logger.trace("Authentication failed for ${call.uri} with provider $provider")
+                    logger?.trace("Authentication failed for ${call.uri} with provider $provider")
                 }
             }
 
@@ -146,7 +146,7 @@ public val AuthenticationInterceptors: RouteScopedPlugin<RouteAuthenticationConf
                 authenticationContext.allFailures
                     .none { it == AuthenticationFailedCause.InvalidCredentials }
             if (isOptional && isNoInvalidCredentials) {
-                logger.trace("Authentication is optional and no credentials were provided for ${call.uri}")
+                logger?.trace("Authentication is optional and no credentials were provided for ${call.uri}")
                 return@on
             }
 
@@ -180,7 +180,7 @@ private suspend fun AuthenticationContext.executeChallenges(call: ApplicationCal
 
     if (challengeStatus is ChallengeStatus.Denied) {
         for (error in allErrors) {
-            call.application.log.trace("Authentication failed for ${call.uri} with error ${error.message}")
+            call.application.logger?.trace("Authentication failed for ${call.uri} with error ${error.message}")
             // TODO: Should report this error in some way?
         }
     }
@@ -198,7 +198,7 @@ private suspend fun AuthenticationContext.executeChallenges(
             return challengeStatus
         }
     }
-    call.application.log.trace("Responding unauthorized because call ${call.uri} is not handled.")
+    call.application.logger?.trace("Responding unauthorized because call ${call.uri} is not handled.")
     return ChallengeStatus.Denied
 }
 

@@ -8,7 +8,7 @@ import dev.programadorthi.routing.core.application
 import dev.programadorthi.routing.core.application.RouteScopedPlugin
 import dev.programadorthi.routing.core.application.createRouteScopedPlugin
 import dev.programadorthi.routing.core.application.hooks.ResponseSent
-import dev.programadorthi.routing.core.application.log
+import dev.programadorthi.routing.core.application.logger
 import dev.programadorthi.routing.core.asRouting
 import io.ktor.util.AttributeKey
 
@@ -35,7 +35,7 @@ public val Sessions: RouteScopedPlugin<SessionsConfig> =
                 .reversed()
 
         val providers = parentProviders + pluginConfig.providers.toList()
-        val logger = application.log
+        val logger = application.logger
 
         application.attributes.put(SessionProvidersKey, providers)
 
@@ -48,10 +48,10 @@ public val Sessions: RouteScopedPlugin<SessionsConfig> =
                 }
 
             if (providerData.isEmpty()) {
-                logger.trace("No sessions found for ${call.uri}")
+                logger?.trace("No sessions found for ${call.uri}")
             } else {
                 val sessions = providerData.keys.joinToString()
-                logger.trace("Sessions found for ${call.uri}: $sessions")
+                logger?.trace("Sessions found for ${call.uri}: $sessions")
             }
             val sessionData = SessionData(providerData)
             call.attributes.put(SessionDataKey, sessionData)
@@ -62,7 +62,7 @@ public val Sessions: RouteScopedPlugin<SessionsConfig> =
             val sessionData = call.attributes.getOrNull(SessionDataKey) ?: return@on
 
             sessionData.providerData.values.forEach { data ->
-                logger.trace("Sending session data for ${call.uri}: ${data.provider.name}")
+                logger?.trace("Sending session data for ${call.uri}: ${data.provider.name}")
                 data.sendSessionData(call)
             }
 

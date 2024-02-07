@@ -58,8 +58,8 @@ public fun VoyagerRouting(
     configuration: Route.() -> Unit,
     rootPath: String = "/",
     parent: Routing? = null,
-    coroutineContext: CoroutineContext = EmptyCoroutineContext,
-    log: Logger = KtorSimpleLogger("kotlin-routing"),
+    parentCoroutineContext: CoroutineContext? = null,
+    logger: Logger? = null,
     developmentMode: Boolean = false,
     disposeBehavior: NavigatorDisposeBehavior = NavigatorDisposeBehavior(),
     onBackPressed: OnBackPressed = { true },
@@ -71,8 +71,8 @@ public fun VoyagerRouting(
             routing(
                 rootPath = rootPath,
                 parent = parent,
-                parentCoroutineContext = coroutineContext,
-                log = log,
+                parentCoroutineContext = parentCoroutineContext,
+                logger = logger,
                 developmentMode = developmentMode,
                 configuration = configuration,
             )

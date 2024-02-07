@@ -20,7 +20,7 @@ public data class ApplicationEnvironment(
     /**
      * Instance of [Logger] to be used for logging.
      */
-    public val log: Logger,
+    public val logger: Logger?,
     /**
      * Indicates if development mode is enabled.
      */

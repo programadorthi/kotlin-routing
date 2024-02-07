@@ -15,7 +15,7 @@ import dev.programadorthi.routing.core.application.BaseApplicationPlugin
 import dev.programadorthi.routing.core.application.Plugin
 import dev.programadorthi.routing.core.application.call
 import dev.programadorthi.routing.core.application.install
-import dev.programadorthi.routing.core.application.log
+import dev.programadorthi.routing.core.application.logger
 import dev.programadorthi.routing.core.errors.BadRequestException
 import dev.programadorthi.routing.core.errors.MissingRequestParameterException
 import dev.programadorthi.routing.core.errors.RouteNotFoundException
@@ -26,7 +26,6 @@ import io.ktor.http.Url
 import io.ktor.http.plus
 import io.ktor.util.AttributeKey
 import io.ktor.util.Attributes
-import io.ktor.util.logging.KtorSimpleLogger
 import io.ktor.util.logging.Logger
 import io.ktor.util.logging.isTraceEnabled
 import io.ktor.util.pipeline.PipelineContext
@@ -35,6 +34,8 @@ import io.ktor.utils.io.KtorDsl
 import kotlinx.coroutines.launch
 import kotlin.coroutines.CoroutineContext
 import kotlin.coroutines.EmptyCoroutineContext
+import kotlin.experimental.ExperimentalObjCRefinement
+import kotlin.native.HiddenFromObjC
 
 /**
  * A root routing node.
@@ -238,10 +239,10 @@ public class Routing internal constructor(
     }
 
     private fun addDefaultTracing() {
-        if (!application.log.isTraceEnabled) return
+        if (application.logger?.isTraceEnabled != true) return
 
         tracers.add {
-            application.log.trace(it.buildText())
+            application.logger?.trace(it.buildText())
         }
     }
 
@@ -377,6 +378,8 @@ public fun <B : Any, F : Any> Route.install(
     configure: B.() -> Unit = {},
 ): F = application.install(plugin, configure)
 
+@OptIn(ExperimentalObjCRefinement::class)
+@HiddenFromObjC
 public fun Routing.call(
     name: String = "",
     uri: String = "",
@@ -400,8 +403,8 @@ public fun Routing.call(
 public fun routing(
     rootPath: String = "/",
     parent: Routing? = null,
-    parentCoroutineContext: CoroutineContext = EmptyCoroutineContext,
-    log: Logger = KtorSimpleLogger("kotlin-routing"),
+    parentCoroutineContext: CoroutineContext? = null,
+    logger: Logger? = null,
     developmentMode: Boolean = false,
     configuration: Route.() -> Unit,
 ): Routing {
@@ -410,11 +413,11 @@ public fun routing(
     }
     val environment =
         ApplicationEnvironment(
-            parentCoroutineContext = parentCoroutineContext,
+            parentCoroutineContext = parentCoroutineContext ?: EmptyCoroutineContext,
             developmentMode = developmentMode,
             rootPath = rootPath,
             parentRouting = parent,
-            log = log,
+            logger = logger,
             monitor = Events(),
         )
     val application = Application(environment)
@@ -432,6 +435,6 @@ private fun ApplicationEnvironment?.safeRiseEvent(
     runCatching {
         instance.monitor.raise(event, application)
     }.onFailure { cause ->
-        instance.log.error("One or more of the handlers thrown an exception", cause)
+        instance.logger?.error("One or more of the handlers thrown an exception", cause)
     }
 }
