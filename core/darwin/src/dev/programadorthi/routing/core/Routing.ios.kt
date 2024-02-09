@@ -2,6 +2,26 @@ package dev.programadorthi.routing.core
 
 import io.ktor.http.Parameters
 import io.ktor.util.Attributes
+import io.ktor.util.logging.Logger
+import io.ktor.utils.io.KtorDsl
+import kotlinx.coroutines.Dispatchers
+
+@KtorDsl
+public fun routing(
+    rootPath: String = "/",
+    parent: Routing? = null,
+    logger: Logger? = null,
+    developmentMode: Boolean = false,
+    configuration: Route.() -> Unit,
+): Routing =
+    routing(
+        rootPath = rootPath,
+        parent = parent,
+        logger = logger,
+        developmentMode = developmentMode,
+        configuration = configuration,
+        parentCoroutineContext = Dispatchers.Main,
+    )
 
 public fun Routing.callUri(uri: String) {
     call(uri = uri)

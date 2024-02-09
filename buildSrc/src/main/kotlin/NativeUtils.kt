@@ -2,8 +2,10 @@
  * Copyright 2014-2021 JetBrains s.r.o and contributors. Use of this source code is governed by the Apache 2.0 license.
  */
 
-import org.gradle.api.*
+import org.gradle.api.Project
+import org.jetbrains.kotlin.gradle.dsl.KotlinMultiplatformExtension
 import org.jetbrains.kotlin.gradle.plugin.mpp.Framework
+import org.jetbrains.kotlin.gradle.plugin.mpp.KotlinNativeTarget
 
 fun Project.fastOr(block: () -> List<String>): List<String> {
     return block()
@@ -81,19 +83,22 @@ fun Project.windowsTargets(): List<String> = fastOr {
 }
 
 fun Project.darwinTargetsFramework(
-    action: Framework.() -> Unit = {}
-) {
-    val projectName = name
-    val specialCharacters = """\W""".toRegex()
-
-    with(kotlin) {
+    targets: KotlinMultiplatformExtension.() -> List<KotlinNativeTarget> = {
         listOf(
             macosX64(),
             macosArm64(),
             iosX64(),
             iosArm64(),
             iosSimulatorArm64(),
-        ).forEach { iosTarget ->
+        )
+    },
+    action: Framework.() -> Unit = {}
+) {
+    val projectName = name
+    val specialCharacters = """\W""".toRegex()
+
+    with(kotlin) {
+        targets().forEach { iosTarget ->
             val moduleName = projectName
                 .lowercase()
                 .split(specialCharacters)

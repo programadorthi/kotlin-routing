@@ -2,6 +2,8 @@
 * Copyright 2014-2021 JetBrains s.r.o and contributors. Use of this source code is governed by the Apache 2.0 license.
 */
 
+@file:OptIn(ExperimentalObjCRefinement::class)
+
 package dev.programadorthi.routing.core
 
 import dev.programadorthi.routing.core.application.Application
@@ -378,7 +380,6 @@ public fun <B : Any, F : Any> Route.install(
     configure: B.() -> Unit = {},
 ): F = application.install(plugin, configure)
 
-@OptIn(ExperimentalObjCRefinement::class)
 @HiddenFromObjC
 public fun Routing.call(
     name: String = "",
@@ -399,6 +400,7 @@ public fun Routing.call(
     )
 }
 
+@HiddenFromObjC
 @KtorDsl
 public fun routing(
     rootPath: String = "/",
