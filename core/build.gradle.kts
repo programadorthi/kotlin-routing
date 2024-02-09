@@ -9,6 +9,10 @@ plugins {
 
 applyBasicSetup()
 
+darwinTargetsFramework {
+    export(libs.ktor.utils)
+}
+
 kotlin {
     sourceSets {
         commonMain {

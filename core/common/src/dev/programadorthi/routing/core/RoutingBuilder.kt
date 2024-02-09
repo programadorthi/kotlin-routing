@@ -2,11 +2,15 @@
 * Copyright 2014-2021 JetBrains s.r.o and contributors. Use of this source code is governed by the Apache 2.0 license.
 */
 
+@file:OptIn(ExperimentalObjCRefinement::class)
+
 package dev.programadorthi.routing.core
 
 import dev.programadorthi.routing.core.application.ApplicationCall
 import io.ktor.util.pipeline.PipelineInterceptor
 import io.ktor.utils.io.KtorDsl
+import kotlin.experimental.ExperimentalObjCRefinement
+import kotlin.native.HiddenFromObjC
 
 /**
  * Builds a route to match the specified [path].
@@ -53,6 +57,7 @@ public fun Route.method(
 }
 
 @KtorDsl
+@HiddenFromObjC
 public fun Route.handle(
     path: String,
     name: String? = null,
@@ -60,6 +65,7 @@ public fun Route.handle(
 ): Route = route(path, name) { handle(body) }
 
 @KtorDsl
+@HiddenFromObjC
 public fun Route.handle(
     path: String,
     method: RouteMethod,

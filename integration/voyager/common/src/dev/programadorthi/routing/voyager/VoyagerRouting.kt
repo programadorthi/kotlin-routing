@@ -18,10 +18,8 @@ import dev.programadorthi.routing.core.Route
 import dev.programadorthi.routing.core.Routing
 import dev.programadorthi.routing.core.application
 import dev.programadorthi.routing.core.routing
-import io.ktor.util.logging.KtorSimpleLogger
 import io.ktor.util.logging.Logger
 import kotlin.coroutines.CoroutineContext
-import kotlin.coroutines.EmptyCoroutineContext
 
 public val LocalVoyagerRouting: ProvidableCompositionLocal<Routing> =
     staticCompositionLocalOf {

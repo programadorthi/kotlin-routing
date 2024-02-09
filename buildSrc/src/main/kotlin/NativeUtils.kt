@@ -3,6 +3,7 @@
  */
 
 import org.gradle.api.*
+import org.jetbrains.kotlin.gradle.plugin.mpp.Framework
 
 fun Project.fastOr(block: () -> List<String>): List<String> {
     return block()
@@ -76,5 +77,33 @@ fun Project.windowsTargets(): List<String> = fastOr {
         listOf(
             mingwX64()
         ).map { it.name }
+    }
+}
+
+fun Project.darwinTargetsFramework(
+    action: Framework.() -> Unit = {}
+) {
+    val projectName = name
+    val specialCharacters = """\W""".toRegex()
+
+    with(kotlin) {
+        listOf(
+            macosX64(),
+            macosArm64(),
+            iosX64(),
+            iosArm64(),
+            iosSimulatorArm64(),
+        ).forEach { iosTarget ->
+            val moduleName = projectName
+                .lowercase()
+                .split(specialCharacters)
+                .joinToString(separator = "") { splitName ->
+                    splitName.replaceFirstChar { it.uppercase() }
+                }
+            iosTarget.binaries.framework {
+                baseName = "${moduleName}Shared"
+                action()
+            }
+        }
     }
 }
