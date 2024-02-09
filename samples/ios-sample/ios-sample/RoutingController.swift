@@ -27,7 +27,6 @@ public struct RoutingController {
 extension RoutingController: UIViewControllerRepresentable {
     
     public func makeUIViewController(context _: Context) -> UINavigationController {
-        router.application_.logger?.debug(message: ">>>> makeUIViewController")
         let navigationController = UINavigationController()
         navigationController.navigationBar.prefersLargeTitles = prefersLargeTitles
         
@@ -45,6 +44,6 @@ extension RoutingController: UIViewControllerRepresentable {
     }
     
     public func updateUIViewController(_ uiViewController: UINavigationController, context _: Context) {
-        router.application_.logger?.debug(message: ">>>> updateUIViewController: \(uiViewController)")
+        // no-op
     }
 }

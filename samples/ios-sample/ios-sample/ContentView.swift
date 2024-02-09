@@ -10,9 +10,9 @@ import UIKitShared
 
 struct ContentView: View {
     
-    var router: Routing?
+    let router: Routing
     
-    init(router: Routing? = nil) {
+    init(router: Routing) {
         self.router = router
     }
 
@@ -26,13 +26,7 @@ struct ContentView: View {
         }
         .padding()
         .onTapGesture {
-            router?.callUri(uri: "/login", routeMethod: RouteMethodCompanion().Push)
+            router.callUri(uri: "/login", routeMethod: RouteMethodCompanion().Push)
         }
-    }
-}
-
-struct ContentView_Previews: PreviewProvider {
-    static var previews: some View {
-        ContentView()
     }
 }

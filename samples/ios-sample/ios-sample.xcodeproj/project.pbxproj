@@ -7,6 +7,9 @@
 	objects = {
 
 /* Begin PBXBuildFile section */
+		60452B6A2B768636006BC8CB /* HomeView.swift in Sources */ = {isa = PBXBuildFile; fileRef = 60452B692B768636006BC8CB /* HomeView.swift */; };
+		60452B6C2B7686C4006BC8CB /* LoginView.swift in Sources */ = {isa = PBXBuildFile; fileRef = 60452B6B2B7686C4006BC8CB /* LoginView.swift */; };
+		60452B6E2B7687AC006BC8CB /* MyLogger.swift in Sources */ = {isa = PBXBuildFile; fileRef = 60452B6D2B7687AC006BC8CB /* MyLogger.swift */; };
 		6064E7942B767D1B00F65D52 /* UIKitShared.framework in Frameworks */ = {isa = PBXBuildFile; fileRef = 6064E7932B767D1B00F65D52 /* UIKitShared.framework */; };
 		6064E7952B767D1B00F65D52 /* UIKitShared.framework in Embed Frameworks */ = {isa = PBXBuildFile; fileRef = 6064E7932B767D1B00F65D52 /* UIKitShared.framework */; settings = {ATTRIBUTES = (CodeSignOnCopy, RemoveHeadersOnCopy, ); }; };
 		606654F42B75A69E00786DA1 /* RoutingController.swift in Sources */ = {isa = PBXBuildFile; fileRef = 606654F32B75A69E00786DA1 /* RoutingController.swift */; };
@@ -32,6 +35,9 @@
 /* End PBXCopyFilesBuildPhase section */
 
 /* Begin PBXFileReference section */
+		60452B692B768636006BC8CB /* HomeView.swift */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.swift; path = HomeView.swift; sourceTree = "<group>"; };
+		60452B6B2B7686C4006BC8CB /* LoginView.swift */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.swift; path = LoginView.swift; sourceTree = "<group>"; };
+		60452B6D2B7687AC006BC8CB /* MyLogger.swift */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.swift; path = MyLogger.swift; sourceTree = "<group>"; };
 		6064E7932B767D1B00F65D52 /* UIKitShared.framework */ = {isa = PBXFileReference; lastKnownFileType = wrapper.framework; name = UIKitShared.framework; path = "../../integration/uikit/build/xcode-frameworks/Debug/iphonesimulator16.4/UIKitShared.framework"; sourceTree = "<group>"; };
 		606654F32B75A69E00786DA1 /* RoutingController.swift */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.swift; path = RoutingController.swift; sourceTree = "<group>"; };
 		606655172B75B21300786DA1 /* SwiftUIController.swift */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.swift; path = SwiftUIController.swift; sourceTree = "<group>"; };
@@ -54,6 +60,16 @@
 /* End PBXFrameworksBuildPhase section */
 
 /* Begin PBXGroup section */
+		60452B682B76861C006BC8CB /* View */ = {
+			isa = PBXGroup;
+			children = (
+				609CFD802B73A0600079F82D /* ContentView.swift */,
+				60452B692B768636006BC8CB /* HomeView.swift */,
+				60452B6B2B7686C4006BC8CB /* LoginView.swift */,
+			);
+			name = View;
+			sourceTree = "<group>";
+		};
 		609CFD722B73A0600079F82D = {
 			isa = PBXGroup;
 			children = (
@@ -74,12 +90,13 @@
 		609CFD7D2B73A0600079F82D /* ios-sample */ = {
 			isa = PBXGroup;
 			children = (
+				60452B682B76861C006BC8CB /* View */,
 				609CFD7E2B73A0600079F82D /* ios_sampleApp.swift */,
-				609CFD802B73A0600079F82D /* ContentView.swift */,
 				609CFD822B73A0610079F82D /* Assets.xcassets */,
 				609CFD842B73A0610079F82D /* Preview Content */,
 				606654F32B75A69E00786DA1 /* RoutingController.swift */,
 				606655172B75B21300786DA1 /* SwiftUIController.swift */,
+				60452B6D2B7687AC006BC8CB /* MyLogger.swift */,
 			);
 			path = "ios-sample";
 			sourceTree = "<group>";
@@ -193,9 +210,12 @@
 			isa = PBXSourcesBuildPhase;
 			buildActionMask = 2147483647;
 			files = (
+				60452B6C2B7686C4006BC8CB /* LoginView.swift in Sources */,
 				609CFD812B73A0600079F82D /* ContentView.swift in Sources */,
+				60452B6E2B7687AC006BC8CB /* MyLogger.swift in Sources */,
 				609CFD7F2B73A0600079F82D /* ios_sampleApp.swift in Sources */,
 				606655182B75B21300786DA1 /* SwiftUIController.swift in Sources */,
+				60452B6A2B768636006BC8CB /* HomeView.swift in Sources */,
 				606654F42B75A69E00786DA1 /* RoutingController.swift in Sources */,
 			);
 			runOnlyForDeploymentPostprocessing = 0;
