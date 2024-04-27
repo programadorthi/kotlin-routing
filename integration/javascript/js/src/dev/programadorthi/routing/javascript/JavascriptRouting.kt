@@ -8,11 +8,18 @@ import kotlinx.dom.clear
 import org.w3c.dom.Element
 
 public fun render(
+    historyMode: JavascriptRoutingHistoryMode = JavascriptRoutingHistoryMode.Hash,
     routing: Routing,
     root: Element,
     initial: Element,
 ) {
     with(routing.application) {
+        this.historyMode = historyMode
+
+        if (historyMode == JavascriptRoutingHistoryMode.Memory) {
+            callStack = mutableListOf()
+        }
+
         routingFlow = MutableStateFlow(initial)
 
         launch {
@@ -23,5 +30,5 @@ public fun render(
         }
     }
 
-    JavascriptRoutingStateManager.init(routing)
+    JavascriptRoutingStateManager.init(routing, historyMode)
 }

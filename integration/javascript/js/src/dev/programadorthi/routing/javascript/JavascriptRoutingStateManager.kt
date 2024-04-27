@@ -4,6 +4,7 @@ import dev.programadorthi.routing.core.RouteMethod
 import dev.programadorthi.routing.core.Routing
 import dev.programadorthi.routing.core.application
 import dev.programadorthi.routing.core.application.ApplicationCall
+import dev.programadorthi.routing.core.replace
 import io.ktor.http.parametersOf
 import kotlinx.browser.window
 import kotlinx.coroutines.withTimeout
@@ -11,9 +12,26 @@ import kotlin.coroutines.resume
 import kotlin.coroutines.suspendCoroutine
 
 internal object JavascriptRoutingStateManager {
-    fun init(routing: Routing) {
-        // First time or page refresh we try continue from last state
-        routing.tryNotifyTheRoute(state = window.history.state)
+    fun init(
+        routing: Routing,
+        historyMode: JavascriptRoutingHistoryMode,
+    ) {
+        window.onpageshow = {
+            // First time or page refresh we try continue from last state
+            val state = window.history.state
+            if (state != null) {
+                routing.tryNotifyTheRoute(state = state)
+            } else {
+                val path = window.location.run { pathname + search + hash }
+                val hash = window.location.hash.removePrefix("#")
+                val destination =
+                    when {
+                        historyMode != JavascriptRoutingHistoryMode.Hash || hash.isBlank() -> path
+                        else -> hash
+                    }
+                routing.replace(path = destination)
+            }
+        }
 
         resetOnPopStateEvent(routing)
     }
@@ -47,7 +65,7 @@ internal object JavascriptRoutingStateManager {
 
         window.history.replaceState(
             title = "routing",
-            url = call.uri,
+            url = call.uriToAddressBar(),
             data = call.serialize(),
         )
 
