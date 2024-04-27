@@ -47,11 +47,11 @@ import kotlin.native.HiddenFromObjC
 public class Routing internal constructor(
     internal val application: Application,
 ) : Route(
-    parent = application.environment.parentRouting,
-    selector = RootRouteSelector(application.environment.rootPath),
-    application.environment.developmentMode,
-    application.environment,
-) {
+        parent = application.environment.parentRouting,
+        selector = RootRouteSelector(application.environment.rootPath),
+        application.environment.developmentMode,
+        application.environment,
+    ) {
     private val tracers = mutableListOf<(RoutingResolveTrace) -> Unit>()
     private val namedRoutes = mutableMapOf<String, Route>()
     private var disposed = false
@@ -60,19 +60,27 @@ public class Routing internal constructor(
         addDefaultTracing()
     }
 
-    public fun canHandleByName(name: String, lookUpOnParent: Boolean = false): Boolean {
+    public fun canHandleByName(
+        name: String,
+        lookUpOnParent: Boolean = false,
+    ): Boolean {
         return when {
             !lookUpOnParent -> namedRoutes.containsKey(name)
-            else -> generateSequence(seed = this) { it.parent?.asRouting }
-                .firstOrNull { it.namedRoutes.containsKey(name) } != null
+            else ->
+                generateSequence(seed = this) { it.parent?.asRouting }
+                    .firstOrNull { it.namedRoutes.containsKey(name) } != null
         }
     }
 
-    public fun canHandleByPath(path: String, lookUpOnParent: Boolean = false): Boolean {
+    public fun canHandleByPath(
+        path: String,
+        lookUpOnParent: Boolean = false,
+    ): Boolean {
         return when {
             !lookUpOnParent -> canHandleByPath(path = path, routing = this)
-            else -> generateSequence(seed = this) { it.parent?.asRouting }
-                .firstOrNull { canHandleByPath(path = path, routing = it) } != null
+            else ->
+                generateSequence(seed = this) { it.parent?.asRouting }
+                    .firstOrNull { canHandleByPath(path = path, routing = it) } != null
         }
     }
 
@@ -133,7 +141,10 @@ public class Routing internal constructor(
         namedRoutes[name] = route
     }
 
-    private fun canHandleByPath(path: String, routing: Routing): Boolean {
+    private fun canHandleByPath(
+        path: String,
+        routing: Routing,
+    ): Boolean {
         var routingChildren = routing.children
         var hasHandle = false
 

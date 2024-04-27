@@ -18,8 +18,10 @@ import kotlinx.coroutines.test.advanceTimeBy
 import kotlinx.coroutines.test.runTest
 import kotlin.test.Test
 import kotlin.test.assertEquals
+import kotlin.test.assertFalse
 import kotlin.test.assertIs
 import kotlin.test.assertNotNull
+import kotlin.test.assertTrue
 
 @OptIn(ExperimentalCoroutinesApi::class)
 class ResourcesTest {
@@ -297,4 +299,38 @@ class ResourcesTest {
                 exception?.message,
             )
         }
+
+    @Test
+    fun shouldReturnsTrueWhenCanHandleAResource() {
+        // GIVEN
+        val routing =
+            routing {
+                install(Resources)
+
+                handle<Path.Id> { }
+            }
+
+        // WHEN
+        val result = routing.canHandleByResource<Path.Id>()
+
+        // THEN
+        assertTrue(result, "having a resource should can handle it")
+    }
+
+    @Test
+    fun shouldReturnsFalseWhenCanNotHandleAResource() {
+        // GIVEN
+        val routing =
+            routing {
+                install(Resources)
+
+                handle<Path> { }
+            }
+
+        // WHEN
+        val result = routing.canHandleByResource<Path.Id>()
+
+        // THEN
+        assertFalse(result, "not having a resource should can't handle it")
+    }
 }

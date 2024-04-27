@@ -212,10 +212,10 @@ class RoutingTest {
             routing.call(
                 name = "named",
                 parameters =
-                parametersOf(
-                    "id" to listOf("123"),
-                    "name" to listOf("routing"),
-                ),
+                    parametersOf(
+                        "id" to listOf("123"),
+                        "name" to listOf("routing"),
+                    ),
             )
             advanceTimeBy(99)
 
@@ -343,7 +343,7 @@ class RoutingTest {
                         handle {
                             call.redirectToName(
                                 name = "path2",
-                                parameters = parametersOf("key", "value")
+                                parameters = parametersOf("key", "value"),
                             )
                         }
                     }
@@ -379,10 +379,10 @@ class RoutingTest {
                             call.redirectToName(
                                 name = "path2",
                                 parameters =
-                                parametersOf(
-                                    "id" to listOf("123"),
-                                    "key" to listOf("value"),
-                                ),
+                                    parametersOf(
+                                        "id" to listOf("123"),
+                                        "key" to listOf("value"),
+                                    ),
                             )
                         }
                     }
@@ -1585,12 +1585,13 @@ class RoutingTest {
     @Test
     fun shouldReturnsTrueWhenCanHandleByANamedRoute() {
         // GIVEN
-        val routing = routing {
-            route(path = "/path", name = "path") {
-                handle {
+        val routing =
+            routing {
+                route(path = "/path", name = "path") {
+                    handle {
+                    }
                 }
             }
-        }
 
         // WHEN
         val result = routing.canHandleByName(name = "path")
@@ -1620,12 +1621,13 @@ class RoutingTest {
     @Test
     fun shouldReturnsTrueWhenCanHandleByANamedRouteOnParent() {
         // GIVEN
-        val parent = routing {
-            route(path = "/path", name = "path") {
-                handle {
+        val parent =
+            routing {
+                route(path = "/path", name = "path") {
+                    handle {
+                    }
                 }
             }
-        }
         val routing = routing(parent = parent, rootPath = "/child") {}
 
         // WHEN
@@ -1638,12 +1640,13 @@ class RoutingTest {
     @Test
     fun shouldReturnsFalseWhenCanNotHandleByANamedRouteOnParent() {
         // GIVEN
-        val parent = routing {
-            route(path = "/path") {
-                handle {
+        val parent =
+            routing {
+                route(path = "/path") {
+                    handle {
+                    }
                 }
             }
-        }
         val routing = routing(parent = parent, rootPath = "/child") {}
 
         // WHEN
@@ -1656,12 +1659,13 @@ class RoutingTest {
     @Test
     fun shouldReturnsTrueWhenCanHandleByAPath() {
         // GIVEN
-        val routing = routing {
-            route(path = "/path") {
-                handle {
+        val routing =
+            routing {
+                route(path = "/path") {
+                    handle {
+                    }
                 }
             }
-        }
 
         // WHEN
         val result = routing.canHandleByPath(path = "/path")
@@ -1673,12 +1677,13 @@ class RoutingTest {
     @Test
     fun shouldReturnsFalseWhenCanNotHandleByAPath() {
         // GIVEN
-        val routing = routing {
-            route(path = "/other") {
-                handle {
+        val routing =
+            routing {
+                route(path = "/other") {
+                    handle {
+                    }
                 }
             }
-        }
 
         // WHEN
         val result = routing.canHandleByPath(path = "/path")
@@ -1690,17 +1695,17 @@ class RoutingTest {
     @Test
     fun shouldReturnsTrueWhenCanHandleByAPathWithMultiLevel() {
         // GIVEN
-        val routing = routing {
-            route(path = "/level1") {
-                route(path = "/level2") {
-                    route(path = "/level3") {
-                        handle {
-
+        val routing =
+            routing {
+                route(path = "/level1") {
+                    route(path = "/level2") {
+                        route(path = "/level3") {
+                            handle {
+                            }
                         }
                     }
                 }
             }
-        }
 
         // WHEN
         val result = routing.canHandleByPath(path = "/level1/level2/level3")
@@ -1712,13 +1717,13 @@ class RoutingTest {
     @Test
     fun shouldReturnsFalseWhenCanNotHandleByAPathWithMultiLevel() {
         // GIVEN
-        val routing = routing {
-            route(path = "/level1") {
-                handle {
-
+        val routing =
+            routing {
+                route(path = "/level1") {
+                    handle {
+                    }
                 }
             }
-        }
 
         // WHEN
         val result = routing.canHandleByPath(path = "/level1/level2/level3")
@@ -1730,12 +1735,13 @@ class RoutingTest {
     @Test
     fun shouldReturnsTrueWhenCanHandleByAPathOnParent() {
         // GIVEN
-        val parent = routing {
-            route(path = "/path") {
-                handle {
+        val parent =
+            routing {
+                route(path = "/path") {
+                    handle {
+                    }
                 }
             }
-        }
         val routing = routing(parent = parent, rootPath = "/child") {}
 
         // WHEN
@@ -1748,12 +1754,13 @@ class RoutingTest {
     @Test
     fun shouldReturnsFalseWhenCanNotHandleByAPathOnParent() {
         // GIVEN
-        val parent = routing {
-            route(path = "/path") {
-                handle {
+        val parent =
+            routing {
+                route(path = "/path") {
+                    handle {
+                    }
                 }
             }
-        }
         val routing = routing(parent = parent, rootPath = "/child") {}
 
         // WHEN
@@ -1766,17 +1773,17 @@ class RoutingTest {
     @Test
     fun shouldReturnsTrueWhenCanHandleByAPathWithMultiLevelOnParent() {
         // GIVEN
-        val parent = routing {
-            route(path = "/level1") {
-                route(path = "/level2") {
-                    route(path = "/level3") {
-                        handle {
-
+        val parent =
+            routing {
+                route(path = "/level1") {
+                    route(path = "/level2") {
+                        route(path = "/level3") {
+                            handle {
+                            }
                         }
                     }
                 }
             }
-        }
         val routing = routing(parent = parent, rootPath = "/child") {}
 
         // WHEN
@@ -1789,13 +1796,13 @@ class RoutingTest {
     @Test
     fun shouldReturnsFalseWhenCanNotHandleByAPathWithMultiLevelOnParent() {
         // GIVEN
-        val routing = routing {
-            route(path = "/level1") {
-                handle {
-
+        val routing =
+            routing {
+                route(path = "/level1") {
+                    handle {
+                    }
                 }
             }
-        }
 
         // WHEN
         val result = routing.canHandleByPath(path = "/level1/level2/level3", lookUpOnParent = true)
@@ -1807,24 +1814,27 @@ class RoutingTest {
     @Test
     fun shouldReturnsTrueWhenCanHandleByAPathInNestedRouting() {
         // GIVEN
-        val parent = routing {
-            route(path = "/parent") {
-                handle {
+        val parent =
+            routing {
+                route(path = "/parent") {
+                    handle {
+                    }
                 }
             }
-        }
-        val child = routing(parent = parent, rootPath = "/child") {
-            route(path = "/childPath") {
-                handle {
+        val child =
+            routing(parent = parent, rootPath = "/child") {
+                route(path = "/childPath") {
+                    handle {
+                    }
                 }
             }
-        }
-        val grandchild = routing(parent = child, rootPath = "/grandchild") {
-            route(path = "/grandchildPath") {
-                handle {
+        val grandchild =
+            routing(parent = child, rootPath = "/grandchild") {
+                route(path = "/grandchildPath") {
+                    handle {
+                    }
                 }
             }
-        }
 
         // WHEN
         val result = grandchild.canHandleByPath(path = "/child/childPath", lookUpOnParent = true)
@@ -1836,24 +1846,27 @@ class RoutingTest {
     @Test
     fun shouldReturnsFalseWhenCanNotHandleByAPathInNestedRouting() {
         // GIVEN
-        val parent = routing {
-            route(path = "/parent") {
-                handle {
+        val parent =
+            routing {
+                route(path = "/parent") {
+                    handle {
+                    }
                 }
             }
-        }
-        val child = routing(parent = parent, rootPath = "/child") {
-            route(path = "/childPath") {
-                handle {
+        val child =
+            routing(parent = parent, rootPath = "/child") {
+                route(path = "/childPath") {
+                    handle {
+                    }
                 }
             }
-        }
-        val grandchild = routing(parent = child, rootPath = "/grandchild") {
-            route(path = "/grandchildPath") {
-                handle {
+        val grandchild =
+            routing(parent = child, rootPath = "/grandchild") {
+                route(path = "/grandchildPath") {
+                    handle {
+                    }
                 }
             }
-        }
 
         // WHEN
         val result =
