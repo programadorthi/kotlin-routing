@@ -47,17 +47,33 @@ import kotlin.native.HiddenFromObjC
 public class Routing internal constructor(
     internal val application: Application,
 ) : Route(
-        parent = application.environment.parentRouting,
-        selector = RootRouteSelector(application.environment.rootPath),
-        application.environment.developmentMode,
-        application.environment,
-    ) {
+    parent = application.environment.parentRouting,
+    selector = RootRouteSelector(application.environment.rootPath),
+    application.environment.developmentMode,
+    application.environment,
+) {
     private val tracers = mutableListOf<(RoutingResolveTrace) -> Unit>()
     private val namedRoutes = mutableMapOf<String, Route>()
     private var disposed = false
 
     init {
         addDefaultTracing()
+    }
+
+    public fun canHandleByName(name: String, lookUpOnParent: Boolean = false): Boolean {
+        return when {
+            !lookUpOnParent -> namedRoutes.containsKey(name)
+            else -> generateSequence(seed = this) { it.parent?.asRouting }
+                .firstOrNull { it.namedRoutes.containsKey(name) } != null
+        }
+    }
+
+    public fun canHandleByPath(path: String, lookUpOnParent: Boolean = false): Boolean {
+        return when {
+            !lookUpOnParent -> canHandleByPath(path = path, routing = this)
+            else -> generateSequence(seed = this) { it.parent?.asRouting }
+                .firstOrNull { canHandleByPath(path = path, routing = it) } != null
+        }
     }
 
     public fun execute(call: ApplicationCall) {
@@ -115,6 +131,25 @@ public class Routing internal constructor(
             "Duplicated named route. Found '$name' to ${namedRoutes[name]} and $route"
         }
         namedRoutes[name] = route
+    }
+
+    private fun canHandleByPath(path: String, routing: Routing): Boolean {
+        var routingChildren = routing.children
+        var hasHandle = false
+
+        val fakeRoute = Route(parent = null, selector = routing.selector)
+        fakeRoute.createRouteFromPath(path)
+
+        generateSequence(seed = fakeRoute.children) { it.firstOrNull()?.children }
+            .flatten()
+            .forEach { child ->
+                val found =
+                    routingChildren.firstOrNull { it.selector == child.selector } ?: return false
+                hasHandle = found.handlers.isNotEmpty()
+                routingChildren = found.children
+            }
+
+        return hasHandle
     }
 
     private fun removeChild(route: Route) {

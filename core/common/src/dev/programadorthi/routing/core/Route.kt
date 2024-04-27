@@ -116,15 +116,6 @@ public open class Route(
         }
 }
 
-/**
- * Return list of endpoints with handlers under this route.
- */
-public fun Route.getAllRoutes(): List<Route> {
-    val endpoints = mutableListOf<Route>()
-    getAllRoutes(endpoints)
-    return endpoints
-}
-
 internal fun Route.allSelectors(): List<RouteSelector> {
     val selectors = mutableListOf(selector)
     var other = parent
@@ -134,11 +125,4 @@ internal fun Route.allSelectors(): List<RouteSelector> {
     }
     // We need reverse to starting from top-most parent
     return selectors.reversed()
-}
-
-private fun Route.getAllRoutes(endpoints: MutableList<Route>) {
-    if (handlers.isEmpty()) {
-        endpoints.add(this)
-    }
-    children.forEach { it.getAllRoutes(endpoints) }
 }

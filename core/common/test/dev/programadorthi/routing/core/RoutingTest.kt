@@ -16,8 +16,10 @@ import kotlinx.coroutines.test.runTest
 import kotlin.test.Test
 import kotlin.test.assertEquals
 import kotlin.test.assertFails
+import kotlin.test.assertFalse
 import kotlin.test.assertIs
 import kotlin.test.assertNotNull
+import kotlin.test.assertTrue
 
 @OptIn(ExperimentalCoroutinesApi::class)
 class RoutingTest {
@@ -210,10 +212,10 @@ class RoutingTest {
             routing.call(
                 name = "named",
                 parameters =
-                    parametersOf(
-                        "id" to listOf("123"),
-                        "name" to listOf("routing"),
-                    ),
+                parametersOf(
+                    "id" to listOf("123"),
+                    "name" to listOf("routing"),
+                ),
             )
             advanceTimeBy(99)
 
@@ -339,7 +341,10 @@ class RoutingTest {
                 routing(parentCoroutineContext = coroutineContext + job) {
                     route(path = "/path1", name = "path1") {
                         handle {
-                            call.redirectToName(name = "path2", parameters = parametersOf("key", "value"))
+                            call.redirectToName(
+                                name = "path2",
+                                parameters = parametersOf("key", "value")
+                            )
                         }
                     }
                     handle(path = "/path2", name = "path2") {
@@ -374,10 +379,10 @@ class RoutingTest {
                             call.redirectToName(
                                 name = "path2",
                                 parameters =
-                                    parametersOf(
-                                        "id" to listOf("123"),
-                                        "key" to listOf("value"),
-                                    ),
+                                parametersOf(
+                                    "id" to listOf("123"),
+                                    "key" to listOf("value"),
+                                ),
                             )
                         }
                     }
@@ -1576,4 +1581,285 @@ class RoutingTest {
                 exception?.message,
             )
         }
+
+    @Test
+    fun shouldReturnsTrueWhenCanHandleByANamedRoute() {
+        // GIVEN
+        val routing = routing {
+            route(path = "/path", name = "path") {
+                handle {
+                }
+            }
+        }
+
+        // WHEN
+        val result = routing.canHandleByName(name = "path")
+
+        // THEN
+        assertTrue(result, "having a named route should can handle it")
+    }
+
+    @Test
+    fun shouldReturnsFalseWhenCanNotHandleByANamedRoute() {
+        // GIVEN
+        val routing =
+            routing {
+                route(path = "/path") {
+                    handle {
+                    }
+                }
+            }
+
+        // WHEN
+        val result = routing.canHandleByName(name = "path")
+
+        // THEN
+        assertFalse(result, "not having a named route should can't handle it")
+    }
+
+    @Test
+    fun shouldReturnsTrueWhenCanHandleByANamedRouteOnParent() {
+        // GIVEN
+        val parent = routing {
+            route(path = "/path", name = "path") {
+                handle {
+                }
+            }
+        }
+        val routing = routing(parent = parent, rootPath = "/child") {}
+
+        // WHEN
+        val result = routing.canHandleByName(name = "path", lookUpOnParent = true)
+
+        // THEN
+        assertTrue(result, "having a named route on parent should can handle it")
+    }
+
+    @Test
+    fun shouldReturnsFalseWhenCanNotHandleByANamedRouteOnParent() {
+        // GIVEN
+        val parent = routing {
+            route(path = "/path") {
+                handle {
+                }
+            }
+        }
+        val routing = routing(parent = parent, rootPath = "/child") {}
+
+        // WHEN
+        val result = routing.canHandleByName(name = "path", lookUpOnParent = true)
+
+        // THEN
+        assertFalse(result, "not having a named route on parent should can't handle it")
+    }
+
+    @Test
+    fun shouldReturnsTrueWhenCanHandleByAPath() {
+        // GIVEN
+        val routing = routing {
+            route(path = "/path") {
+                handle {
+                }
+            }
+        }
+
+        // WHEN
+        val result = routing.canHandleByPath(path = "/path")
+
+        // THEN
+        assertTrue(result, "having a path should can handle it")
+    }
+
+    @Test
+    fun shouldReturnsFalseWhenCanNotHandleByAPath() {
+        // GIVEN
+        val routing = routing {
+            route(path = "/other") {
+                handle {
+                }
+            }
+        }
+
+        // WHEN
+        val result = routing.canHandleByPath(path = "/path")
+
+        // THEN
+        assertFalse(result, "not having a path should can't handle it")
+    }
+
+    @Test
+    fun shouldReturnsTrueWhenCanHandleByAPathWithMultiLevel() {
+        // GIVEN
+        val routing = routing {
+            route(path = "/level1") {
+                route(path = "/level2") {
+                    route(path = "/level3") {
+                        handle {
+
+                        }
+                    }
+                }
+            }
+        }
+
+        // WHEN
+        val result = routing.canHandleByPath(path = "/level1/level2/level3")
+
+        // THEN
+        assertTrue(result, "having a multi level path should can handle it")
+    }
+
+    @Test
+    fun shouldReturnsFalseWhenCanNotHandleByAPathWithMultiLevel() {
+        // GIVEN
+        val routing = routing {
+            route(path = "/level1") {
+                handle {
+
+                }
+            }
+        }
+
+        // WHEN
+        val result = routing.canHandleByPath(path = "/level1/level2/level3")
+
+        // THEN
+        assertFalse(result, "not having a multi level path should can't handle it")
+    }
+
+    @Test
+    fun shouldReturnsTrueWhenCanHandleByAPathOnParent() {
+        // GIVEN
+        val parent = routing {
+            route(path = "/path") {
+                handle {
+                }
+            }
+        }
+        val routing = routing(parent = parent, rootPath = "/child") {}
+
+        // WHEN
+        val result = routing.canHandleByPath(path = "/path", lookUpOnParent = true)
+
+        // THEN
+        assertTrue(result, "having a path on parent should can handle it")
+    }
+
+    @Test
+    fun shouldReturnsFalseWhenCanNotHandleByAPathOnParent() {
+        // GIVEN
+        val parent = routing {
+            route(path = "/path") {
+                handle {
+                }
+            }
+        }
+        val routing = routing(parent = parent, rootPath = "/child") {}
+
+        // WHEN
+        val result = routing.canHandleByPath(path = "/random", lookUpOnParent = true)
+
+        // THEN
+        assertFalse(result, "not having a path on parent should can't handle it")
+    }
+
+    @Test
+    fun shouldReturnsTrueWhenCanHandleByAPathWithMultiLevelOnParent() {
+        // GIVEN
+        val parent = routing {
+            route(path = "/level1") {
+                route(path = "/level2") {
+                    route(path = "/level3") {
+                        handle {
+
+                        }
+                    }
+                }
+            }
+        }
+        val routing = routing(parent = parent, rootPath = "/child") {}
+
+        // WHEN
+        val result = routing.canHandleByPath(path = "/level1/level2/level3", lookUpOnParent = true)
+
+        // THEN
+        assertTrue(result, "having a multi level path on parent should can handle it")
+    }
+
+    @Test
+    fun shouldReturnsFalseWhenCanNotHandleByAPathWithMultiLevelOnParent() {
+        // GIVEN
+        val routing = routing {
+            route(path = "/level1") {
+                handle {
+
+                }
+            }
+        }
+
+        // WHEN
+        val result = routing.canHandleByPath(path = "/level1/level2/level3", lookUpOnParent = true)
+
+        // THEN
+        assertFalse(result, "not having a multi level path on parent should can't handle it")
+    }
+
+    @Test
+    fun shouldReturnsTrueWhenCanHandleByAPathInNestedRouting() {
+        // GIVEN
+        val parent = routing {
+            route(path = "/parent") {
+                handle {
+                }
+            }
+        }
+        val child = routing(parent = parent, rootPath = "/child") {
+            route(path = "/childPath") {
+                handle {
+                }
+            }
+        }
+        val grandchild = routing(parent = child, rootPath = "/grandchild") {
+            route(path = "/grandchildPath") {
+                handle {
+                }
+            }
+        }
+
+        // WHEN
+        val result = grandchild.canHandleByPath(path = "/child/childPath", lookUpOnParent = true)
+
+        // THEN
+        assertTrue(result, "having a path in nested routing should can handle it")
+    }
+
+    @Test
+    fun shouldReturnsFalseWhenCanNotHandleByAPathInNestedRouting() {
+        // GIVEN
+        val parent = routing {
+            route(path = "/parent") {
+                handle {
+                }
+            }
+        }
+        val child = routing(parent = parent, rootPath = "/child") {
+            route(path = "/childPath") {
+                handle {
+                }
+            }
+        }
+        val grandchild = routing(parent = child, rootPath = "/grandchild") {
+            route(path = "/grandchildPath") {
+                handle {
+                }
+            }
+        }
+
+        // WHEN
+        val result =
+            grandchild.canHandleByPath(path = "/child/grandchildPath", lookUpOnParent = true)
+
+        // THEN
+        assertFalse(result, "not having a path in nested routing should can't handle it")
+    }
 }
