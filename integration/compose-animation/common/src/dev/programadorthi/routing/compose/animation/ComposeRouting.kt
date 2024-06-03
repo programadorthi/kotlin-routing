@@ -12,8 +12,8 @@ import androidx.compose.animation.togetherWith
 import androidx.compose.runtime.Composable
 import androidx.compose.runtime.DisposableEffect
 import androidx.compose.runtime.remember
+import dev.programadorthi.routing.compose.CurrentContent
 import dev.programadorthi.routing.compose.Routing
-import dev.programadorthi.routing.compose.content
 import dev.programadorthi.routing.compose.popped
 import dev.programadorthi.routing.core.Route
 import dev.programadorthi.routing.core.Routing
@@ -39,14 +39,12 @@ public fun Routing(
     popEnterTransition: Animation<EnterTransition> = enterTransition,
     popExitTransition: Animation<ExitTransition> = exitTransition,
     initial: ComposeAnimatedContent,
-    content: ComposeAnimatedContent = { call ->
-        call.content(call)
-    },
+    content: ComposeAnimatedContent = { CurrentContent() },
 ) {
     Routing(
         routing = routing,
         initial = { call ->
-            call.animatedVisibilityScope?.initial(call)
+            call.animatedVisibilityScope.initial(call)
         },
     ) { call ->
         AnimatedContent(
@@ -94,7 +92,7 @@ public fun Routing(
     popExitTransition: Animation<ExitTransition> = exitTransition,
     configuration: Route.() -> Unit,
     initial: ComposeAnimatedContent,
-    content: ComposeAnimatedContent = { call -> call.content(call) },
+    content: ComposeAnimatedContent = { CurrentContent() },
 ) {
     val routing =
         remember {

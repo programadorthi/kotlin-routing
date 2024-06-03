@@ -9,8 +9,12 @@ public typealias ComposeContent = @Composable (ApplicationCall) -> Unit
 private val ComposeRoutingContentAttributeKey: AttributeKey<ComposeContent> =
     AttributeKey("ComposeRoutingContentAttributeKey")
 
-public var ApplicationCall.content: ComposeContent
-    get() = attributes[ComposeRoutingContentAttributeKey]
+public var ApplicationCall.content: ComposeContent?
+    get() = attributes.getOrNull(ComposeRoutingContentAttributeKey)
     internal set(value) {
-        attributes.put(ComposeRoutingContentAttributeKey, value)
+        if (value != null) {
+            attributes.put(ComposeRoutingContentAttributeKey, value)
+        } else {
+            attributes.remove(ComposeRoutingContentAttributeKey)
+        }
     }

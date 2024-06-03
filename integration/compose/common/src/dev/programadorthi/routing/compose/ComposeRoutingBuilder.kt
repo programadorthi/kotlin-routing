@@ -1,6 +1,10 @@
 package dev.programadorthi.routing.compose
 
 import androidx.compose.runtime.Composable
+import dev.programadorthi.routing.compose.history.platformPush
+import dev.programadorthi.routing.compose.history.platformReplace
+import dev.programadorthi.routing.compose.history.platformReplaceAll
+import dev.programadorthi.routing.compose.history.shouldNeglect
 import dev.programadorthi.routing.core.Route
 import dev.programadorthi.routing.core.RouteMethod
 import dev.programadorthi.routing.core.Routing
@@ -59,30 +63,27 @@ public inline fun <reified T : Any> Route.composable(
     }
 }
 
-public fun <T> PipelineContext<Unit, ApplicationCall>.composable(
+public suspend fun <T> PipelineContext<Unit, ApplicationCall>.composable(
     routing: Routing,
     resource: T?,
     body: ComposeContent,
 ) {
-    routing.poppedCall = null // Clear pop call after each new routing call
-
     call.popped = false
     call.resource = resource
     call.content = body
 
-    val callStack = routing.callStack
+    if (call.shouldNeglect()) {
+        return
+    }
+
+    // Clear pop call after each new routing call
+    routing.poppedCall = null
+    routing.popResult = null
+
     when (call.routeMethod) {
-        RouteMethod.Push -> callStack.add(call)
-        RouteMethod.Replace -> {
-            callStack.removeLastOrNull()
-            callStack.add(call)
-        }
-
-        RouteMethod.ReplaceAll -> {
-            callStack.clear()
-            callStack.add(call)
-        }
-
+        RouteMethod.Push -> call.platformPush(routing)
+        RouteMethod.Replace -> call.platformReplace(routing)
+        RouteMethod.ReplaceAll -> call.platformReplaceAll(routing)
         else ->
             error(
                 "Compose needs a stack route method to work. You called a composable ${call.uri} " +

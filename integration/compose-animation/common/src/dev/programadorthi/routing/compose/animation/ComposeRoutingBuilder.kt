@@ -123,7 +123,7 @@ public inline fun <reified T : Any> Route.composable(
     }
 }
 
-public fun <T> PipelineContext<Unit, ApplicationCall>.composable(
+public suspend fun <T> PipelineContext<Unit, ApplicationCall>.composable(
     routing: Routing,
     resource: T? = null,
     enterTransition: Animation<EnterTransition>? = null,

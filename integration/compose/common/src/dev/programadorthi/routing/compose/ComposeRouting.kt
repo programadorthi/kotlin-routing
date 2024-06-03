@@ -7,6 +7,9 @@ import androidx.compose.runtime.ProvidableCompositionLocal
 import androidx.compose.runtime.mutableStateListOf
 import androidx.compose.runtime.remember
 import androidx.compose.runtime.staticCompositionLocalOf
+import dev.programadorthi.routing.compose.history.ComposeHistoryMode
+import dev.programadorthi.routing.compose.history.historyMode
+import dev.programadorthi.routing.compose.history.restoreState
 import dev.programadorthi.routing.core.Route
 import dev.programadorthi.routing.core.Routing
 import dev.programadorthi.routing.core.application
@@ -24,11 +27,12 @@ public val LocalRouting: ProvidableCompositionLocal<Routing> =
 public fun CurrentContent() {
     val routing = LocalRouting.current
     val lastCall = routing.callStack.last()
-    lastCall.content(lastCall)
+    lastCall.content?.invoke(lastCall)
 }
 
 @Composable
 public fun Routing(
+    historyMode: ComposeHistoryMode = ComposeHistoryMode.Memory,
     routing: Routing,
     initial: ComposeContent,
     content: ComposeContent = { CurrentContent() },
@@ -45,14 +49,17 @@ public fun Routing(
                 call.content = initial
                 stack += call
                 routing.callStack = stack
+                routing.historyMode = historyMode
                 routing
             }
+        router.restoreState()
         content(router.callStack.last())
     }
 }
 
 @Composable
 public fun Routing(
+    historyMode: ComposeHistoryMode = ComposeHistoryMode.Memory,
     rootPath: String = "/",
     parent: Routing? = null,
     parentCoroutineContext: CoroutineContext? = null,
@@ -81,6 +88,7 @@ public fun Routing(
     }
 
     Routing(
+        historyMode = historyMode,
         routing = routing,
         initial = initial,
         content = content,

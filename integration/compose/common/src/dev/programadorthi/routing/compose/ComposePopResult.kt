@@ -35,6 +35,16 @@ internal var Routing.poppedCall: ApplicationCall?
         }
     }
 
+internal var Routing.popResult: Any?
+    get() = attributes.getOrNull(ComposeRoutingPopResultAttributeKey)
+    set(value) {
+        if (value != null) {
+            attributes.put(ComposeRoutingPopResultAttributeKey, value)
+        } else {
+            attributes.remove(ComposeRoutingPopResultAttributeKey)
+        }
+    }
+
 public var ApplicationCall.popped: Boolean
     get() = attributes.getOrNull(ComposeRoutingPoppedFlagCallAttributeKey) ?: false
     internal set(value) {
@@ -52,3 +62,9 @@ public inline fun <reified T> ApplicationCall.popResult(default: T): T = popResu
 public inline fun <reified T> ApplicationCall.popResult(default: () -> T): T = popResult() ?: default()
 
 public fun Routing.poppedCall(): ApplicationCall? = poppedCall
+
+public inline fun <reified T> Routing.popResult(): T? = poppedCall()?.popResult()
+
+public inline fun <reified T> Routing.popResult(default: T): T = popResult() ?: default
+
+public inline fun <reified T> Routing.popResult(default: () -> T): T = popResult() ?: default()
