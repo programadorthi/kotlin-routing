@@ -23,6 +23,9 @@ import kotlin.test.assertNotNull
 
 @OptIn(ExperimentalCoroutinesApi::class)
 class ComposeResourcesTest {
+    @Resource("/initial")
+    class Initial
+
     @Resource("/path")
     class Path {
         @Resource("{id}")
@@ -41,6 +44,11 @@ class ComposeResourcesTest {
                 routing(parentCoroutineContext = coroutineContext) {
                     install(Resources)
 
+                    composable<Initial> {
+                        fakeContent.content = "I'm the initial content"
+                        fakeContent.Composable()
+                    }
+
                     composable<Path>(method = RouteMethod.Push) {
                         result = call
                         path = it
@@ -52,16 +60,16 @@ class ComposeResourcesTest {
             composition.setContent {
                 Routing(
                     routing = routing,
-                    initial = {
-                        fakeContent.content = "I'm the initial content"
-                        fakeContent.Composable()
-                    },
+                    startUri = "/initial",
                 )
             }
 
             // WHEN
+            advanceTimeBy(99) // Ask for start uri routing
+            clock.sendFrame(0L) // Ask for recomposition
+
             routing.call(resource = Path(), routeMethod = RouteMethod.Push)
-            advanceTimeBy(99) // Ask for routing
+            advanceTimeBy(99) // Ask for /path routing
             clock.sendFrame(0L) // Ask for recomposition
 
             // THEN
@@ -85,6 +93,11 @@ class ComposeResourcesTest {
                 routing(parentCoroutineContext = coroutineContext) {
                     install(Resources)
 
+                    composable<Initial> {
+                        fakeContent.content = "I'm the initial content"
+                        fakeContent.Composable()
+                    }
+
                     composable<Path>(method = RouteMethod.Push) {
                         result = call
                         path = it
@@ -96,16 +109,16 @@ class ComposeResourcesTest {
             composition.setContent {
                 Routing(
                     routing = routing,
-                    initial = {
-                        fakeContent.content = "I'm the initial content"
-                        fakeContent.Composable()
-                    },
+                    startUri = "/initial",
                 )
             }
 
             // WHEN
+            advanceTimeBy(99) // Ask for start uri routing
+            clock.sendFrame(0L) // Ask for recomposition
+
             routing.push(Path())
-            advanceTimeBy(99) // Ask for routing
+            advanceTimeBy(99) // Ask for /path routing
             clock.sendFrame(0L) // Ask for recomposition
 
             // THEN
@@ -129,6 +142,11 @@ class ComposeResourcesTest {
                 routing(parentCoroutineContext = coroutineContext) {
                     install(Resources)
 
+                    composable<Initial> {
+                        fakeContent.content = "I'm the initial content"
+                        fakeContent.Composable()
+                    }
+
                     composable<Path> {
                         result = call
                         path = it
@@ -140,16 +158,16 @@ class ComposeResourcesTest {
             composition.setContent {
                 Routing(
                     routing = routing,
-                    initial = {
-                        fakeContent.content = "I'm the initial content"
-                        fakeContent.Composable()
-                    },
+                    startUri = "/initial",
                 )
             }
 
             // WHEN
+            advanceTimeBy(99) // Ask for start uri routing
+            clock.sendFrame(0L) // Ask for recomposition
+
             routing.replace(Path())
-            advanceTimeBy(99) // Ask for routing
+            advanceTimeBy(99) // Ask for /path routing
             clock.sendFrame(0L) // Ask for recomposition
 
             // THEN
@@ -173,6 +191,11 @@ class ComposeResourcesTest {
                 routing(parentCoroutineContext = coroutineContext) {
                     install(Resources)
 
+                    composable<Initial> {
+                        fakeContent.content = "I'm the initial content"
+                        fakeContent.Composable()
+                    }
+
                     composable<Path> {
                         result = call
                         path = it
@@ -184,16 +207,16 @@ class ComposeResourcesTest {
             composition.setContent {
                 Routing(
                     routing = routing,
-                    initial = {
-                        fakeContent.content = "I'm the initial content"
-                        fakeContent.Composable()
-                    },
+                    startUri = "/initial",
                 )
             }
 
             // WHEN
+            advanceTimeBy(99) // Ask for start uri routing
+            clock.sendFrame(0L) // Ask for recomposition
+
             routing.replaceAll(Path())
-            advanceTimeBy(99) // Ask for routing
+            advanceTimeBy(99) // Ask for /path routing
             clock.sendFrame(0L) // Ask for recomposition
 
             // THEN
@@ -217,6 +240,11 @@ class ComposeResourcesTest {
                 routing(parentCoroutineContext = coroutineContext) {
                     install(Resources)
 
+                    composable<Initial> {
+                        fakeContent.content = "I'm the initial content"
+                        fakeContent.Composable()
+                    }
+
                     composable<Path.Id> {
                         result = call
                         id = it
@@ -228,16 +256,16 @@ class ComposeResourcesTest {
             composition.setContent {
                 Routing(
                     routing = routing,
-                    initial = {
-                        fakeContent.content = "I'm the initial content"
-                        fakeContent.Composable()
-                    },
+                    startUri = "/initial",
                 )
             }
 
             // WHEN
+            advanceTimeBy(99) // Ask for start uri routing
+            clock.sendFrame(0L) // Ask for recomposition
+
             routing.push(Path.Id(id = 123))
-            advanceTimeBy(99) // Ask for routing
+            advanceTimeBy(99) // Ask for /path/{id} routing
             clock.sendFrame(0L) // Ask for recomposition
 
             // THEN
@@ -262,6 +290,11 @@ class ComposeResourcesTest {
                 routing(parentCoroutineContext = coroutineContext) {
                     install(Resources)
 
+                    composable<Initial> {
+                        fakeContent.content = "I'm the initial content"
+                        fakeContent.Composable()
+                    }
+
                     composable<Path.Id> {
                         result = call
                         id = it
@@ -273,16 +306,16 @@ class ComposeResourcesTest {
             composition.setContent {
                 Routing(
                     routing = routing,
-                    initial = {
-                        fakeContent.content = "I'm the initial content"
-                        fakeContent.Composable()
-                    },
+                    startUri = "/initial",
                 )
             }
 
             // WHEN
+            advanceTimeBy(99) // Ask for start uri routing
+            clock.sendFrame(0L) // Ask for recomposition
+
             routing.replace(Path.Id(id = 123))
-            advanceTimeBy(99) // Ask for routing
+            advanceTimeBy(99) // Ask for /path/{id} routing
             clock.sendFrame(0L) // Ask for recomposition
 
             // THEN
@@ -307,6 +340,11 @@ class ComposeResourcesTest {
                 routing(parentCoroutineContext = coroutineContext) {
                     install(Resources)
 
+                    composable<Initial> {
+                        fakeContent.content = "I'm the initial content"
+                        fakeContent.Composable()
+                    }
+
                     composable<Path.Id> {
                         result = call
                         id = it
@@ -318,16 +356,16 @@ class ComposeResourcesTest {
             composition.setContent {
                 Routing(
                     routing = routing,
-                    initial = {
-                        fakeContent.content = "I'm the initial content"
-                        fakeContent.Composable()
-                    },
+                    startUri = "/initial",
                 )
             }
 
             // WHEN
+            advanceTimeBy(99) // Ask for start uri routing
+            clock.sendFrame(0L) // Ask for recomposition
+
             routing.replaceAll(Path.Id(id = 123))
-            advanceTimeBy(99) // Ask for routing
+            advanceTimeBy(99) // Ask for /path/{id} routing
             clock.sendFrame(0L) // Ask for recomposition
 
             // THEN
@@ -352,6 +390,11 @@ class ComposeResourcesTest {
                 routing(parentCoroutineContext = coroutineContext) {
                     install(Resources)
 
+                    composable<Initial> {
+                        fakeContent.content = "I'm the initial content"
+                        fakeContent.Composable()
+                    }
+
                     composable<Path.Id> {
                         result = call
                         ids += it
@@ -363,14 +406,14 @@ class ComposeResourcesTest {
             composition.setContent {
                 Routing(
                     routing = routing,
-                    initial = {
-                        fakeContent.content = "I'm the initial content"
-                        fakeContent.Composable()
-                    },
+                    startUri = "/initial",
                 )
             }
 
             // WHEN
+            advanceTimeBy(99) // Ask for start uri routing
+            clock.sendFrame(0L) // Ask for recomposition
+
             routing.push(Path.Id(id = 1))
             advanceTimeBy(99)
             clock.sendFrame(0L)
@@ -405,6 +448,11 @@ class ComposeResourcesTest {
                 routing(parentCoroutineContext = coroutineContext) {
                     install(Resources)
 
+                    composable<Initial> {
+                        fakeContent.content = "I'm the initial content"
+                        fakeContent.Composable()
+                    }
+
                     composable<Path.Id> {
                         result += call to it
                         fakeContent.content = "I'm the reactive based content"
@@ -415,14 +463,14 @@ class ComposeResourcesTest {
             composition.setContent {
                 Routing(
                     routing = routing,
-                    initial = {
-                        fakeContent.content = "I'm the initial content"
-                        fakeContent.Composable()
-                    },
+                    startUri = "/initial",
                 )
             }
 
             // WHEN
+            advanceTimeBy(99) // Ask for start uri routing
+            clock.sendFrame(0L) // Ask for recomposition
+
             routing.push(Path.Id(id = 1))
             advanceTimeBy(99)
             clock.sendFrame(0L) // Ask for recomposition

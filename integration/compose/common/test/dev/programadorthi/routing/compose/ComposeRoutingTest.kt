@@ -20,24 +20,28 @@ import kotlin.test.assertNotNull
 import kotlin.test.assertNull
 
 @OptIn(ExperimentalCoroutinesApi::class)
-internal class ComposeRoutingTest {
+class ComposeRoutingTest {
     @Test
     fun shouldInvokeInitialContentWhenThereIsNoEmittedComposable() =
         runComposeTest { coroutineContext, composition, clock ->
             // GIVEN
-            val routing = routing(parentCoroutineContext = coroutineContext) {}
             val fakeContent = FakeContent()
+            val routing =
+                routing(parentCoroutineContext = coroutineContext) {
+                    composable(path = "/initial") {
+                        fakeContent.content = "I'm the initial content"
+                        fakeContent.Composable()
+                    }
+                }
 
             // WHEN
             composition.setContent {
                 Routing(
                     routing = routing,
-                    initial = {
-                        fakeContent.content = "I'm the initial content"
-                        fakeContent.Composable()
-                    },
+                    startUri = "/initial",
                 )
             }
+            advanceTimeBy(99) // Ask for start uri routing
             clock.sendFrame(0L) // Ask for recomposition
 
             // THEN
@@ -52,6 +56,10 @@ internal class ComposeRoutingTest {
 
             val routing =
                 routing(parentCoroutineContext = coroutineContext) {
+                    composable(path = "/initial") {
+                        fakeContent.content = "I'm the initial content"
+                        fakeContent.Composable()
+                    }
                     composable(path = "/path") {
                         fakeContent.content = "I'm the path based content"
                         fakeContent.Composable()
@@ -61,16 +69,16 @@ internal class ComposeRoutingTest {
             composition.setContent {
                 Routing(
                     routing = routing,
-                    initial = {
-                        fakeContent.content = "I'm the initial content"
-                        fakeContent.Composable()
-                    },
+                    startUri = "/initial",
                 )
             }
 
             // WHEN
+            advanceTimeBy(99) // Ask for start uri routing
+            clock.sendFrame(0L) // Ask for recomposition
+
             routing.call(uri = "/path", routeMethod = RouteMethod.Push)
-            advanceTimeBy(99) // Ask for routing
+            advanceTimeBy(99) // Ask for /path routing
             clock.sendFrame(0L) // Ask for recomposition
 
             // THEN
@@ -85,6 +93,10 @@ internal class ComposeRoutingTest {
 
             val routing =
                 routing(parentCoroutineContext = coroutineContext) {
+                    composable(path = "/initial") {
+                        fakeContent.content = "I'm the initial content"
+                        fakeContent.Composable()
+                    }
                     composable(path = "/path", name = "path") {
                         fakeContent.content = "I'm the name based content"
                         fakeContent.Composable()
@@ -94,16 +106,16 @@ internal class ComposeRoutingTest {
             composition.setContent {
                 Routing(
                     routing = routing,
-                    initial = {
-                        fakeContent.content = "I'm the initial content"
-                        fakeContent.Composable()
-                    },
+                    startUri = "/initial",
                 )
             }
 
             // WHEN
+            advanceTimeBy(99) // Ask for start uri routing
+            clock.sendFrame(0L) // Ask for recomposition
+
             routing.call(name = "path", routeMethod = RouteMethod.Push)
-            advanceTimeBy(99) // Ask for routing
+            advanceTimeBy(99) // Ask for /path routing
             clock.sendFrame(0L) // Ask for recomposition
 
             // THEN
@@ -118,6 +130,10 @@ internal class ComposeRoutingTest {
 
             val routing =
                 routing(parentCoroutineContext = coroutineContext) {
+                    composable(path = "/initial") {
+                        fakeContent.content = "I'm the initial content"
+                        fakeContent.Composable()
+                    }
                     route(path = "/any") {
                         composable {
                             fakeContent.content = "I'm the generic based content"
@@ -129,16 +145,16 @@ internal class ComposeRoutingTest {
             composition.setContent {
                 Routing(
                     routing = routing,
-                    initial = {
-                        fakeContent.content = "I'm the initial content"
-                        fakeContent.Composable()
-                    },
+                    startUri = "/initial",
                 )
             }
 
             // WHEN
+            advanceTimeBy(99) // Ask for start uri routing
+            clock.sendFrame(0L) // Ask for recomposition
+
             routing.call(uri = "/any", routeMethod = RouteMethod.Push)
-            advanceTimeBy(99) // Ask for routing
+            advanceTimeBy(99) // Ask /any for routing
             clock.sendFrame(0L) // Ask for recomposition
 
             // THEN
@@ -154,6 +170,10 @@ internal class ComposeRoutingTest {
 
             val routing =
                 routing(parentCoroutineContext = coroutineContext) {
+                    composable(path = "/initial") {
+                        fakeContent.content = "I'm the initial content"
+                        fakeContent.Composable()
+                    }
                     composable(path = "/path") {
                         result = call
                         fakeContent.content = "I'm the push based content"
@@ -164,16 +184,16 @@ internal class ComposeRoutingTest {
             composition.setContent {
                 Routing(
                     routing = routing,
-                    initial = {
-                        fakeContent.content = "I'm the initial content"
-                        fakeContent.Composable()
-                    },
+                    startUri = "/initial",
                 )
             }
 
             // WHEN
+            advanceTimeBy(99) // Ask for start uri routing
+            clock.sendFrame(0L) // Ask for recomposition
+
             routing.push(path = "/path")
-            advanceTimeBy(99) // Ask for routing
+            advanceTimeBy(99) // Ask for /path routing
             clock.sendFrame(0L) // Ask for recomposition
 
             // THEN
@@ -195,6 +215,10 @@ internal class ComposeRoutingTest {
 
             val routing =
                 routing(parentCoroutineContext = coroutineContext) {
+                    composable(path = "/initial") {
+                        pushContent.content = "I'm the initial content"
+                        pushContent.Composable()
+                    }
                     composable(path = "/push") {
                         pushContent.content = "I'm the push based content"
                         pushContent.Composable()
@@ -209,20 +233,20 @@ internal class ComposeRoutingTest {
             composition.setContent {
                 Routing(
                     routing = routing,
-                    initial = {
-                        replaceContent.content = "I'm the initial content"
-                        replaceContent.Composable()
-                    },
+                    startUri = "/initial",
                 )
             }
 
             // WHEN
+            advanceTimeBy(99) // Ask for start uri routing
+            clock.sendFrame(0L) // Ask for recomposition
+
             routing.push(path = "/push")
-            advanceTimeBy(99) // Ask for routing
+            advanceTimeBy(99) // Ask for /push routing
             clock.sendFrame(0L) // Ask for recomposition
 
             routing.replace(path = "/replace")
-            advanceTimeBy(99) // Ask for routing
+            advanceTimeBy(99) // Ask for /replace routing
             clock.sendFrame(0L) // Ask for recomposition
 
             // THEN
@@ -245,6 +269,10 @@ internal class ComposeRoutingTest {
 
             val routing =
                 routing(parentCoroutineContext = coroutineContext) {
+                    composable(path = "/initial") {
+                        pushContent.content = "I'm the initial content"
+                        pushContent.Composable()
+                    }
                     composable(path = "/push") {
                         pushContent.content = "I'm the push based content"
                         pushContent.Composable()
@@ -259,20 +287,20 @@ internal class ComposeRoutingTest {
             composition.setContent {
                 Routing(
                     routing = routing,
-                    initial = {
-                        replaceContent.content = "I'm the initial content"
-                        replaceContent.Composable()
-                    },
+                    startUri = "/initial",
                 )
             }
 
             // WHEN
+            advanceTimeBy(99) // Ask for start uri routing
+            clock.sendFrame(0L) // Ask for recomposition
+
             routing.push(path = "/push")
-            advanceTimeBy(99) // Ask for routing
+            advanceTimeBy(99) // Ask for /push routing
             clock.sendFrame(0L) // Ask for recomposition
 
             routing.replaceAll(path = "/replace")
-            advanceTimeBy(99) // Ask for routing
+            advanceTimeBy(99) // Ask for /replace routing
             clock.sendFrame(0L) // Ask for recomposition
 
             // THEN
@@ -289,10 +317,13 @@ internal class ComposeRoutingTest {
     fun shouldPopAComposable() =
         runComposeTest { coroutineContext, composition, clock ->
             // GIVEN
-            var composedCounter = 0
+            var composedCounter = -1
 
             val routing =
                 routing(parentCoroutineContext = coroutineContext) {
+                    composable(path = "/initial") {
+                        composedCounter = 0
+                    }
                     composable(path = "/push") {
                         composedCounter += 1
                     }
@@ -301,21 +332,24 @@ internal class ComposeRoutingTest {
             composition.setContent {
                 Routing(
                     routing = routing,
-                    initial = {},
+                    startUri = "/initial",
                 )
             }
 
             // WHEN
-            routing.push(path = "/push")
-            advanceTimeBy(99) // Ask for routing
+            advanceTimeBy(99) // Ask for start uri routing
             clock.sendFrame(0L) // Ask for recomposition
 
             routing.push(path = "/push")
-            advanceTimeBy(99) // Ask for routing
+            advanceTimeBy(99) // Ask for /push routing
+            clock.sendFrame(0L) // Ask for recomposition
+
+            routing.push(path = "/push")
+            advanceTimeBy(99) // Ask for /push routing
             clock.sendFrame(0L) // Ask for recomposition
 
             routing.pop()
-            advanceTimeBy(99) // Ask for routing
+            advanceTimeBy(99) // Ask for pop routing
             clock.sendFrame(0L) // Ask for recomposition
 
             // THEN
@@ -330,6 +364,9 @@ internal class ComposeRoutingTest {
 
             val routing =
                 routing(parentCoroutineContext = coroutineContext) {
+                    composable(path = "/initial") {
+                        poppedMessage = "I'm the initial content"
+                    }
                     composable(path = "/push") {
                         poppedMessage = LocalRouting.current.poppedCall?.popResult<String>()
                     }
@@ -338,21 +375,24 @@ internal class ComposeRoutingTest {
             composition.setContent {
                 Routing(
                     routing = routing,
-                    initial = {},
+                    startUri = "/initial",
                 )
             }
 
             // WHEN
-            routing.push(path = "/push")
-            advanceTimeBy(99) // Ask for routing
+            advanceTimeBy(99) // Ask for start uri routing
             clock.sendFrame(0L) // Ask for recomposition
 
             routing.push(path = "/push")
-            advanceTimeBy(99) // Ask for routing
+            advanceTimeBy(99) // Ask for /push routing
+            clock.sendFrame(0L) // Ask for recomposition
+
+            routing.push(path = "/push")
+            advanceTimeBy(99) // Ask for /push routing
             clock.sendFrame(0L) // Ask for recomposition
 
             routing.pop(result = "This is the popped message")
-            advanceTimeBy(99) // Ask for routing
+            advanceTimeBy(99) // Ask for pop routing
             clock.sendFrame(0L) // Ask for recomposition
 
             // THEN
@@ -367,6 +407,9 @@ internal class ComposeRoutingTest {
 
             val routing =
                 routing(parentCoroutineContext = coroutineContext) {
+                    composable(path = "/initial") {
+                        poppedMessage = "I'm the initial content"
+                    }
                     composable(path = "/push") {
                         poppedMessage = LocalRouting.current.poppedCall?.popResult<String>()
                     }
@@ -375,21 +418,24 @@ internal class ComposeRoutingTest {
             composition.setContent {
                 Routing(
                     routing = routing,
-                    initial = {},
+                    startUri = "/initial",
                 )
             }
 
             // WHEN
+            advanceTimeBy(99) // Ask for start uri routing
+            clock.sendFrame(0L) // Ask for recomposition
+
             routing.push(path = "/push")
-            advanceTimeBy(99) // Ask for routing
+            advanceTimeBy(99) // Ask for /push routing
             clock.sendFrame(0L) // Ask for recomposition
 
             routing.pop(result = "This is the popped message")
-            advanceTimeBy(99) // Ask for routing
+            advanceTimeBy(99) // Ask for pop routing
             clock.sendFrame(0L) // Ask for recomposition
 
             routing.push(path = "/push")
-            advanceTimeBy(99) // Ask for routing
+            advanceTimeBy(99) // Ask for /push routing
             clock.sendFrame(0L) // Ask for recomposition
 
             // THEN

@@ -3,6 +3,7 @@ package dev.programadorthi.routing.compose.animation
 import androidx.compose.animation.fadeIn
 import androidx.compose.animation.fadeOut
 import androidx.compose.ui.test.junit4.createComposeRule
+import dev.programadorthi.routing.compose.composable
 import dev.programadorthi.routing.compose.pop
 import dev.programadorthi.routing.compose.popped
 import dev.programadorthi.routing.compose.poppedCall
@@ -20,7 +21,7 @@ import kotlin.test.Test
 import kotlin.test.assertEquals
 
 @OptIn(ExperimentalCoroutinesApi::class)
-internal class ComposeAnimationRoutingTest {
+class ComposeAnimationRoutingTest {
     @get:Rule
     val rule = createComposeRule()
 
@@ -36,15 +37,15 @@ internal class ComposeAnimationRoutingTest {
 
             val routing =
                 routing(parentCoroutineContext = coroutineContext + job) {
-                    composable(path = "/path") {
-                    }
+                    composable(path = "/initial") { }
+                    composable(path = "/path") { }
                 }
 
             // WHEN
             rule.setContent {
                 Routing(
                     routing = routing,
-                    initial = { },
+                    startUri = "/initial",
                     enterTransition = {
                         previous = initialState
                         next = targetState
@@ -58,6 +59,9 @@ internal class ComposeAnimationRoutingTest {
                 )
             }
 
+            advanceTimeBy(99) // Ask for start uri routing
+            rule.mainClock.advanceTimeBy(0L) // Ask for recomposition
+
             routing.push(path = "/path")
             advanceTimeBy(99) // Ask for routing
             rule.mainClock.advanceTimeBy(0L) // Ask for recomposition
@@ -65,9 +69,9 @@ internal class ComposeAnimationRoutingTest {
             // THEN
             assertEquals(previous, exitPrevious)
             assertEquals(next, exitNext)
-            assertEquals("/", "${previous?.uri}")
+            assertEquals("/initial", "${previous?.uri}")
             assertEquals("", "${previous?.name}")
-            assertEquals(RouteMethod.Empty, previous?.routeMethod)
+            assertEquals(RouteMethod.Push, previous?.routeMethod)
             assertEquals(Parameters.Empty, previous?.parameters)
             assertEquals("/path", "${next?.uri}")
             assertEquals("", "${next?.name}")
@@ -87,15 +91,17 @@ internal class ComposeAnimationRoutingTest {
 
             val routing =
                 routing(parentCoroutineContext = coroutineContext + job) {
-                    composable(path = "/path") {
-                    }
+                    composable(path = "/initial") { }
+                    composable(path = "/path") { }
                 }
 
             // WHEN
             rule.setContent {
                 Routing(
                     routing = routing,
-                    initial = { },
+                    startUri = "/initial",
+                    enterTransition = { fadeIn() },
+                    exitTransition = { fadeOut() },
                     popEnterTransition = {
                         previous = initialState
                         next = targetState
@@ -108,6 +114,9 @@ internal class ComposeAnimationRoutingTest {
                     },
                 )
             }
+
+            advanceTimeBy(99) // Ask for start uri routing
+            rule.mainClock.advanceTimeBy(0L) // Ask for recomposition
 
             routing.push(path = "/path")
             advanceTimeBy(99) // Ask for routing
@@ -123,9 +132,9 @@ internal class ComposeAnimationRoutingTest {
             assertEquals("", "${previous?.name}")
             assertEquals(RouteMethod.Push, previous?.routeMethod)
             assertEquals(Parameters.Empty, previous?.parameters)
-            assertEquals("/", "${next?.uri}")
+            assertEquals("/initial", "${next?.uri}")
             assertEquals("", "${next?.name}")
-            assertEquals(RouteMethod.Empty, next?.routeMethod)
+            assertEquals(RouteMethod.Push, next?.routeMethod)
             assertEquals(Parameters.Empty, next?.parameters)
             assertEquals(true, previous?.popped, "Previous call should be popped")
             assertEquals(
@@ -147,6 +156,7 @@ internal class ComposeAnimationRoutingTest {
 
             val routing =
                 routing(parentCoroutineContext = coroutineContext + job) {
+                    composable(path = "/initial") { }
                     composable(
                         path = "/path",
                         enterTransition = {
@@ -162,7 +172,8 @@ internal class ComposeAnimationRoutingTest {
             rule.setContent {
                 Routing(
                     routing = routing,
-                    initial = { },
+                    startUri = "/initial",
+                    enterTransition = { fadeIn() },
                     // Initial screen always uses global enter and exit transition
                     exitTransition = {
                         exitPrevious = initialState
@@ -172,6 +183,9 @@ internal class ComposeAnimationRoutingTest {
                 )
             }
 
+            advanceTimeBy(99) // Ask for routing
+            rule.mainClock.advanceTimeBy(0L) // Ask for recomposition
+
             routing.push(path = "/path")
             advanceTimeBy(99) // Ask for routing
             rule.mainClock.advanceTimeBy(0L) // Ask for recomposition
@@ -179,9 +193,9 @@ internal class ComposeAnimationRoutingTest {
             // THEN
             assertEquals(previous, exitPrevious)
             assertEquals(next, exitNext)
-            assertEquals("/", "${previous?.uri}")
+            assertEquals("/initial", "${previous?.uri}")
             assertEquals("", "${previous?.name}")
-            assertEquals(RouteMethod.Empty, previous?.routeMethod)
+            assertEquals(RouteMethod.Push, previous?.routeMethod)
             assertEquals(Parameters.Empty, previous?.parameters)
             assertEquals("/path", "${next?.uri}")
             assertEquals("", "${next?.name}")
@@ -201,6 +215,7 @@ internal class ComposeAnimationRoutingTest {
 
             val routing =
                 routing(parentCoroutineContext = coroutineContext + job) {
+                    composable(path = "/initial") { }
                     composable(
                         path = "/path",
                         method = RouteMethod.Push,
@@ -222,9 +237,14 @@ internal class ComposeAnimationRoutingTest {
             rule.setContent {
                 Routing(
                     routing = routing,
-                    initial = { },
+                    startUri = "/initial",
+                    enterTransition = { fadeIn() },
+                    exitTransition = { fadeOut() },
                 )
             }
+
+            advanceTimeBy(99) // Ask for routing
+            rule.mainClock.advanceTimeBy(0L) // Ask for recomposition
 
             routing.push(path = "/path")
             advanceTimeBy(99) // Ask for routing
@@ -236,9 +256,9 @@ internal class ComposeAnimationRoutingTest {
             // THEN
             assertEquals(previous, exitNext)
             assertEquals(next, exitPrevious)
-            assertEquals("/", "${exitNext?.uri}")
+            assertEquals("/initial", "${exitNext?.uri}")
             assertEquals("", "${exitNext?.name}")
-            assertEquals(RouteMethod.Empty, exitNext?.routeMethod)
+            assertEquals(RouteMethod.Push, exitNext?.routeMethod)
             assertEquals(Parameters.Empty, exitNext?.parameters)
             assertEquals("/path", "${exitPrevious?.uri}")
             assertEquals("", "${exitPrevious?.name}")
@@ -259,7 +279,8 @@ internal class ComposeAnimationRoutingTest {
 
             val routing =
                 routing(parentCoroutineContext = coroutineContext + job) {
-                    composable(path = "/path") {
+                    composable(path = "/initial") {
+                        initialContent = "this is the initial content"
                     }
                 }
 
@@ -267,9 +288,7 @@ internal class ComposeAnimationRoutingTest {
             rule.setContent {
                 Routing(
                     routing = routing,
-                    initial = {
-                        initialContent = "this is the initial content"
-                    },
+                    startUri = "/initial",
                     enterTransition = {
                         previous = initialState
                         next = targetState
@@ -283,6 +302,7 @@ internal class ComposeAnimationRoutingTest {
                 )
             }
 
+            advanceTimeBy(99)
             rule.mainClock.advanceTimeBy(0L) // Ask for recomposition
 
             // THEN
@@ -304,6 +324,9 @@ internal class ComposeAnimationRoutingTest {
 
             val routing =
                 routing(parentCoroutineContext = coroutineContext + job) {
+                    composable(path = "/initial") {
+                        initialContentCount += 1
+                    }
                     composable(path = "/path") {
                     }
                 }
@@ -312,9 +335,7 @@ internal class ComposeAnimationRoutingTest {
             rule.setContent {
                 Routing(
                     routing = routing,
-                    initial = {
-                        initialContentCount += 1
-                    },
+                    startUri = "/initial",
                     enterTransition = {
                         previous = initialState
                         next = targetState
@@ -329,6 +350,7 @@ internal class ComposeAnimationRoutingTest {
             }
 
             // Render initial content
+            advanceTimeBy(99)
             rule.mainClock.advanceTimeBy(0L) // Ask for recomposition
 
             // Go to other composition
@@ -348,9 +370,9 @@ internal class ComposeAnimationRoutingTest {
             assertEquals("", "${previous?.name}")
             assertEquals(RouteMethod.Push, previous?.routeMethod)
             assertEquals(Parameters.Empty, previous?.parameters)
-            assertEquals("/", "${next?.uri}")
+            assertEquals("/initial", "${next?.uri}")
             assertEquals("", "${next?.name}")
-            assertEquals(RouteMethod.Empty, next?.routeMethod)
+            assertEquals(RouteMethod.Push, next?.routeMethod)
             assertEquals(Parameters.Empty, next?.parameters)
             assertEquals(true, previous?.popped, "Previous call should be popped")
             assertEquals(

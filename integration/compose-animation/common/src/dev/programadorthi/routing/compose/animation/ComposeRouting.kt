@@ -1,76 +1,88 @@
 package dev.programadorthi.routing.compose.animation
 
 import androidx.compose.animation.AnimatedContent
-import androidx.compose.animation.AnimatedVisibilityScope
 import androidx.compose.animation.EnterTransition
 import androidx.compose.animation.ExitTransition
-import androidx.compose.animation.core.tween
-import androidx.compose.animation.fadeIn
-import androidx.compose.animation.fadeOut
-import androidx.compose.animation.scaleIn
 import androidx.compose.animation.togetherWith
 import androidx.compose.runtime.Composable
 import androidx.compose.runtime.DisposableEffect
+import androidx.compose.runtime.SideEffect
+import androidx.compose.runtime.getValue
+import androidx.compose.runtime.mutableStateOf
 import androidx.compose.runtime.remember
-import dev.programadorthi.routing.compose.CurrentContent
+import androidx.compose.runtime.saveable.Saver
+import androidx.compose.runtime.saveable.rememberSaveable
+import androidx.compose.runtime.setValue
+import dev.programadorthi.routing.compose.CallContent
 import dev.programadorthi.routing.compose.Routing
+import dev.programadorthi.routing.compose.history.ComposeHistoryMode
 import dev.programadorthi.routing.compose.popped
 import dev.programadorthi.routing.core.Route
 import dev.programadorthi.routing.core.Routing
-import dev.programadorthi.routing.core.application.ApplicationCall
 import dev.programadorthi.routing.core.routing
 import io.ktor.util.logging.KtorSimpleLogger
 import io.ktor.util.logging.Logger
 import kotlin.coroutines.CoroutineContext
 import kotlin.coroutines.EmptyCoroutineContext
 
-public typealias ComposeAnimatedContent = @Composable AnimatedVisibilityScope.(ApplicationCall) -> Unit
-
 @Composable
 public fun Routing(
+    historyMode: ComposeHistoryMode = ComposeHistoryMode.Memory,
     routing: Routing,
-    enterTransition: Animation<EnterTransition> = {
-        fadeIn(animationSpec = tween(220, delayMillis = 90)) +
-            scaleIn(initialScale = 0.92f, animationSpec = tween(220, delayMillis = 90))
-    },
-    exitTransition: Animation<ExitTransition> = {
-        fadeOut(animationSpec = tween(90))
-    },
+    startUri: String,
+    enterTransition: Animation<EnterTransition>,
+    exitTransition: Animation<ExitTransition>,
     popEnterTransition: Animation<EnterTransition> = enterTransition,
     popExitTransition: Animation<ExitTransition> = exitTransition,
-    initial: ComposeAnimatedContent,
-    content: ComposeAnimatedContent = { CurrentContent() },
 ) {
+    var restored by rememberSaveable(
+        key = "state:restored:$routing",
+        saver =
+            Saver(
+                restore = { mutableStateOf(true) },
+                save = { true },
+            ),
+    ) {
+        mutableStateOf(false)
+    }
     Routing(
+        historyMode = historyMode,
         routing = routing,
-        initial = { call ->
-            call.animatedVisibilityScope.initial(call)
-        },
+        startUri = startUri,
     ) { call ->
-        AnimatedContent(
-            targetState = call,
-            transitionSpec = {
-                val previousCall = initialState
-                val nextCall = targetState
-                val enter =
-                    when {
-                        previousCall.popped -> nextCall.popEnterTransition ?: popEnterTransition
-                        else -> nextCall.enterTransition ?: enterTransition
-                    }
-                val exit =
-                    when {
-                        previousCall.popped -> previousCall.popExitTransition ?: popExitTransition
-                        else -> previousCall.exitTransition ?: exitTransition
-                    }
+        if (restored) {
+            CallContent(call)
+        } else {
+            AnimatedContent(
+                targetState = call,
+                transitionSpec = {
+                    val previousCall = initialState
+                    val nextCall = targetState
+                    val enter =
+                        when {
+                            previousCall.popped -> nextCall.popEnterTransition ?: popEnterTransition
+                            else -> nextCall.enterTransition ?: enterTransition
+                        }
+                    val exit =
+                        when {
+                            previousCall.popped ->
+                                previousCall.popExitTransition
+                                    ?: popExitTransition
 
-                enter(this) togetherWith exit(this)
-            },
-            content = { animatedCall ->
-                animatedCall.animatedVisibilityScope = this
+                            else -> previousCall.exitTransition ?: exitTransition
+                        }
 
-                content(animatedCall)
-            },
-        )
+                    enter(this) togetherWith exit(this)
+                },
+                content = { animatedCall ->
+                    CallContent(animatedCall)
+                },
+            )
+        }
+
+        SideEffect {
+            restored = false
+        }
     }
 }
 
@@ -81,18 +93,12 @@ public fun Routing(
     coroutineContext: CoroutineContext = EmptyCoroutineContext,
     log: Logger = KtorSimpleLogger("kotlin-routing"),
     developmentMode: Boolean = false,
-    enterTransition: Animation<EnterTransition> = {
-        fadeIn(animationSpec = tween(220, delayMillis = 90)) +
-            scaleIn(initialScale = 0.92f, animationSpec = tween(220, delayMillis = 90))
-    },
-    exitTransition: Animation<ExitTransition> = {
-        fadeOut(animationSpec = tween(90))
-    },
+    startUri: String,
+    enterTransition: Animation<EnterTransition>,
+    exitTransition: Animation<ExitTransition>,
     popEnterTransition: Animation<EnterTransition> = enterTransition,
     popExitTransition: Animation<ExitTransition> = exitTransition,
     configuration: Route.() -> Unit,
-    initial: ComposeAnimatedContent,
-    content: ComposeAnimatedContent = { CurrentContent() },
 ) {
     val routing =
         remember {
@@ -114,11 +120,10 @@ public fun Routing(
 
     Routing(
         routing = routing,
+        startUri = startUri,
         enterTransition = enterTransition,
         exitTransition = exitTransition,
         popEnterTransition = popEnterTransition,
         popExitTransition = popExitTransition,
-        initial = initial,
-        content = content,
     )
 }

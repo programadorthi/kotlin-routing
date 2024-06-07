@@ -12,7 +12,6 @@ import dev.programadorthi.routing.compose.push
 import dev.programadorthi.routing.core.RouteMethod
 import dev.programadorthi.routing.core.application
 import dev.programadorthi.routing.core.application.ApplicationCall
-import dev.programadorthi.routing.core.handle
 import dev.programadorthi.routing.core.routing
 import kotlinx.coroutines.ExperimentalCoroutinesApi
 import kotlinx.coroutines.test.advanceTimeBy
@@ -27,19 +26,23 @@ class ComposeHistoryExtTest {
     fun shouldCallStackStartsWithInitialOnly() =
         runComposeTest { coroutineContext, composition, clock ->
             // GIVEN
-            val routing = routing(parentCoroutineContext = coroutineContext) {}
             val fakeContent = FakeContent()
+            val routing =
+                routing(parentCoroutineContext = coroutineContext) {
+                    composable(path = "/initial") {
+                        fakeContent.content = "I'm the initial content"
+                        fakeContent.Composable()
+                    }
+                }
 
             // WHEN
             composition.setContent {
                 Routing(
                     routing = routing,
-                    initial = {
-                        fakeContent.content = "I'm the initial content"
-                        fakeContent.Composable()
-                    },
+                    startUri = "/initial",
                 )
             }
+            advanceTimeBy(99)
             clock.sendFrame(0L) // Ask for recomposition
 
             // THEN
@@ -50,8 +53,14 @@ class ComposeHistoryExtTest {
     fun shouldUseMemoryHistoryMode() =
         runComposeTest { coroutineContext, composition, clock ->
             // GIVEN
-            val routing = routing(parentCoroutineContext = coroutineContext) {}
             val fakeContent = FakeContent()
+            val routing =
+                routing(parentCoroutineContext = coroutineContext) {
+                    composable(path = "/initial") {
+                        fakeContent.content = "I'm the initial content"
+                        fakeContent.Composable()
+                    }
+                }
             val stateRegistry =
                 SaveableStateRegistry(
                     restoredValues = null,
@@ -63,13 +72,11 @@ class ComposeHistoryExtTest {
                 CompositionLocalProvider(LocalSaveableStateRegistry provides stateRegistry) {
                     Routing(
                         routing = routing,
-                        initial = {
-                            fakeContent.content = "I'm the initial content"
-                            fakeContent.Composable()
-                        },
+                        startUri = "/initial",
                     )
                 }
             }
+            advanceTimeBy(99)
             clock.sendFrame(0L) // Ask for recomposition
 
             // THEN
@@ -80,12 +87,14 @@ class ComposeHistoryExtTest {
     fun shouldCallStackStartsWithRestoreValues() =
         runComposeTest { coroutineContext, composition, clock ->
             // GIVEN
+            val fakeContent = FakeContent()
             val routing =
                 routing(parentCoroutineContext = coroutineContext) {
-                    handle(path = "/path3") {
+                    composable(path = "/path3") {
+                        fakeContent.content = "I'm the path3 content"
+                        fakeContent.Composable()
                     }
                 }
-            val fakeContent = FakeContent()
             val history =
                 listOf(
                     ApplicationCall(
@@ -104,7 +113,7 @@ class ComposeHistoryExtTest {
             val json = Json.encodeToString(history)
             val stateRegistry =
                 SaveableStateRegistry(
-                    restoredValues = mapOf(routing.toString() to listOf(json)),
+                    restoredValues = mapOf("state:restoration:$routing" to listOf(json)),
                     canBeSaved = { true },
                 )
 
@@ -113,10 +122,7 @@ class ComposeHistoryExtTest {
                 CompositionLocalProvider(LocalSaveableStateRegistry provides stateRegistry) {
                     Routing(
                         routing = routing,
-                        initial = {
-                            fakeContent.content = "I'm the initial content"
-                            fakeContent.Composable()
-                        },
+                        startUri = "/path3",
                     )
                 }
             }
@@ -140,13 +146,8 @@ class ComposeHistoryExtTest {
                     composable(path = "/path3") {
                     }
                 }
-            val fakeContent = FakeContent()
             val calls =
                 listOf(
-                    ApplicationCall(
-                        application = routing.application,
-                        uri = routing.toString(),
-                    ),
                     ApplicationCall(
                         application = routing.application,
                         uri = "/path1",
@@ -164,7 +165,7 @@ class ComposeHistoryExtTest {
                     ),
                 )
             val json = Json.encodeToString(calls.map { it.toHistoryState() })
-            val expected = mapOf(routing.toString() to listOf(json))
+            val expected = mapOf("state:restoration:$routing" to listOf(json))
             val stateRegistry =
                 SaveableStateRegistry(
                     restoredValues = null,
@@ -176,19 +177,13 @@ class ComposeHistoryExtTest {
                 CompositionLocalProvider(LocalSaveableStateRegistry provides stateRegistry) {
                     Routing(
                         routing = routing,
-                        initial = {
-                            fakeContent.content = "I'm the initial content"
-                            fakeContent.Composable()
-                        },
+                        startUri = "/path1",
                     )
                 }
             }
             clock.sendFrame(0L) // Ask for recomposition
             advanceTimeBy(99)
 
-            routing.push(path = "/path1")
-            advanceTimeBy(99)
-            clock.sendFrame(0L) // Ask for recomposition
             routing.push(path = "/path2")
             advanceTimeBy(99)
             clock.sendFrame(0L) // Ask for recomposition

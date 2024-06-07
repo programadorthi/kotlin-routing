@@ -13,4 +13,4 @@ internal expect suspend fun ApplicationCall.platformReplaceAll(routing: Routing)
 internal expect fun ApplicationCall.shouldNeglect(): Boolean
 
 @Composable
-internal expect fun Routing.restoreState()
+internal expect fun Routing.restoreState(startUri: String)

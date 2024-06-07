@@ -66,23 +66,14 @@ internal actual suspend fun ApplicationCall.platformReplaceAll(routing: Routing)
 }
 
 @Composable
-internal actual fun Routing.restoreState() {
+internal actual fun Routing.restoreState(startUri: String) {
     LaunchedEffect(Unit) {
         window.onpageshow = {
             // First time or page refresh we try continue from last state
             val state = window.history.state
-            if (state != null) {
-                tryNotifyTheRoute(state = state)
-            } else {
-                val hashValue = window.location.hash.removePrefix("#")
-                val destination =
-                    when {
-                        historyMode != ComposeHistoryMode.Hash || hashValue.isBlank() ->
-                            window.location.run { pathname + search + hash }
-
-                        else -> hashValue
-                    }
-                replace(path = destination)
+            when {
+                state != null -> tryNotifyTheRoute(state = state)
+                else -> replace(path = startUri)
             }
         }
 

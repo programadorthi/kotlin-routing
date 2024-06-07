@@ -1,7 +1,7 @@
 package dev.programadorthi.routing.compose.history
 
 import dev.programadorthi.routing.compose.Routing
-import dev.programadorthi.routing.compose.helper.FakeContent
+import dev.programadorthi.routing.compose.composable
 import dev.programadorthi.routing.compose.helper.runComposeTest
 import dev.programadorthi.routing.core.application
 import dev.programadorthi.routing.core.application.ApplicationCall
@@ -21,17 +21,16 @@ class ComposeHistoryAttributeTest {
     fun shouldUseMemoryHistoryMode() =
         runComposeTest { coroutineContext, composition, clock ->
             // GIVEN
-            val routing = routing(parentCoroutineContext = coroutineContext) {}
-            val fakeContent = FakeContent()
+            val routing = routing(parentCoroutineContext = coroutineContext) {
+                composable(path = "/initial") {
+                }
+            }
 
             // WHEN
             composition.setContent {
                 Routing(
                     routing = routing,
-                    initial = {
-                        fakeContent.content = "I'm the initial content"
-                        fakeContent.Composable()
-                    },
+                    startUri = "/initial",
                 )
             }
             clock.sendFrame(0L) // Ask for recomposition
@@ -44,18 +43,17 @@ class ComposeHistoryAttributeTest {
     fun shouldUseHtml5HistoryMode() =
         runComposeTest { coroutineContext, composition, clock ->
             // GIVEN
-            val routing = routing(parentCoroutineContext = coroutineContext) {}
-            val fakeContent = FakeContent()
+            val routing = routing(parentCoroutineContext = coroutineContext) {
+                composable(path = "/initial") {
+                }
+            }
 
             // WHEN
             composition.setContent {
                 Routing(
                     historyMode = ComposeHistoryMode.Html5,
                     routing = routing,
-                    initial = {
-                        fakeContent.content = "I'm the initial content"
-                        fakeContent.Composable()
-                    },
+                    startUri = "/initial",
                 )
             }
             clock.sendFrame(0L) // Ask for recomposition
@@ -68,18 +66,17 @@ class ComposeHistoryAttributeTest {
     fun shouldUseHashHistoryMode() =
         runComposeTest { coroutineContext, composition, clock ->
             // GIVEN
-            val routing = routing(parentCoroutineContext = coroutineContext) {}
-            val fakeContent = FakeContent()
+            val routing = routing(parentCoroutineContext = coroutineContext) {
+                composable(path = "/initial") {
+                }
+            }
 
             // WHEN
             composition.setContent {
                 Routing(
                     historyMode = ComposeHistoryMode.Hash,
                     routing = routing,
-                    initial = {
-                        fakeContent.content = "I'm the initial content"
-                        fakeContent.Composable()
-                    },
+                    startUri = "/initial",
                 )
             }
             clock.sendFrame(0L) // Ask for recomposition

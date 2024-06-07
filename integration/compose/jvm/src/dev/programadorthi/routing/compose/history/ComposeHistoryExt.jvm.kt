@@ -6,6 +6,7 @@ import androidx.compose.runtime.remember
 import androidx.compose.runtime.saveable.Saver
 import androidx.compose.runtime.saveable.rememberSaveable
 import dev.programadorthi.routing.compose.callStack
+import dev.programadorthi.routing.compose.push
 import dev.programadorthi.routing.core.Routing
 import dev.programadorthi.routing.core.application
 import dev.programadorthi.routing.core.application.ApplicationCall
@@ -33,11 +34,11 @@ internal actual suspend fun ApplicationCall.platformReplaceAll(routing: Routing)
 }
 
 @Composable
-internal actual fun Routing.restoreState() {
-    val key = remember(this) { toString() }
+internal actual fun Routing.restoreState(startUri: String) {
+    val routingPath = remember(this) { toString() }
     val history =
         rememberSaveable(
-            key = key,
+            key = "state:restoration:$routingPath",
             init = { callStack.toList() },
             saver =
                 Saver<List<ApplicationCall>, String>(
@@ -52,11 +53,15 @@ internal actual fun Routing.restoreState() {
                 ),
         )
     LaunchedEffect(Unit) {
-        val lastCall = history.last()
-        if (lastCall.restored) {
-            callStack.clear()
-            callStack.addAll(history)
-            execute(lastCall)
+        val lastCall = history.lastOrNull()
+        when {
+            lastCall?.restored == true -> {
+                callStack.clear()
+                callStack.addAll(history)
+                execute(lastCall)
+            }
+
+            else -> push(path = startUri)
         }
     }
 }

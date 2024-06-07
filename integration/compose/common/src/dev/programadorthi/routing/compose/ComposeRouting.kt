@@ -12,7 +12,6 @@ import dev.programadorthi.routing.compose.history.historyMode
 import dev.programadorthi.routing.compose.history.restoreState
 import dev.programadorthi.routing.core.Route
 import dev.programadorthi.routing.core.Routing
-import dev.programadorthi.routing.core.application
 import dev.programadorthi.routing.core.application.ApplicationCall
 import dev.programadorthi.routing.core.routing
 import io.ktor.util.logging.Logger
@@ -24,36 +23,32 @@ public val LocalRouting: ProvidableCompositionLocal<Routing> =
     }
 
 @Composable
-public fun CurrentContent() {
-    val routing = LocalRouting.current
-    val lastCall = routing.callStack.last()
-    lastCall.content?.invoke(lastCall)
+public fun CallContent(call: ApplicationCall) {
+    call.content?.invoke(call)
 }
 
 @Composable
 public fun Routing(
     historyMode: ComposeHistoryMode = ComposeHistoryMode.Memory,
     routing: Routing,
-    initial: ComposeContent,
-    content: ComposeContent = { CurrentContent() },
+    startUri: String,
+    content: ComposeContent = { CallContent(it) },
 ) {
     CompositionLocalProvider(LocalRouting provides routing) {
+        val stack =
+            remember(routing, historyMode) {
+                mutableStateListOf<ApplicationCall>()
+            }
         val router =
-            remember(routing) {
-                val stack = mutableStateListOf<ApplicationCall>()
-                val call =
-                    ApplicationCall(
-                        application = routing.application,
-                        uri = routing.toString(),
-                    )
-                call.content = initial
-                stack += call
+            remember(routing, historyMode) {
                 routing.callStack = stack
                 routing.historyMode = historyMode
                 routing
             }
-        router.restoreState()
-        content(router.callStack.last())
+        router.restoreState(startUri = startUri)
+        stack.lastOrNull()?.let { call ->
+            content(call)
+        }
     }
 }
 
@@ -65,9 +60,8 @@ public fun Routing(
     parentCoroutineContext: CoroutineContext? = null,
     logger: Logger? = null,
     developmentMode: Boolean = false,
+    startUri: String,
     configuration: Route.() -> Unit,
-    initial: ComposeContent,
-    content: ComposeContent = { CurrentContent() },
 ) {
     val routing =
         remember {
@@ -90,7 +84,6 @@ public fun Routing(
     Routing(
         historyMode = historyMode,
         routing = routing,
-        initial = initial,
-        content = content,
+        startUri = startUri,
     )
 }
