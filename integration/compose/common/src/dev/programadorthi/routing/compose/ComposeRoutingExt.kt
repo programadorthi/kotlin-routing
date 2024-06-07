@@ -12,6 +12,8 @@ internal expect fun Routing.popOnPlatform(
     fallback: () -> Unit,
 )
 
+public expect val Routing.canPop: Boolean
+
 public fun Routing.pop(result: Any? = null) {
     popOnPlatform(result = result) {
         if (callStack.size < 2) return@popOnPlatform

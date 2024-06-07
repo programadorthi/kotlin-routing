@@ -17,3 +17,6 @@ internal actual fun Routing.popOnPlatform(
         }
     }
 }
+
+public actual val Routing.canPop: Boolean
+    get() = historyMode != ComposeHistoryMode.Memory || callStack.size > 1

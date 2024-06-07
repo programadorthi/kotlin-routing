@@ -8,3 +8,6 @@ internal actual fun Routing.popOnPlatform(
 ) {
     fallback()
 }
+
+public actual val Routing.canPop: Boolean
+    get() = callStack.size > 1

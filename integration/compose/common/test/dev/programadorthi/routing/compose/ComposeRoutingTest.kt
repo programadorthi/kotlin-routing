@@ -16,8 +16,10 @@ import kotlinx.coroutines.ExperimentalCoroutinesApi
 import kotlinx.coroutines.test.advanceTimeBy
 import kotlin.test.Test
 import kotlin.test.assertEquals
+import kotlin.test.assertFalse
 import kotlin.test.assertNotNull
 import kotlin.test.assertNull
+import kotlin.test.assertTrue
 
 @OptIn(ExperimentalCoroutinesApi::class)
 class ComposeRoutingTest {
@@ -46,6 +48,7 @@ class ComposeRoutingTest {
 
             // THEN
             assertEquals("I'm the initial content", fakeContent.result)
+            assertFalse(routing.canPop, "pop having one call only isn't valid")
         }
 
     @Test
@@ -83,6 +86,7 @@ class ComposeRoutingTest {
 
             // THEN
             assertEquals("I'm the path based content", fakeContent.result)
+            assertTrue(routing.canPop, "pop should be available having more than one call")
         }
 
     @Test
@@ -311,6 +315,7 @@ class ComposeRoutingTest {
             assertEquals("", "${result?.name}")
             assertEquals(RouteMethod.ReplaceAll, result?.routeMethod)
             assertEquals(Parameters.Empty, result?.parameters)
+            assertFalse(routing.canPop, "replace all should turn can pop false")
         }
 
     @Test

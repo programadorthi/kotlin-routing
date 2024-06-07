@@ -21,10 +21,11 @@ class ComposeHistoryAttributeTest {
     fun shouldUseMemoryHistoryMode() =
         runComposeTest { coroutineContext, composition, clock ->
             // GIVEN
-            val routing = routing(parentCoroutineContext = coroutineContext) {
-                composable(path = "/initial") {
+            val routing =
+                routing(parentCoroutineContext = coroutineContext) {
+                    composable(path = "/initial") {
+                    }
                 }
-            }
 
             // WHEN
             composition.setContent {
@@ -43,10 +44,11 @@ class ComposeHistoryAttributeTest {
     fun shouldUseHtml5HistoryMode() =
         runComposeTest { coroutineContext, composition, clock ->
             // GIVEN
-            val routing = routing(parentCoroutineContext = coroutineContext) {
-                composable(path = "/initial") {
+            val routing =
+                routing(parentCoroutineContext = coroutineContext) {
+                    composable(path = "/initial") {
+                    }
                 }
-            }
 
             // WHEN
             composition.setContent {
@@ -66,10 +68,11 @@ class ComposeHistoryAttributeTest {
     fun shouldUseHashHistoryMode() =
         runComposeTest { coroutineContext, composition, clock ->
             // GIVEN
-            val routing = routing(parentCoroutineContext = coroutineContext) {
-                composable(path = "/initial") {
+            val routing =
+                routing(parentCoroutineContext = coroutineContext) {
+                    composable(path = "/initial") {
+                    }
                 }
-            }
 
             // WHEN
             composition.setContent {
