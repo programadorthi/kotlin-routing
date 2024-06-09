@@ -40,6 +40,12 @@ kotlin {
             }
         }
 
+        val jsMain by getting {
+            dependencies {
+                implementation(libs.serialization.json)
+            }
+        }
+
         val jvmMain by getting {
             dependsOn(commonMain.get())
             dependencies {
@@ -72,6 +78,9 @@ kotlin {
             dependsOn(nativeMain)
         }
         val iosArm64Main by getting {
+            dependsOn(nativeMain)
+        }
+        val iosSimulatorArm64Main by getting {
             dependsOn(nativeMain)
         }
     }

@@ -6,7 +6,10 @@ import androidx.compose.runtime.DisposableEffect
 import androidx.compose.runtime.ProvidableCompositionLocal
 import androidx.compose.runtime.SideEffect
 import androidx.compose.runtime.currentCompositeKeyHash
+import androidx.compose.runtime.getValue
+import androidx.compose.runtime.mutableStateOf
 import androidx.compose.runtime.remember
+import androidx.compose.runtime.setValue
 import androidx.compose.runtime.staticCompositionLocalOf
 import cafe.adriel.voyager.core.screen.Screen
 import cafe.adriel.voyager.navigator.CurrentScreen
@@ -16,8 +19,12 @@ import cafe.adriel.voyager.navigator.NavigatorDisposeBehavior
 import cafe.adriel.voyager.navigator.OnBackPressed
 import dev.programadorthi.routing.core.Route
 import dev.programadorthi.routing.core.Routing
-import dev.programadorthi.routing.core.application
+import dev.programadorthi.routing.core.application.ApplicationCall
+import dev.programadorthi.routing.core.replace
 import dev.programadorthi.routing.core.routing
+import dev.programadorthi.routing.voyager.history.VoyagerHistoryMode
+import dev.programadorthi.routing.voyager.history.historyMode
+import dev.programadorthi.routing.voyager.history.restoreState
 import io.ktor.util.logging.Logger
 import kotlin.coroutines.CoroutineContext
 
@@ -28,6 +35,7 @@ public val LocalVoyagerRouting: ProvidableCompositionLocal<Routing> =
 
 @Composable
 public fun VoyagerRouting(
+    historyMode: VoyagerHistoryMode = VoyagerHistoryMode.Memory,
     routing: Routing,
     initialScreen: Screen,
     disposeBehavior: NavigatorDisposeBehavior = NavigatorDisposeBehavior(),
@@ -36,6 +44,12 @@ public fun VoyagerRouting(
     content: NavigatorContent = { CurrentScreen() },
 ) {
     CompositionLocalProvider(LocalVoyagerRouting provides routing) {
+        var stateToRestore by remember { mutableStateOf<Any?>(null) }
+
+        routing.restoreState { state ->
+            stateToRestore = state
+        }
+
         Navigator(
             screen = initialScreen,
             disposeBehavior = disposeBehavior,
@@ -43,7 +57,18 @@ public fun VoyagerRouting(
             key = key,
         ) { navigator ->
             SideEffect {
-                routing.application.voyagerNavigator = navigator
+                routing.voyagerNavigator = navigator
+                routing.historyMode = historyMode
+
+                if (stateToRestore != null) {
+                    val call = stateToRestore as? ApplicationCall
+                    val path = stateToRestore as? String ?: ""
+                    when {
+                        call != null -> routing.execute(call)
+                        path.isNotBlank() -> routing.replace(path)
+                    }
+                    stateToRestore = null
+                }
             }
             content(navigator)
         }
@@ -52,6 +77,7 @@ public fun VoyagerRouting(
 
 @Composable
 public fun VoyagerRouting(
+    historyMode: VoyagerHistoryMode = VoyagerHistoryMode.Memory,
     initialScreen: Screen,
     configuration: Route.() -> Unit,
     rootPath: String = "/",
@@ -83,6 +109,7 @@ public fun VoyagerRouting(
     }
 
     VoyagerRouting(
+        historyMode = historyMode,
         routing = routing,
         initialScreen = initialScreen,
         disposeBehavior = disposeBehavior,

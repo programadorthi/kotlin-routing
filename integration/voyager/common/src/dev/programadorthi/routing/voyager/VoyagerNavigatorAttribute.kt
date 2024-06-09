@@ -1,6 +1,8 @@
 package dev.programadorthi.routing.voyager
 
 import cafe.adriel.voyager.navigator.Navigator
+import dev.programadorthi.routing.core.Routing
+import dev.programadorthi.routing.core.application
 import dev.programadorthi.routing.core.application.Application
 import dev.programadorthi.routing.core.application.ApplicationCall
 import io.ktor.util.AttributeKey
@@ -22,6 +24,12 @@ internal var Application.voyagerNavigator: Navigator
     }
 
 internal var ApplicationCall.voyagerNavigator: Navigator
+    get() = application.voyagerNavigator
+    set(value) {
+        application.voyagerNavigator = value
+    }
+
+internal var Routing.voyagerNavigator: Navigator
     get() = application.voyagerNavigator
     set(value) {
         application.voyagerNavigator = value
