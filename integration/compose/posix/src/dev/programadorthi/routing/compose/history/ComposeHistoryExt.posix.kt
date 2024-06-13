@@ -7,7 +7,7 @@ import dev.programadorthi.routing.compose.push
 import dev.programadorthi.routing.core.Routing
 import dev.programadorthi.routing.core.application.ApplicationCall
 
-internal actual fun ApplicationCall.shouldNeglect(): Boolean = restored
+internal actual fun ApplicationCall.shouldNeglect(): Boolean = false
 
 internal actual suspend fun ApplicationCall.platformPush(routing: Routing) {
     routing.callStack.add(this)

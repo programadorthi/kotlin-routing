@@ -6,14 +6,17 @@ import androidx.compose.runtime.remember
 import androidx.compose.runtime.saveable.Saver
 import androidx.compose.runtime.saveable.rememberSaveable
 import dev.programadorthi.routing.compose.callStack
+import dev.programadorthi.routing.compose.content
 import dev.programadorthi.routing.compose.push
+import dev.programadorthi.routing.core.RouteMethod
 import dev.programadorthi.routing.core.Routing
 import dev.programadorthi.routing.core.application
 import dev.programadorthi.routing.core.application.ApplicationCall
+import dev.programadorthi.routing.core.call
 import kotlinx.serialization.encodeToString
 import kotlinx.serialization.json.Json
 
-internal actual fun ApplicationCall.shouldNeglect(): Boolean = restored
+internal actual fun ApplicationCall.shouldNeglect(): Boolean = false
 
 internal actual suspend fun ApplicationCall.platformPush(routing: Routing) {
     routing.callStack.add(this)
@@ -52,16 +55,37 @@ internal actual fun Routing.restoreState(startUri: String) {
                     },
                 ),
         )
-    LaunchedEffect(Unit) {
-        val lastCall = history.lastOrNull()
-        when {
-            lastCall?.restored == true -> {
-                callStack.clear()
-                callStack.addAll(history)
-                execute(lastCall)
-            }
-
-            else -> push(path = startUri)
+    LaunchedEffect(routingPath) {
+        when (history.lastOrNull()) {
+            null -> push(path = startUri)
+            else -> restoreLastCall(history)
         }
+    }
+}
+
+private fun Routing.restoreLastCall(history: List<ApplicationCall>) {
+    val lastCall = history.last()
+    lastCall.restored = true
+    val hasContent = lastCall.content != null
+    callStack.clear()
+    callStack.addAll(
+        history.subList(
+            fromIndex = 0,
+            toIndex =
+                if (hasContent) {
+                    history.size
+                } else {
+                    history.lastIndex
+                },
+        ),
+    )
+    if (!hasContent) {
+        call(
+            name = lastCall.name,
+            uri = lastCall.uri,
+            parameters = lastCall.parameters,
+            attributes = lastCall.attributes,
+            routeMethod = RouteMethod.Push,
+        )
     }
 }

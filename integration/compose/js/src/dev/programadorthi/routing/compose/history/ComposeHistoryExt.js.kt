@@ -14,7 +14,7 @@ import kotlin.coroutines.suspendCoroutine
 
 private const val HASH_PREFIX = "/#"
 
-internal actual fun ApplicationCall.shouldNeglect(): Boolean = neglect || restored
+internal actual fun ApplicationCall.shouldNeglect(): Boolean = neglect
 
 internal actual suspend fun ApplicationCall.platformPush(routing: Routing) {
     window.history.pushState(

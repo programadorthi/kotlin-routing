@@ -61,3 +61,9 @@ internal var ApplicationCall.popExitTransition: Animation<ExitTransition>?
             attributes.remove(ComposeRoutingPopExitTransitionAttributeKey)
         }
     }
+
+public val AnimatedContentTransitionScope<ApplicationCall>.nextCall: ApplicationCall
+    get() = targetState
+
+public val AnimatedContentTransitionScope<ApplicationCall>.previousCall: ApplicationCall
+    get() = initialState

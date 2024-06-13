@@ -4,6 +4,7 @@ import androidx.compose.runtime.Composable
 import dev.programadorthi.routing.compose.history.platformPush
 import dev.programadorthi.routing.compose.history.platformReplace
 import dev.programadorthi.routing.compose.history.platformReplaceAll
+import dev.programadorthi.routing.compose.history.restored
 import dev.programadorthi.routing.compose.history.shouldNeglect
 import dev.programadorthi.routing.core.Route
 import dev.programadorthi.routing.core.RouteMethod
@@ -71,6 +72,12 @@ public suspend fun <T> PipelineContext<Unit, ApplicationCall>.composable(
     call.popped = false
     call.resource = resource
     call.content = body
+
+    // Try clear restored flag on previous call
+    val previousCall = routing.callStack.lastOrNull()
+    if (previousCall?.restored == true) {
+        previousCall.restored = false
+    }
 
     if (call.shouldNeglect()) {
         return

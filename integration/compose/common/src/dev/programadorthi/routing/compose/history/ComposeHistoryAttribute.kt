@@ -6,13 +6,13 @@ import dev.programadorthi.routing.core.application.Application
 import dev.programadorthi.routing.core.application.ApplicationCall
 import io.ktor.util.AttributeKey
 
-internal val ComposeHistoryModeAttributeKey: AttributeKey<ComposeHistoryMode> =
+private val ComposeHistoryModeAttributeKey: AttributeKey<ComposeHistoryMode> =
     AttributeKey("ComposeHistoryModeAttributeKey")
 
 internal val ComposeHistoryNeglectAttributeKey: AttributeKey<Boolean> =
     AttributeKey("ComposeHistoryNeglectAttributeKey")
 
-internal val ComposeHistoryRestoredCallAttributeKey: AttributeKey<Boolean> =
+private val ComposeHistoryRestoredCallAttributeKey: AttributeKey<Boolean> =
     AttributeKey("ComposeHistoryRestoredCallAttributeKey")
 
 internal var Application.historyMode: ComposeHistoryMode
@@ -33,8 +33,8 @@ internal var ApplicationCall.neglect: Boolean
         attributes.put(ComposeHistoryNeglectAttributeKey, value)
     }
 
-internal var ApplicationCall.restored: Boolean
+public var ApplicationCall.restored: Boolean
     get() = attributes.getOrNull(ComposeHistoryRestoredCallAttributeKey) ?: false
-    set(value) {
+    internal set(value) {
         attributes.put(ComposeHistoryRestoredCallAttributeKey, value)
     }

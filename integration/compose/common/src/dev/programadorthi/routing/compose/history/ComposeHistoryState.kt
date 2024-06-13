@@ -16,16 +16,13 @@ internal data class ComposeHistoryState(
 )
 
 internal fun ComposeHistoryState.toCall(application: Application): ApplicationCall {
-    val call =
-        ApplicationCall(
-            application = application,
-            name = name,
-            uri = uri,
-            routeMethod = RouteMethod.parse(routeMethod),
-            parameters = parametersOf(parameters),
-        )
-    call.restored = true
-    return call
+    return ApplicationCall(
+        application = application,
+        name = name,
+        uri = uri,
+        routeMethod = RouteMethod.parse(routeMethod),
+        parameters = parametersOf(parameters),
+    )
 }
 
 internal fun ApplicationCall.toHistoryState(): ComposeHistoryState {

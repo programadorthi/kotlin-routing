@@ -15,13 +15,8 @@ kotlin {
             dependencies {
                 api(projects.resources)
                 implementation(compose.runtime)
-                implementation(libs.serialization.json)
-            }
-        }
-
-        jvmMain {
-            dependencies {
                 implementation(compose.runtimeSaveable)
+                implementation(libs.serialization.json)
             }
         }
     }

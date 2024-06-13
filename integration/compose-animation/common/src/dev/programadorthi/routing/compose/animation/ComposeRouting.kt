@@ -3,19 +3,16 @@ package dev.programadorthi.routing.compose.animation
 import androidx.compose.animation.AnimatedContent
 import androidx.compose.animation.EnterTransition
 import androidx.compose.animation.ExitTransition
+import androidx.compose.animation.fadeIn
+import androidx.compose.animation.fadeOut
 import androidx.compose.animation.togetherWith
 import androidx.compose.runtime.Composable
 import androidx.compose.runtime.DisposableEffect
-import androidx.compose.runtime.SideEffect
-import androidx.compose.runtime.getValue
-import androidx.compose.runtime.mutableStateOf
 import androidx.compose.runtime.remember
-import androidx.compose.runtime.saveable.Saver
-import androidx.compose.runtime.saveable.rememberSaveable
-import androidx.compose.runtime.setValue
 import dev.programadorthi.routing.compose.CallContent
 import dev.programadorthi.routing.compose.Routing
 import dev.programadorthi.routing.compose.history.ComposeHistoryMode
+import dev.programadorthi.routing.compose.history.restored
 import dev.programadorthi.routing.compose.popped
 import dev.programadorthi.routing.core.Route
 import dev.programadorthi.routing.core.Routing
@@ -35,54 +32,30 @@ public fun Routing(
     popEnterTransition: Animation<EnterTransition> = enterTransition,
     popExitTransition: Animation<ExitTransition> = exitTransition,
 ) {
-    var restored by rememberSaveable(
-        key = "state:restored:$routing",
-        saver =
-            Saver(
-                restore = { mutableStateOf(true) },
-                save = { true },
-            ),
-    ) {
-        mutableStateOf(false)
-    }
     Routing(
         historyMode = historyMode,
         routing = routing,
         startUri = startUri,
     ) { call ->
-        if (restored) {
-            CallContent(call)
-        } else {
-            AnimatedContent(
-                targetState = call,
-                transitionSpec = {
-                    val previousCall = initialState
-                    val nextCall = targetState
-                    val enter =
-                        when {
-                            previousCall.popped -> nextCall.popEnterTransition ?: popEnterTransition
-                            else -> nextCall.enterTransition ?: enterTransition
-                        }
-                    val exit =
-                        when {
-                            previousCall.popped ->
-                                previousCall.popExitTransition
-                                    ?: popExitTransition
-
-                            else -> previousCall.exitTransition ?: exitTransition
-                        }
-
+        AnimatedContent(
+            targetState = call,
+            transitionSpec = {
+                if (nextCall.restored) {
+                    fadeIn() togetherWith fadeOut()
+                } else if (previousCall.popped) {
+                    val popEnter = nextCall.popEnterTransition ?: popEnterTransition
+                    val popExit = previousCall.popExitTransition ?: popExitTransition
+                    popEnter(this) togetherWith popExit(this)
+                } else {
+                    val enter = nextCall.enterTransition ?: enterTransition
+                    val exit = previousCall.exitTransition ?: exitTransition
                     enter(this) togetherWith exit(this)
-                },
-                content = { animatedCall ->
-                    CallContent(animatedCall)
-                },
-            )
-        }
-
-        SideEffect {
-            restored = false
-        }
+                }
+            },
+            content = { animatedCall ->
+                CallContent(animatedCall)
+            },
+        )
     }
 }
 

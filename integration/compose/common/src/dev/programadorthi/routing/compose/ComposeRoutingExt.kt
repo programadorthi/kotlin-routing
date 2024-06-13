@@ -22,9 +22,14 @@ public fun Routing.pop(result: Any? = null) {
         poppedCall?.popped = true
         poppedCall?.popResult = result
 
-        val last = callStack.lastOrNull() ?: return@popOnPlatform
-        if (last.content == null) {
-            execute(last)
+        val lastCall = callStack.lastOrNull() ?: return@popOnPlatform
+        if (lastCall.content == null) {
+            call(
+                name = lastCall.name,
+                uri = lastCall.uri,
+                parameters = lastCall.parameters,
+                routeMethod = RouteMethod.Replace,
+            )
         }
     }
 }
