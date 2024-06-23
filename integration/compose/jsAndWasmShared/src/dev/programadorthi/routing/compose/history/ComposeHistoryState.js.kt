@@ -1,12 +1,14 @@
 package dev.programadorthi.routing.compose.history
 
+import dev.programadorthi.routing.compose.toSerializableType
 import dev.programadorthi.routing.core.application.ApplicationCall
 import kotlinx.serialization.encodeToString
 import kotlinx.serialization.json.Json
 
-internal fun ApplicationCall.serialize(): String {
+internal fun <T> ApplicationCall.serialize(): T {
     val state = toHistoryState()
-    return Json.encodeToString(state)
+    val encoded = Json.encodeToString(state)
+    return encoded.toSerializableType()
 }
 
 internal fun Any?.deserialize(): ComposeHistoryState? =

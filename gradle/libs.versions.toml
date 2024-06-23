@@ -11,7 +11,7 @@ compose = "1.6.0"
 
 coroutines = "1.8.0-RC2"
 kotlin = "1.9.21"
-ktor = "3.0.0-beta-1"
+ktor = "3.0.0-beta-2-eap-949"
 serialization = "1.6.2"
 slf4j = "2.0.4"
 voyager = "1.1.0-alpha03"

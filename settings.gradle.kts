@@ -15,6 +15,7 @@ dependencyResolutionManagement {
         mavenCentral()
         maven(url = "https://maven.pkg.jetbrains.space/public/p/compose/dev" )
         google()
+        maven(url = "https://maven.pkg.jetbrains.space/public/p/ktor/eap" )
     }
 }
 
@@ -31,10 +32,10 @@ include(":status-pages")
 
 include(":integration:android")
 include(":integration:compose")
-include(":integration:compose-animation")
+//include(":integration:compose-animation")
 include(":integration:javascript")
 include(":integration:uikit")
-include(":integration:voyager")
+//include(":integration:voyager")
 
 // Samples are disabled by default to avoid sync their.
 //include(":samples:android-activity")

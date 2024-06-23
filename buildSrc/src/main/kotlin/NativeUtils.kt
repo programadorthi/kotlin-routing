@@ -19,6 +19,13 @@ fun Project.nixTargets(): List<String> = fastOr {
     darwinTargets() + kotlin.linuxX64().name
 }
 
+fun Project.linuxTargets(): List<String> = with(kotlin) {
+    listOf(
+        linuxX64(),
+        linuxArm64(),
+    )
+}.map { it.name }
+
 fun Project.darwinTargets(): List<String> = fastOr {
     macosTargets() + iosTargets() + watchosTargets() + tvosTargets()
 }
