@@ -88,9 +88,24 @@ public suspend fun <T> PipelineContext<Unit, ApplicationCall>.composable(
     routing.popResult = null
 
     when (call.routeMethod) {
-        RouteMethod.Push -> call.platformPush(routing)
-        RouteMethod.Replace -> call.platformReplace(routing)
-        RouteMethod.ReplaceAll -> call.platformReplaceAll(routing)
+        RouteMethod.Push ->
+            call.platformPush(routing) {
+                routing.callStack.add(call)
+            }
+        RouteMethod.Replace ->
+            call.platformReplace(routing) {
+                routing.callStack.run {
+                    removeLastOrNull()
+                    add(call)
+                }
+            }
+        RouteMethod.ReplaceAll ->
+            call.platformReplaceAll(routing) {
+                routing.callStack.run {
+                    clear()
+                    add(call)
+                }
+            }
         else ->
             error(
                 "Compose needs a stack route method to work. You called a composable ${call.uri} " +

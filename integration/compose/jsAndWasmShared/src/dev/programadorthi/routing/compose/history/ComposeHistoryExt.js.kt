@@ -16,7 +16,14 @@ private const val HASH_PREFIX = "/#"
 
 internal actual fun ApplicationCall.shouldNeglect(): Boolean = neglect
 
-internal actual suspend fun ApplicationCall.platformPush(routing: Routing) {
+internal actual suspend fun ApplicationCall.platformPush(
+    routing: Routing,
+    fallback: () -> Unit,
+) {
+    if (routing.historyMode == ComposeHistoryMode.Memory) {
+        fallback()
+        return
+    }
     window.history.pushState(
         title = "routing",
         url = uriToAddressBar(),
@@ -24,7 +31,14 @@ internal actual suspend fun ApplicationCall.platformPush(routing: Routing) {
     )
 }
 
-internal actual suspend fun ApplicationCall.platformReplace(routing: Routing) {
+internal actual suspend fun ApplicationCall.platformReplace(
+    routing: Routing,
+    fallback: () -> Unit,
+) {
+    if (routing.historyMode == ComposeHistoryMode.Memory) {
+        fallback()
+        return
+    }
     window.history.replaceState(
         title = "routing",
         url = uriToAddressBar(),
@@ -32,14 +46,20 @@ internal actual suspend fun ApplicationCall.platformReplace(routing: Routing) {
     )
 }
 
-internal actual suspend fun ApplicationCall.platformReplaceAll(routing: Routing) {
+internal actual suspend fun ApplicationCall.platformReplaceAll(
+    routing: Routing,
+    fallback: () -> Unit,
+) {
+    if (routing.historyMode == ComposeHistoryMode.Memory) {
+        fallback()
+        return
+    }
     while (true) {
         window.history.replaceState(
             title = "",
             url = null,
             data = null,
         )
-        window.history.go(-1)
         val forceBreak =
             runCatching {
                 withTimeout(1_000) {
@@ -48,6 +68,7 @@ internal actual suspend fun ApplicationCall.platformReplaceAll(routing: Routing)
                             val state = event.state.deserialize()
                             continuation.resume(state == null)
                         }
+                        window.history.go(-1)
                     }
                 }
             }.getOrDefault(true)

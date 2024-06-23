@@ -9,22 +9,25 @@ import dev.programadorthi.routing.core.application.ApplicationCall
 
 internal actual fun ApplicationCall.shouldNeglect(): Boolean = false
 
-internal actual suspend fun ApplicationCall.platformPush(routing: Routing) {
-    routing.callStack.add(this)
+internal actual suspend fun ApplicationCall.platformPush(
+    routing: Routing,
+    fallback: () -> Unit,
+) {
+    fallback()
 }
 
-internal actual suspend fun ApplicationCall.platformReplace(routing: Routing) {
-    routing.callStack.run {
-        removeLastOrNull()
-        add(this@platformReplace)
-    }
+internal actual suspend fun ApplicationCall.platformReplace(
+    routing: Routing,
+    fallback: () -> Unit,
+) {
+    fallback()
 }
 
-internal actual suspend fun ApplicationCall.platformReplaceAll(routing: Routing) {
-    routing.callStack.run {
-        clear()
-        add(this@platformReplaceAll)
-    }
+internal actual suspend fun ApplicationCall.platformReplaceAll(
+    routing: Routing,
+    fallback: () -> Unit,
+) {
+    fallback()
 }
 
 @Composable

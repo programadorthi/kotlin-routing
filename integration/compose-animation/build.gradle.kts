@@ -1,3 +1,5 @@
+import org.jetbrains.kotlin.gradle.targets.js.dsl.ExperimentalWasmDsl
+
 plugins {
     kotlin("multiplatform")
     kotlin("plugin.serialization")
@@ -24,6 +26,14 @@ kotlin {
 
     configureJs()
 
+    @OptIn(ExperimentalWasmDsl::class)
+    wasmJs {
+        nodejs()
+        browser()
+    }
+
+    configureWasm()
+
     macosX64()
     macosArm64()
     iosX64()
@@ -39,14 +49,13 @@ kotlin {
             }
         }
 
-        val jvmMain by getting {
-            dependsOn(commonMain.get())
+        jvmMain {
             dependencies {
                 api(libs.slf4j.api)
             }
         }
-        val jvmTest by getting {
-            dependsOn(commonTest.get())
+
+        jvmTest {
             dependencies {
                 implementation(libs.test.junit)
                 implementation(libs.test.coroutines.debug)
@@ -54,26 +63,6 @@ kotlin {
                 implementation(compose.desktop.uiTestJUnit4)
                 implementation(compose.desktop.currentOs)
             }
-        }
-
-        val nativeMain by creating {
-            dependsOn(commonMain.get())
-        }
-
-        val macosMain by creating {
-            dependsOn(nativeMain)
-        }
-        val macosX64Main by getting {
-            dependsOn(macosMain)
-        }
-        val macosArm64Main by getting {
-            dependsOn(macosMain)
-        }
-        val iosX64Main by getting {
-            dependsOn(nativeMain)
-        }
-        val iosArm64Main by getting {
-            dependsOn(nativeMain)
         }
     }
 }
