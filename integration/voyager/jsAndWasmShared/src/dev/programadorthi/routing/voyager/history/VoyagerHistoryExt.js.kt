@@ -6,7 +6,6 @@ import cafe.adriel.voyager.core.screen.Screen
 import dev.programadorthi.routing.core.Routing
 import dev.programadorthi.routing.core.application
 import dev.programadorthi.routing.core.application.ApplicationCall
-import dev.programadorthi.routing.voyager.voyagerNavigator
 import kotlinx.browser.window
 import kotlinx.coroutines.Job
 import kotlinx.coroutines.launch
@@ -21,8 +20,12 @@ internal actual fun ApplicationCall.shouldNeglect(): Boolean = neglect
 internal actual suspend fun ApplicationCall.platformPush(
     routing: Routing,
     body: suspend () -> Screen,
+    fallback: suspend () -> Unit,
 ) {
-    voyagerNavigator.push(body())
+    if (routing.historyMode == VoyagerHistoryMode.Memory) {
+        fallback()
+        return
+    }
     window.history.pushState(
         title = "routing",
         url = uriToAddressBar(),
@@ -33,8 +36,12 @@ internal actual suspend fun ApplicationCall.platformPush(
 internal actual suspend fun ApplicationCall.platformReplace(
     routing: Routing,
     body: suspend () -> Screen,
+    fallback: suspend () -> Unit,
 ) {
-    voyagerNavigator.replace(body())
+    if (routing.historyMode == VoyagerHistoryMode.Memory) {
+        fallback()
+        return
+    }
     window.history.replaceState(
         title = "routing",
         url = uriToAddressBar(),
@@ -45,8 +52,12 @@ internal actual suspend fun ApplicationCall.platformReplace(
 internal actual suspend fun ApplicationCall.platformReplaceAll(
     routing: Routing,
     body: suspend () -> Screen,
+    fallback: suspend () -> Unit,
 ) {
-    voyagerNavigator.replaceAll(body())
+    if (routing.historyMode == VoyagerHistoryMode.Memory) {
+        fallback()
+        return
+    }
     while (true) {
         window.history.replaceState(
             title = "",

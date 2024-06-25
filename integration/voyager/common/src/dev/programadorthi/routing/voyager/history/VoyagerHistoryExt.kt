@@ -8,16 +8,19 @@ import dev.programadorthi.routing.core.application.ApplicationCall
 internal expect suspend fun ApplicationCall.platformPush(
     routing: Routing,
     body: suspend () -> Screen,
+    fallback: suspend () -> Unit,
 )
 
 internal expect suspend fun ApplicationCall.platformReplace(
     routing: Routing,
     body: suspend () -> Screen,
+    fallback: suspend () -> Unit,
 )
 
 internal expect suspend fun ApplicationCall.platformReplaceAll(
     routing: Routing,
     body: suspend () -> Screen,
+    fallback: suspend () -> Unit,
 )
 
 internal expect fun ApplicationCall.shouldNeglect(): Boolean

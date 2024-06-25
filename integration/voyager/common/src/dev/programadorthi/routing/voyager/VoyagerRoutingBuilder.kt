@@ -50,9 +50,15 @@ public suspend fun PipelineContext<Unit, ApplicationCall>.screen(
     }
 
     when (call.routeMethod) {
-        RouteMethod.Push -> call.platformPush(routing, body)
-        RouteMethod.Replace -> call.platformReplace(routing, body)
-        RouteMethod.ReplaceAll -> call.platformReplaceAll(routing, body)
+        RouteMethod.Push -> call.platformPush(routing, body) {
+            call.voyagerNavigator.push(body())
+        }
+        RouteMethod.Replace -> call.platformReplace(routing, body) {
+            call.voyagerNavigator.replace(body())
+        }
+        RouteMethod.ReplaceAll -> call.platformReplaceAll(routing, body) {
+            call.voyagerNavigator.replaceAll(body())
+        }
         else ->
             error(
                 "Voyager needs a stack route method to work. You called a screen ${call.uri} using " +
