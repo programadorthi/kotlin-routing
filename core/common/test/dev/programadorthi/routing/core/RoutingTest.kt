@@ -4,6 +4,8 @@ import dev.programadorthi.routing.core.application.ApplicationCall
 import dev.programadorthi.routing.core.application.call
 import dev.programadorthi.routing.core.application.createApplicationPlugin
 import dev.programadorthi.routing.core.application.hooks.CallFailed
+import dev.programadorthi.routing.core.application.receive
+import dev.programadorthi.routing.core.application.receiveNullable
 import dev.programadorthi.routing.core.application.redirectToName
 import dev.programadorthi.routing.core.application.redirectToPath
 import dev.programadorthi.routing.core.errors.RouteNotFoundException
@@ -19,6 +21,7 @@ import kotlin.test.assertFails
 import kotlin.test.assertFalse
 import kotlin.test.assertIs
 import kotlin.test.assertNotNull
+import kotlin.test.assertNull
 import kotlin.test.assertTrue
 
 @OptIn(ExperimentalCoroutinesApi::class)
@@ -1619,6 +1622,43 @@ class RoutingTest {
     }
 
     @Test
+    fun shouldReturnsTrueWhenCanHandleByANamedRouteAndMethod() {
+        // GIVEN
+        val method = RouteMethod("custom")
+        val routing =
+            routing {
+                route(path = "/path", name = "path", method = method) {
+                    handle {
+                    }
+                }
+            }
+
+        // WHEN
+        val result = routing.canHandleByName(name = "path", method = method)
+
+        // THEN
+        assertTrue(result, "having a named route and method should can handle it")
+    }
+
+    @Test
+    fun shouldReturnsFalseWhenCanNotHandleByANamedRouteAndMethod() {
+        // GIVEN
+        val routing =
+            routing {
+                route(path = "/path") {
+                    handle {
+                    }
+                }
+            }
+
+        // WHEN
+        val result = routing.canHandleByName(name = "path", method = RouteMethod("custom"))
+
+        // THEN
+        assertFalse(result, "not having a named route and method should can't handle it")
+    }
+
+    @Test
     fun shouldReturnsTrueWhenCanHandleByANamedRouteOnParent() {
         // GIVEN
         val parent =
@@ -1654,6 +1694,45 @@ class RoutingTest {
 
         // THEN
         assertFalse(result, "not having a named route on parent should can't handle it")
+    }
+
+    @Test
+    fun shouldReturnsTrueWhenCanHandleByANamedRouteAndMethodOnParent() {
+        // GIVEN
+        val method = RouteMethod("custom")
+        val parent =
+            routing {
+                route(path = "/path", name = "path", method = method) {
+                    handle {
+                    }
+                }
+            }
+        val routing = routing(parent = parent, rootPath = "/child") {}
+
+        // WHEN
+        val result = routing.canHandleByName(name = "path", method = method, lookUpOnParent = true)
+
+        // THEN
+        assertTrue(result, "having a named route and method on parent should can handle it")
+    }
+
+    @Test
+    fun shouldReturnsFalseWhenCanNotHandleByANamedRouteAndMethodOnParent() {
+        // GIVEN
+        val parent =
+            routing {
+                route(path = "/path") {
+                    handle {
+                    }
+                }
+            }
+        val routing = routing(parent = parent, rootPath = "/child") {}
+
+        // WHEN
+        val result = routing.canHandleByName(name = "path", method = RouteMethod("custom"), lookUpOnParent = true)
+
+        // THEN
+        assertFalse(result, "not having a named route and method on parent should can't handle it")
     }
 
     @Test
@@ -1875,4 +1954,176 @@ class RoutingTest {
         // THEN
         assertFalse(result, "not having a path in nested routing should can't handle it")
     }
+
+    @Test
+    fun shouldRedirectToAnotherPathAndMethod() =
+        runTest {
+            // GIVEN
+            val job = Job()
+            val method = RouteMethod("custom")
+            var result: ApplicationCall? = null
+
+            val routing =
+                routing(parentCoroutineContext = coroutineContext + job) {
+                    route(path = "/path1") {
+                        handle {
+                            call.redirectToPath(path = "/path2", method = method)
+                        }
+                    }
+                    handle(path = "/path2", method = method) {
+                        result = call
+                        job.complete()
+                    }
+                }
+
+            // WHEN
+            routing.call(uri = "/path1")
+            advanceTimeBy(99)
+
+            // THEN
+            assertNotNull(result)
+            assertEquals("/path2", "${result?.uri}")
+            assertEquals("", "${result?.name}")
+            assertEquals(method, result?.routeMethod)
+            assertEquals(Parameters.Empty, result?.parameters)
+        }
+
+    @Test
+    fun shouldRedirectToAnotherNameAndMethod() =
+        runTest {
+            // GIVEN
+            val job = Job()
+            val method = RouteMethod("custom")
+            var result: ApplicationCall? = null
+
+            val routing =
+                routing(parentCoroutineContext = coroutineContext + job) {
+                    route(path = "/path1", name = "path1") {
+                        handle {
+                            call.redirectToName(name = "path2", method = method)
+                        }
+                    }
+                    handle(path = "/path2", name = "path2", method = method) {
+                        result = call
+                        job.complete()
+                    }
+                }
+
+            // WHEN
+            routing.call(name = "path1")
+            advanceTimeBy(99)
+
+            // THEN
+            assertNotNull(result)
+            assertEquals("/path2", "${result?.uri}")
+            assertEquals("path2", "${result?.name}")
+            assertEquals(method, result?.routeMethod)
+            assertEquals(Parameters.Empty, result?.parameters)
+        }
+
+    @Test
+    fun shouldGetNullBodyWhenNothingIsSent() =
+        runTest {
+            // GIVEN
+            val job = Job()
+            var result: ApplicationCall? = null
+            var body: String? = ""
+
+            val routing =
+                routing(parentCoroutineContext = coroutineContext + job) {
+                    route(path = "/path") {
+                        handle {
+                            body = call.receiveNullable()
+                            result = call
+                            job.complete()
+                        }
+                    }
+                }
+
+            // WHEN
+            routing.call(uri = "/path")
+            advanceTimeBy(99)
+
+            // THEN
+            assertNotNull(result)
+            assertEquals("/path", "${result?.uri}")
+            assertEquals("", "${result?.name}")
+            assertEquals(RouteMethod.Empty, result?.routeMethod)
+            assertEquals(Parameters.Empty, result?.parameters)
+            assertNull(body, "should haven't body to receive")
+        }
+
+    @Test
+    fun shouldGetNotNullBodyWhenSentSomething() =
+        runTest {
+            // GIVEN
+            val job = Job()
+            var result: ApplicationCall? = null
+            var body: String? = null
+
+            val routing =
+                routing(parentCoroutineContext = coroutineContext + job) {
+                    route(path = "/path") {
+                        handle {
+                            body = call.receive()
+                            result = call
+                            job.complete()
+                        }
+                    }
+                }
+
+            // WHEN
+            routing.callWithBody(uri = "/path", body = "body content")
+            advanceTimeBy(99)
+
+            // THEN
+            assertNotNull(result)
+            assertEquals("/path", "${result?.uri}")
+            assertEquals("", "${result?.name}")
+            assertEquals(RouteMethod.Empty, result?.routeMethod)
+            assertEquals(Parameters.Empty, result?.parameters)
+            assertEquals("body content", body, "should have received a body")
+        }
+
+    @Test
+    fun shouldGetNotNullBodyWhenSentAObjectInstance() =
+        runTest {
+            // GIVEN
+            data class CustomBody(
+                val id: Int,
+                val name: String,
+            )
+
+            val expected =
+                CustomBody(
+                    id = 1234,
+                    name = "Kotlin Routing",
+                )
+            val job = Job()
+            var result: ApplicationCall? = null
+            var body: CustomBody? = null
+
+            val routing =
+                routing(parentCoroutineContext = coroutineContext + job) {
+                    route(path = "/path") {
+                        handle {
+                            body = call.receive()
+                            result = call
+                            job.complete()
+                        }
+                    }
+                }
+
+            // WHEN
+            routing.callWithBody(uri = "/path", body = expected)
+            advanceTimeBy(99)
+
+            // THEN
+            assertNotNull(result)
+            assertEquals("/path", "${result?.uri}")
+            assertEquals("", "${result?.name}")
+            assertEquals(RouteMethod.Empty, result?.routeMethod)
+            assertEquals(Parameters.Empty, result?.parameters)
+            assertEquals(expected, body, "should body be the same instance")
+        }
 }

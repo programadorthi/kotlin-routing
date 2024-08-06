@@ -10,10 +10,9 @@ import io.ktor.http.Parameters
 import io.ktor.util.AttributeKey
 import io.ktor.util.Attributes
 import io.ktor.util.pipeline.execute
-import io.ktor.util.reflect.TypeInfo
 import kotlinx.coroutines.launch
 
-private val RECEIVE_TYPE_KEY: AttributeKey<TypeInfo> = AttributeKey("ReceiveType")
+private val RECEIVE_TYPE: AttributeKey<Any> = AttributeKey("KotlinRoutingReceiveType")
 
 /**
  * A single act of communication between a client and server.
@@ -57,13 +56,26 @@ public interface ApplicationCall {
 public fun ApplicationCall.path(): String = uri.substringBefore('?')
 
 /**
- * The [TypeInfo] recorded from the last [call.receive<Type>()] call.
+ * Get the body sent to the current [ApplicationCall]
+ *
+ * @return A no null value of the type requested
+ * @throws IllegalStateException when the current body is null
  */
-public var ApplicationCall.receiveType: TypeInfo
-    get() = attributes[RECEIVE_TYPE_KEY]
-    internal set(value) {
-        attributes.put(RECEIVE_TYPE_KEY, value)
+public fun <T> ApplicationCall.receive(): T =
+    checkNotNull(receiveNullable<T>()) {
+        "There is no body to receive in the call: $this"
     }
+
+/**
+ * Get the body sent to the current [ApplicationCall] or null instead
+ *
+ * @return The instance whether exists or null when missing
+ */
+@Suppress("UNCHECKED_CAST")
+public fun <T> ApplicationCall.receiveNullable(): T? {
+    val body = attributes.getOrNull(RECEIVE_TYPE)
+    return body as? T
+}
 
 public fun ApplicationCall(
     application: Application,
@@ -86,24 +98,47 @@ public fun ApplicationCall(
     )
 }
 
+public fun <T : Any> ApplicationCall(
+    application: Application,
+    body: T,
+    name: String = "",
+    uri: String = "",
+    routeMethod: RouteMethod = RouteMethod.Empty,
+    attributes: Attributes = Attributes(),
+    parameters: Parameters = Parameters.Empty,
+): ApplicationCall {
+    attributes.put(RECEIVE_TYPE, body)
+    return ApplicationCall(
+        application = application,
+        name = name,
+        routeMethod = routeMethod,
+        uri = uri,
+        attributes = attributes,
+        parameters = parameters,
+    )
+}
+
 public fun ApplicationCall.redirectToName(
     name: String,
     parameters: Parameters = Parameters.Empty,
+    method: RouteMethod? = null,
 ) {
-    redirect(path = "", name = name, parameters = parameters)
+    redirect(path = "", name = name, parameters = parameters, routeMethod = method)
 }
 
 public fun ApplicationCall.redirectToPath(
     path: String,
     parameters: Parameters = Parameters.Empty,
+    method: RouteMethod? = null,
 ) {
-    redirect(path = path, name = "", parameters = parameters)
+    redirect(path = path, name = "", parameters = parameters, routeMethod = method)
 }
 
 private fun ApplicationCall.redirect(
     path: String,
     name: String,
     parameters: Parameters,
+    routeMethod: RouteMethod?,
 ) {
     with(application) {
         launch {
@@ -114,6 +149,7 @@ private fun ApplicationCall.redirect(
                     uri = path,
                     coroutineContext = coroutineContext,
                     parameters = parameters,
+                    newMethod = routeMethod,
                 ),
             )
         }

@@ -64,24 +64,41 @@ public class Routing internal constructor(
         name: String,
         lookUpOnParent: Boolean = false,
     ): Boolean {
-        return when {
-            !lookUpOnParent -> namedRoutes.containsKey(name)
-            else ->
-                generateSequence(seed = this) { it.parent?.asRouting }
-                    .firstOrNull { it.namedRoutes.containsKey(name) } != null
-        }
+        return getRouteByName(name = name, lookUpOnParent = lookUpOnParent) != null
+    }
+
+    public fun canHandleByName(
+        name: String,
+        method: RouteMethod,
+        lookUpOnParent: Boolean = false,
+    ): Boolean {
+        val route = getRouteByName(name = name, lookUpOnParent = lookUpOnParent) ?: return false
+        return checkByMethod(method, route)
     }
 
     public fun canHandleByPath(
         path: String,
         lookUpOnParent: Boolean = false,
     ): Boolean {
-        return when {
-            !lookUpOnParent -> canHandleByPath(path = path, routing = this)
-            else ->
-                generateSequence(seed = this) { it.parent?.asRouting }
-                    .firstOrNull { canHandleByPath(path = path, routing = it) } != null
-        }
+        return getRouteByPath(
+            path = path,
+            method = null,
+            lookUpOnParent = lookUpOnParent,
+        ) != null
+    }
+
+    public fun canHandleByPath(
+        path: String,
+        method: RouteMethod,
+        lookUpOnParent: Boolean = false,
+    ): Boolean {
+        val route =
+            getRouteByPath(
+                path = path,
+                method = method,
+                lookUpOnParent = lookUpOnParent,
+            ) ?: return false
+        return checkByMethod(method, route)
     }
 
     public fun execute(call: ApplicationCall) {
@@ -135,32 +152,75 @@ public class Routing internal constructor(
         name: String,
         route: Route,
     ) {
-        check(!namedRoutes.containsKey(name)) {
-            "Duplicated named route. Found '$name' to ${namedRoutes[name]} and $route"
+        val registered = getRouteByName(name = name, lookUpOnParent = false)
+        check(registered == null) {
+            "Duplicated named route. Found '$name' to $registered and $route"
         }
         namedRoutes[name] = route
     }
 
-    private fun canHandleByPath(
+    private fun checkByMethod(
+        method: RouteMethod,
+        route: Route,
+    ): Boolean {
+        val selector = RouteMethodRouteSelector(method)
+        return route.selector == selector ||
+            route.children.any { it.selector == selector }
+    }
+
+    private fun getRouteByName(
+        name: String,
+        lookUpOnParent: Boolean,
+    ): Route? =
+        when {
+            !lookUpOnParent -> namedRoutes[name]
+            else ->
+                generateSequence(seed = this) { it.parent?.asRouting }
+                    .mapNotNull { it.namedRoutes[name] }
+                    .firstOrNull()
+        }
+
+    private fun getRouteByPath(
+        path: String,
+        method: RouteMethod?,
+        lookUpOnParent: Boolean = false,
+    ): Route? =
+        when {
+            !lookUpOnParent -> getRouteByPath(path = path, routing = this, method = method)
+            else ->
+                generateSequence(seed = this) { it.parent?.asRouting }
+                    .mapNotNull { getRouteByPath(path = path, routing = it, method = method) }
+                    .firstOrNull()
+        }
+
+    private fun getRouteByPath(
         path: String,
         routing: Routing,
-    ): Boolean {
-        var routingChildren = routing.children
-        var hasHandle = false
-
+        method: RouteMethod?,
+    ): Route? {
+        // Creating a fake Tree starting from the Routing selector
         val fakeRoute = Route(parent = null, selector = routing.selector)
-        fakeRoute.createRouteFromPath(path)
+        val leaf = fakeRoute.createRouteFromPath(path)
+        if (method != null) {
+            leaf.createChild(RouteMethodRouteSelector(method))
+        }
 
-        generateSequence(seed = fakeRoute.children) { it.firstOrNull()?.children }
-            .flatten()
-            .forEach { child ->
-                val found =
-                    routingChildren.firstOrNull { it.selector == child.selector } ?: return false
-                hasHandle = found.handlers.isNotEmpty()
-                routingChildren = found.children
-            }
+        // On a fake Tree each deeper Route have only one child
+        var node = fakeRoute.children.firstOrNull()
+        var nextLevel = routing.children
+        var leafRoute: Route
+        while (true) {
+            // Time to compare level by level until leaf Route
+            leafRoute = nextLevel.firstOrNull { it.selector == node?.selector } ?: return null
+            // Time to go to the next level or stop
+            node = node?.children?.firstOrNull() ?: break
+            nextLevel = leafRoute.children
+        }
 
-        return hasHandle
+        return when {
+            leafRoute.handlers.isNotEmpty() -> leafRoute
+            else -> null
+        }
     }
 
     private fun removeChild(route: Route) {
@@ -186,7 +246,7 @@ public class Routing internal constructor(
         pathParameters: Parameters,
     ): String {
         val namedRoute =
-            namedRoutes[name]
+            getRouteByName(name = name, lookUpOnParent = false)
                 ?: throw RouteNotFoundException(message = "Named route not found with name: $name")
         val routeSelectors = namedRoute.allSelectors()
         val skipPathParameters =
@@ -437,6 +497,28 @@ public fun Routing.call(
     execute(
         ApplicationCall(
             application = application,
+            name = name,
+            uri = uri,
+            routeMethod = routeMethod,
+            attributes = attributes,
+            parameters = parameters,
+        ),
+    )
+}
+
+@HiddenFromObjC
+public fun <T : Any> Routing.callWithBody(
+    name: String = "",
+    uri: String = "",
+    routeMethod: RouteMethod = RouteMethod.Empty,
+    attributes: Attributes = Attributes(),
+    parameters: Parameters = Parameters.Empty,
+    body: T,
+) {
+    execute(
+        ApplicationCall(
+            application = application,
+            body = body,
             name = name,
             uri = uri,
             routeMethod = routeMethod,

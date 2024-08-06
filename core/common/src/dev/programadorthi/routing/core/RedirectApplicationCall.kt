@@ -12,13 +12,14 @@ internal class RedirectApplicationCall(
     override val name: String = "",
     override val uri: String = "",
     private val previousCall: ApplicationCall,
+    private val newMethod: RouteMethod? = null,
     parameters: Parameters,
 ) : ApplicationCall, CoroutineScope {
     override val application: Application get() = previousCall.application
 
     override val attributes: Attributes get() = previousCall.attributes
 
-    override val routeMethod: RouteMethod get() = previousCall.routeMethod
+    override val routeMethod: RouteMethod get() = newMethod ?: previousCall.routeMethod
 
     override val parameters: Parameters by lazy(LazyThreadSafetyMode.NONE) {
         Parameters.build {
