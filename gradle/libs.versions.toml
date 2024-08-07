@@ -2,7 +2,7 @@
 plugin-android = "8.2.2"
 plugin-kover = "0.7.5"
 plugin-ktlint = "12.1.0"
-plugin-maven = "0.27.0"
+plugin-maven = "0.29.0"
 
 androidx-activity = "1.8.2"
 androidx-startup = "1.1.1"
