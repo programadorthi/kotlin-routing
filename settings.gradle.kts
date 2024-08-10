@@ -33,6 +33,7 @@ include(":integration:android")
 include(":integration:compose")
 include(":integration:compose-animation")
 include(":integration:javascript")
+include(":integration:kodein")
 include(":integration:uikit")
 include(":integration:voyager")
 

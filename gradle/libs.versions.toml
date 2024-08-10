@@ -15,6 +15,7 @@ ktor = "3.0.0-beta-1"
 serialization = "1.6.2"
 slf4j = "2.0.4"
 voyager = "1.1.0-alpha03"
+kodein = "7.21.2"
 
 junit = "4.13.2"
 robolectric = "4.11.1"
@@ -46,6 +47,7 @@ serialization-json = { module = "org.jetbrains.kotlinx:kotlinx-serialization-jso
 slf4j-api = { module = "org.slf4j:slf4j-api", version.ref = "slf4j" }
 slf4j-simple = { module = "org.slf4j:slf4j-simple", version.ref = "slf4j" }
 voyager-navigator = { module = "cafe.adriel.voyager:voyager-navigator", version.ref = "voyager" }
+kodein-di = { module = "org.kodein.di:kodein-di", version.ref = "kodein" }
 
 test-coroutines = { module = "org.jetbrains.kotlinx:kotlinx-coroutines-test", version.ref = "coroutines" }
 test-coroutines-debug = { module = "org.jetbrains.kotlinx:kotlinx-coroutines-debug", version.ref = "coroutines" }

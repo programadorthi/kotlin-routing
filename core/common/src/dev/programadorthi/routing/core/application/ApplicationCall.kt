@@ -5,14 +5,17 @@
 package dev.programadorthi.routing.core.application
 
 import dev.programadorthi.routing.core.RedirectApplicationCall
+import dev.programadorthi.routing.core.Route
 import dev.programadorthi.routing.core.RouteMethod
 import io.ktor.http.Parameters
 import io.ktor.util.AttributeKey
 import io.ktor.util.Attributes
+import io.ktor.util.pipeline.PipelineContext
 import io.ktor.util.pipeline.execute
 import kotlinx.coroutines.launch
 
 private val RECEIVE_TYPE: AttributeKey<Any> = AttributeKey("KotlinRoutingReceiveType")
+internal val ROUTE_INSTANCE: AttributeKey<Route> = AttributeKey("KotlinRouteInstance")
 
 /**
  * A single act of communication between a client and server.
@@ -133,6 +136,8 @@ public fun ApplicationCall.redirectToPath(
 ) {
     redirect(path = path, name = "", parameters = parameters, routeMethod = method)
 }
+
+public fun PipelineContext<*, ApplicationCall>.route(): Route? = call.attributes.getOrNull(ROUTE_INSTANCE)
 
 private fun ApplicationCall.redirect(
     path: String,

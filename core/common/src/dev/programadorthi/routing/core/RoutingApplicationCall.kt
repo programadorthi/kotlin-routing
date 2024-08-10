@@ -2,6 +2,7 @@ package dev.programadorthi.routing.core
 
 import dev.programadorthi.routing.core.application.Application
 import dev.programadorthi.routing.core.application.ApplicationCall
+import dev.programadorthi.routing.core.application.ROUTE_INSTANCE
 import io.ktor.http.Parameters
 import io.ktor.util.Attributes
 import kotlinx.coroutines.CoroutineScope
@@ -15,7 +16,6 @@ internal class RoutingApplicationCall(
     parameters: Parameters,
 ) : ApplicationCall, CoroutineScope {
     override val application: Application get() = previousCall.application
-    override val attributes: Attributes get() = previousCall.attributes
     override val name: String get() = previousCall.name
     override val uri: String get() = previousCall.uri
 
@@ -23,6 +23,12 @@ internal class RoutingApplicationCall(
         Parameters.build {
             appendAll(previousCall.parameters)
             appendMissing(parameters)
+        }
+    }
+
+    override val attributes: Attributes by lazy(LazyThreadSafetyMode.NONE) {
+        previousCall.attributes.apply {
+            put(ROUTE_INSTANCE, route)
         }
     }
 
