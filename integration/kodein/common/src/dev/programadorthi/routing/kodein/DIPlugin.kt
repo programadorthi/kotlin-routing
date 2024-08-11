@@ -1,3 +1,7 @@
+/*
+ * Copyright Kodein the original author or authors.
+ * https://github.com/kosi-libs/Kodein/blob/master/framework/ktor/kodein-di-framework-ktor-server-jvm/src/main/kotlin/org/kodein/di/ktor/plugin.kt
+ */
 package dev.programadorthi.routing.kodein
 
 import dev.programadorthi.routing.core.application.Application
