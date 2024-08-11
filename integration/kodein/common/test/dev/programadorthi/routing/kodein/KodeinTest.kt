@@ -4,6 +4,7 @@ import dev.programadorthi.routing.core.call
 import dev.programadorthi.routing.core.handle
 import dev.programadorthi.routing.core.install
 import dev.programadorthi.routing.core.routing
+import dev.programadorthi.routing.kodein.ext.instance
 import dev.programadorthi.routing.statuspages.StatusPages
 import kotlinx.coroutines.ExperimentalCoroutinesApi
 import kotlinx.coroutines.Job
@@ -38,8 +39,8 @@ class KodeinTest {
                     }
 
                     handle(path = "/path") {
-                        val text: String by closestDI().instance(tag = "test")
-                        val item: Item = closestDI().direct.instance()
+                        val text: String by instance()
+                        val item: Item by instance()
                         // Printing variables that ask to Kodein retrieve the instances
                         println("text: $text and item: $item")
                         job.complete()
@@ -116,7 +117,7 @@ class KodeinTest {
                     parentCoroutineContext = coroutineContext + job,
                 ) {
                     handle(path = "/path") {
-                        val text: String by closestDI().instance(tag = "test")
+                        val text: String by instance(tag = "test")
                         result = text
                         item = closestDI().direct.instance()
                         job.complete()
@@ -157,7 +158,7 @@ class KodeinTest {
                     }
 
                     handle(path = "/path") {
-                        val text: String by closestDI().instance(tag = "test")
+                        val text: String by instance(tag = "test")
                         result = text
                         item = closestDI().direct.instance()
                         job.complete()
@@ -201,7 +202,7 @@ class KodeinTest {
                     }
 
                     handle(path = "/path") {
-                        val text: String by closestDI().instance(tag = "test")
+                        val text: String by instance(tag = "test")
                         result = text
                         item = closestDI().direct.instance()
                         job.complete()
@@ -237,8 +238,8 @@ class KodeinTest {
                     }
 
                     handle(path = "/path") {
-                        val text: String by closestDI().instance(tag = "test")
-                        val item: Item = closestDI().direct.instance()
+                        val text: String by instance(tag = "test")
+                        val item: Item by instance()
                         // Printing variables that ask to Kodein retrieve the instances
                         println("text: $text and item: $item")
                         job.complete()
@@ -294,8 +295,8 @@ class KodeinTest {
                     }
 
                     handle(path = "/path") {
-                        val text: String by closestDI().instance(tag = "test")
-                        val aux: Item = closestDI().direct.instance()
+                        val text: String by instance(tag = "test")
+                        val aux: Item by instance()
                         result = text
                         item = aux
                         job.complete()

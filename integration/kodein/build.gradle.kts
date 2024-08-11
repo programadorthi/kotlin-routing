@@ -1,3 +1,5 @@
+import kotlinx.kover.gradle.plugin.dsl.KoverReportExtension
+
 plugins {
     kotlin("multiplatform")
     id("org.jlleitschuh.gradle.ktlint")
@@ -20,6 +22,16 @@ kotlin {
             dependencies {
                 implementation(projects.statusPages)
             }
+        }
+    }
+}
+
+configure<KoverReportExtension> {
+    filters {
+        excludes {
+            packages(
+                "dev.programadorthi.routing.kodein.ext",
+            )
         }
     }
 }
