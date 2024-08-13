@@ -85,8 +85,13 @@ public fun <T : Any> Route.resource(
     val path = resources.resourcesFormat.encodeToPathPattern(serializer)
     val queryParameters = resources.resourcesFormat.encodeToQueryParameters(serializer)
     var route = this
+    var routePath = route.toString()
+    if (routePath.startsWith("/")) {
+        routePath = routePath.removePrefix("/")
+    }
+    val finalPath = path.removePrefix(routePath)
     // Required for register to parents
-    route(path = path, name = null) {
+    route(path = finalPath, name = null) {
         route =
             queryParameters.fold(this) { entry, query ->
                 val selector =

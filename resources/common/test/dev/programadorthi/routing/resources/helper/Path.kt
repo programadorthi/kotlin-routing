@@ -7,3 +7,12 @@ class Path {
     @Resource("{id}")
     class Id(val parent: Path = Path(), val id: Int)
 }
+
+@Resource("/parent")
+class ParentRouting {
+    @Resource("/child")
+    class ChildRouting(val parent: ParentRouting = ParentRouting()) {
+        @Resource("/destination")
+        class Destination(val parent: ChildRouting = ChildRouting())
+    }
+}

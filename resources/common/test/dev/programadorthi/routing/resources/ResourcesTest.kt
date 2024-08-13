@@ -11,6 +11,7 @@ import dev.programadorthi.routing.core.call
 import dev.programadorthi.routing.core.errors.RouteNotFoundException
 import dev.programadorthi.routing.core.install
 import dev.programadorthi.routing.core.routing
+import dev.programadorthi.routing.resources.helper.ParentRouting
 import dev.programadorthi.routing.resources.helper.Path
 import io.ktor.http.Parameters
 import io.ktor.http.parametersOf
@@ -468,5 +469,48 @@ class ResourcesTest {
             assertEquals(RouteMethod.Empty, result?.routeMethod)
             assertEquals(parametersOf(), result?.parameters)
             assertEquals("body content", body, "should have received a body")
+        }
+
+    @Test
+    fun shouldDoParentToChildRoutingUsingChildType() =
+        runTest {
+            // GIVEN
+            val job = Job()
+            var result: ApplicationCall? = null
+
+            val parent =
+                routing(
+                    rootPath = "/parent",
+                    parentCoroutineContext = coroutineContext + job,
+                ) {
+                    install(Resources)
+
+                    handle<Path.Id> {
+                    }
+                }
+
+            routing(
+                rootPath = "/child",
+                parentCoroutineContext = coroutineContext + job,
+                parent = parent,
+            ) {
+                install(Resources)
+
+                handle<ParentRouting.ChildRouting.Destination> {
+                    result = call
+                    job.complete()
+                }
+            }
+
+            // WHEN
+            parent.call(resource = ParentRouting.ChildRouting.Destination())
+            advanceTimeBy(99)
+
+            // THEN
+            assertNotNull(result)
+            assertEquals("/parent/child/destination", "${result?.uri}")
+            assertEquals("", "${result?.name}")
+            assertEquals(RouteMethod.Empty, result?.routeMethod)
+            assertEquals(Parameters.Empty, result?.parameters)
         }
 }
