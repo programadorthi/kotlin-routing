@@ -1,21 +1,30 @@
 package dev.programadorthi.routing.callloging
 
+import io.ktor.util.collections.ConcurrentMap
+
 public actual object MDC {
-    // TODO: Well, how to implement MDC in native?
+    // TODO: Well, how to implement MDC Thread Local map in native?
+    private val current = ConcurrentMap<String, String>()
 
     public actual fun clear() {
-        // no-op for now
+        current.clear()
+    }
+
+    public actual fun get(key: String): String? {
+        return current[key]
     }
 
     public actual fun getCopyOfContextMap(): Map<String, String>? {
-        return null
+        return current.toMap()
     }
 
     public actual fun remove(key: String) {
-        // no-op for now
+        current.remove(key)
     }
 
     public actual fun setContextMap(contextMap: Map<String, String>?) {
-        // no-op for now
+        val other = contextMap ?: return
+        current.clear()
+        current.putAll(other)
     }
 }

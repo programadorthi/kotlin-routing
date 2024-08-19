@@ -7,6 +7,10 @@ public actual object MDC {
         current.clear()
     }
 
+    public actual fun get(key: String): String? {
+        return current[key]
+    }
+
     public actual fun getCopyOfContextMap(): Map<String, String>? {
         return current.toMap()
     }

@@ -11,6 +11,12 @@ import dev.programadorthi.routing.core.application.call
 import dev.programadorthi.routing.core.call
 import dev.programadorthi.routing.core.install
 import dev.programadorthi.routing.core.routing
+import kotlin.test.Test
+import kotlin.test.assertEquals
+import kotlin.test.assertIs
+import kotlin.test.assertNotNull
+import kotlin.test.assertNull
+import kotlin.test.assertTrue
 import kotlinx.coroutines.ExperimentalCoroutinesApi
 import kotlinx.coroutines.Job
 import kotlinx.coroutines.test.advanceTimeBy
@@ -19,12 +25,6 @@ import org.junit.runner.RunWith
 import org.robolectric.RobolectricTestRunner
 import org.robolectric.RuntimeEnvironment
 import org.robolectric.Shadows
-import kotlin.test.Test
-import kotlin.test.assertEquals
-import kotlin.test.assertIs
-import kotlin.test.assertNotNull
-import kotlin.test.assertNull
-import kotlin.test.assertTrue
 
 @OptIn(ExperimentalCoroutinesApi::class)
 @RunWith(RobolectricTestRunner::class)
@@ -43,7 +43,9 @@ internal class AndroidRoutingTest {
                         manager = fakeActivityManager
                     }
 
-                    activity<FakeActivityA>(path = "/fakeA")
+                    activity(path = "/fakeA") {
+                        Intent(call.currentActivity, FakeActivityA::class.java)
+                    }
                 }
 
             // WHEN
@@ -97,8 +99,13 @@ internal class AndroidRoutingTest {
                         manager = fakeActivityManager
                     }
 
-                    activity<FakeActivityB>(path = "/fakeB")
-                    activity<FakeActivityC>(path = "/fakeC")
+                    activity(path = "/fakeB") {
+                        Intent(call.currentActivity, FakeActivityB::class.java)
+                    }
+
+                    activity(path = "/fakeC") {
+                        Intent(call.currentActivity, FakeActivityC::class.java)
+                    }
                 }
 
             // WHEN
@@ -179,7 +186,9 @@ internal class AndroidRoutingTest {
                         manager = fakeActivityManager
                     }
 
-                    activity<FakeActivityB>(path = "/fakeB")
+                    activity(path = "/fakeB") {
+                        Intent(call.currentActivity, FakeActivityB::class.java)
+                    }
                 }
 
             // WHEN
@@ -223,7 +232,9 @@ internal class AndroidRoutingTest {
                         manager = fakeActivityManager
                     }
 
-                    activity<FakeActivityB>(path = "/fakeB")
+                    activity(path = "/fakeB") {
+                        Intent(call.currentActivity, FakeActivityB::class.java)
+                    }
                 }
 
             // WHEN
@@ -259,7 +270,9 @@ internal class AndroidRoutingTest {
                         manager = fakeActivityManager
                     }
 
-                    activity<FakeActivityB>(path = "/fakeB")
+                    activity(path = "/fakeB") {
+                        Intent(call.currentActivity, FakeActivityB::class.java)
+                    }
                 }
 
             // WHEN

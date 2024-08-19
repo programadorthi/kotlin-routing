@@ -7,6 +7,10 @@ public actual object MDC {
         JvmMDC.clear()
     }
 
+    public actual fun get(key: String): String? {
+        return JvmMDC.get(key)
+    }
+
     public actual fun getCopyOfContextMap(): Map<String, String>? {
         return JvmMDC.getCopyOfContextMap()
     }
