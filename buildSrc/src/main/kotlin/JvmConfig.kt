@@ -1,14 +1,18 @@
 /*
  * Copyright 2014-2021 JetBrains s.r.o and contributors. Use of this source code is governed by the Apache 2.0 license.
  */
-@file:Suppress("UNUSED_VARIABLE")
-
-import org.gradle.api.*
+import org.gradle.api.Project
 import org.gradle.api.artifacts.VersionCatalogsExtension
-import org.gradle.api.tasks.testing.*
-import org.gradle.jvm.tasks.*
-import org.gradle.kotlin.dsl.*
-import org.jetbrains.kotlin.gradle.targets.jvm.tasks.*
+import org.gradle.api.tasks.testing.Test
+import org.gradle.jvm.tasks.Jar
+import org.gradle.kotlin.dsl.create
+import org.gradle.kotlin.dsl.creating
+import org.gradle.kotlin.dsl.getByName
+import org.gradle.kotlin.dsl.getByType
+import org.gradle.kotlin.dsl.getValue
+import org.gradle.kotlin.dsl.getting
+import org.gradle.kotlin.dsl.register
+import org.jetbrains.kotlin.gradle.targets.jvm.tasks.KotlinJvmTest
 
 fun Project.configureJvm() {
     val libs = extensions.getByType<VersionCatalogsExtension>().named("libs")

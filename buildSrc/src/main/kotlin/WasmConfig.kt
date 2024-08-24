@@ -7,13 +7,14 @@ import org.gradle.api.Project
 import org.gradle.kotlin.dsl.getValue
 import org.gradle.kotlin.dsl.getting
 import org.gradle.kotlin.dsl.invoke
+import org.jetbrains.kotlin.gradle.targets.js.dsl.ExperimentalWasmDsl
 
-fun Project.configureJs() {
-    configureJsTasks()
+fun Project.configureWasm() {
+    configureWasmTasks()
 
     kotlin {
         sourceSets {
-            val jsTest by getting {
+            val wasmJsTest by getting {
                 dependencies {
                     implementation(npm("puppeteer", Versions.puppeteer))
                 }
@@ -21,12 +22,13 @@ fun Project.configureJs() {
         }
     }
 
-    configureJsTestTasks()
+    configureWasmTestTasks()
 }
 
-private fun Project.configureJsTasks() {
+private fun Project.configureWasmTasks() {
     kotlin {
-        js(IR) {
+        @OptIn(ExperimentalWasmDsl::class)
+        wasmJs {
             nodejs {
                 testTask {
                     useMocha {
@@ -38,23 +40,21 @@ private fun Project.configureJsTasks() {
             browser {
                 testTask {
                     useKarma {
-                        useChromeHeadless()
+                        useChromeHeadlessWasmGc()
                         useConfigDirectory(File(project.rootProject.projectDir, "karma"))
                     }
                 }
             }
-
-            binaries.library()
         }
     }
 }
 
-private fun Project.configureJsTestTasks() {
-    val shouldRunJsBrowserTest = !hasProperty("teamcity") || hasProperty("enable-js-tests")
-    if (shouldRunJsBrowserTest) return
+private fun Project.configureWasmTestTasks() {
+    val shouldRunWasmBrowserTest = !hasProperty("teamcity") || hasProperty("enable-js-tests")
+    if (shouldRunWasmBrowserTest) return
 
-    val cleanJsBrowserTest by tasks.getting
-    val jsBrowserTest by tasks.getting
-    cleanJsBrowserTest.onlyIf { false }
-    jsBrowserTest.onlyIf { false }
+    val cleanWasmJsBrowserTest by tasks.getting
+    val wasmJsBrowserTest by tasks.getting
+    cleanWasmJsBrowserTest.onlyIf { false }
+    wasmJsBrowserTest.onlyIf { false }
 }

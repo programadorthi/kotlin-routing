@@ -11,15 +11,17 @@ compose = "1.6.0"
 
 coroutines = "1.8.0-RC2"
 kotlin = "1.9.21"
-ktor = "3.0.0-beta-1"
+ktor = "3.0.0-beta-2"
 serialization = "1.6.2"
 slf4j = "2.0.4"
 voyager = "1.1.0-alpha03"
 kodein = "7.21.2"
-koin = "3.5.3"
+koin = "3.6.0-wasm-alpha2"
+tomlj = "1.1.1"
 
 junit = "4.13.2"
 robolectric = "4.11.1"
+puppeteer = "21.5.0"
 
 # SAMPLE VERSIONS #
 core-ktx = "1.9.0"
@@ -50,6 +52,8 @@ slf4j-simple = { module = "org.slf4j:slf4j-simple", version.ref = "slf4j" }
 voyager-navigator = { module = "cafe.adriel.voyager:voyager-navigator", version.ref = "voyager" }
 kodein-di = { module = "org.kodein.di:kodein-di", version.ref = "kodein" }
 koin-core = { module = "io.insert-koin:koin-core", version.ref = "koin" }
+
+tomlj = { module = "org.tomlj:tomlj", version.ref = "tomlj" }
 
 test-coroutines = { module = "org.jetbrains.kotlinx:kotlinx-coroutines-test", version.ref = "coroutines" }
 test-coroutines-debug = { module = "org.jetbrains.kotlinx:kotlinx-coroutines-debug", version.ref = "coroutines" }

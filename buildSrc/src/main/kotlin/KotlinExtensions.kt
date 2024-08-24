@@ -4,7 +4,10 @@
 
 import org.gradle.api.NamedDomainObjectContainer
 import org.gradle.api.Project
-import org.gradle.kotlin.dsl.*
+import org.gradle.kotlin.dsl.configure
+import org.gradle.kotlin.dsl.getValue
+import org.gradle.kotlin.dsl.provideDelegate
+import org.gradle.kotlin.dsl.the
 import org.jetbrains.kotlin.gradle.dsl.KotlinMultiplatformExtension
 import org.jetbrains.kotlin.gradle.plugin.KotlinSourceSet
 import org.jetbrains.kotlin.gradle.plugin.mpp.DefaultCInteropSettings
@@ -21,10 +24,21 @@ fun KotlinMultiplatformExtension.createCInterop(
     cinteropTargets: List<String>,
     block: DefaultCInteropSettings.() -> Unit
 ) {
-    cinteropTargets.mapNotNull { targets.findByName(it) }.filterIsInstance<KotlinNativeTarget>().forEach {
-        val main by it.compilations
-        main.cinterops.create(name, block)
-    }
+    cinteropTargets.mapNotNull { targets.findByName(it) }.filterIsInstance<KotlinNativeTarget>()
+        .forEach {
+            val main by it.compilations
+            main.cinterops.create(name, block)
+        }
+}
+
+fun NamedDomainObjectContainer<KotlinSourceSet>.commonMain(block: KotlinSourceSet.() -> Unit) {
+    val sourceSet = getByName("commonMain")
+    block(sourceSet)
+}
+
+fun NamedDomainObjectContainer<KotlinSourceSet>.commonTest(block: KotlinSourceSet.() -> Unit) {
+    val sourceSet = getByName("commonTest")
+    block(sourceSet)
 }
 
 fun NamedDomainObjectContainer<KotlinSourceSet>.jvmAndNixMain(block: KotlinSourceSet.() -> Unit) {
@@ -64,6 +78,16 @@ fun NamedDomainObjectContainer<KotlinSourceSet>.jsMain(block: KotlinSourceSet.()
 
 fun NamedDomainObjectContainer<KotlinSourceSet>.jsTest(block: KotlinSourceSet.() -> Unit) {
     val sourceSet = findByName("jsTest") ?: return
+    block(sourceSet)
+}
+
+fun NamedDomainObjectContainer<KotlinSourceSet>.wasmJsMain(block: KotlinSourceSet.() -> Unit) {
+    val sourceSet = findByName("wasmJsMain") ?: return
+    block(sourceSet)
+}
+
+fun NamedDomainObjectContainer<KotlinSourceSet>.wasmJsTest(block: KotlinSourceSet.() -> Unit) {
+    val sourceSet = findByName("wasmJsTest") ?: return
     block(sourceSet)
 }
 

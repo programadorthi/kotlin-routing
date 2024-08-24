@@ -10,6 +10,7 @@ import org.gradle.kotlin.dsl.getting
 import org.gradle.kotlin.dsl.invoke
 import org.jetbrains.kotlin.gradle.plugin.KotlinSourceSet
 import java.io.File
+import org.jetbrains.kotlin.gradle.targets.js.dsl.ExperimentalWasmDsl
 
 val Project.files: Array<File> get() = project.projectDir.listFiles() ?: emptyArray()
 val Project.hasCommon: Boolean get() = files.any { it.name == "common" }
@@ -17,11 +18,15 @@ val Project.hasJvmAndNix: Boolean get() = hasCommon || files.any { it.name == "j
 val Project.hasPosix: Boolean get() = hasCommon || files.any { it.name == "posix" }
 val Project.hasDesktop: Boolean get() = hasPosix || files.any { it.name == "desktop" }
 val Project.hasNix: Boolean get() = hasPosix || hasJvmAndNix || files.any { it.name == "nix" }
+val Project.hasLinux: Boolean get() = hasNix || files.any { it.name == "linux" }
 val Project.hasDarwin: Boolean get() = hasNix || files.any { it.name == "darwin" }
 val Project.hasWindows: Boolean get() = hasPosix || files.any { it.name == "windows" }
-val Project.hasJs: Boolean get() = hasCommon || files.any { it.name == "js" }
+val Project.hasJsAndWasmShared: Boolean get() = files.any { it.name == "jsAndWasmShared" }
+val Project.hasJs: Boolean get() = hasCommon || files.any { it.name == "js" } || hasJsAndWasmShared
+val Project.hasWasm: Boolean get() = hasCommon || files.any { it.name == "wasmJs" } || hasJsAndWasmShared
 val Project.hasJvm: Boolean get() = hasCommon || hasJvmAndNix || files.any { it.name == "jvm" }
-val Project.hasNative: Boolean get() = hasCommon || hasNix || hasPosix || hasDarwin || hasDesktop || hasWindows
+val Project.hasNative: Boolean get() =
+    hasCommon || hasNix || hasPosix || hasLinux || hasDarwin || hasDesktop || hasWindows
 
 fun Project.configureTargets() {
     configureCommon()
@@ -37,9 +42,43 @@ fun Project.configureTargets() {
             configureJs()
         }
 
-        if (hasPosix || hasDarwin || hasWindows) extra.set("hasNative", true)
+        if (hasWasm) {
+            @OptIn(ExperimentalWasmDsl::class)
+            wasmJs {
+                nodejs()
+                browser()
+            }
+
+            configureWasm()
+        }
+
+        if (hasPosix || hasLinux || hasDarwin || hasWindows) extra.set("hasNative", true)
 
         sourceSets {
+            if (hasJsAndWasmShared) {
+                val commonMain by getting {}
+                val jsAndWasmSharedMain by creating {
+                    dependsOn(commonMain)
+                }
+                val commonTest by getting {}
+                val jsAndWasmSharedTest by creating {
+                    dependsOn(commonTest)
+                }
+
+                jsMain {
+                    dependsOn(jsAndWasmSharedMain)
+                }
+                jsTest {
+                    dependsOn(jsAndWasmSharedTest)
+                }
+                wasmJsMain {
+                    dependsOn(jsAndWasmSharedMain)
+                }
+                wasmJsTest {
+                    dependsOn(jsAndWasmSharedTest)
+                }
+            }
+
             if (hasPosix) {
                 val posixMain by creating
                 val posixTest by creating
@@ -78,6 +117,11 @@ fun Project.configureTargets() {
                         implementation(kotlin("test"))
                     }
                 }
+            }
+
+            if (hasLinux) {
+                val linuxMain by creating
+                val linuxTest by creating
             }
 
             if (hasWindows) {
@@ -186,6 +230,25 @@ fun Project.configureTargets() {
                 }
             }
 
+            if (hasLinux) {
+                val linuxMain by getting {
+                    findByName("nixMain")?.let { dependsOn(it) }
+                }
+
+                val linuxTest by getting {
+                    findByName("nixTest")?.let { dependsOn(it) }
+
+                    dependencies {
+                        implementation(kotlin("test"))
+                    }
+                }
+
+                linuxTargets().forEach {
+                    getByName("${it}Main").dependsOn(linuxMain)
+                    getByName("${it}Test").dependsOn(linuxTest)
+                }
+            }
+
             if (hasDesktop) {
                 val desktopMain by getting {
                     findByName("posixMain")?.let { dependsOn(it) }
@@ -218,7 +281,16 @@ fun Project.configureTargets() {
 
             if (hasNative) {
                 tasks.findByName("linkDebugTestLinuxX64")?.onlyIf { HOST_NAME == "linux" }
+                tasks.findByName("linkDebugTestLinuxArm64")?.onlyIf { HOST_NAME == "linux" }
                 tasks.findByName("linkDebugTestMingwX64")?.onlyIf { HOST_NAME == "windows" }
+            }
+        }
+    }
+
+    if (hasJsAndWasmShared) {
+        tasks.configureEach {
+            if (name == "compileJsAndWasmSharedMainKotlinMetadata") {
+                enabled = false
             }
         }
     }

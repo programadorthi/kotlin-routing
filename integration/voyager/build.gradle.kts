@@ -1,3 +1,5 @@
+import org.jetbrains.kotlin.gradle.targets.js.dsl.ExperimentalWasmDsl
+
 plugins {
     kotlin("multiplatform")
     kotlin("plugin.serialization")
@@ -23,6 +25,14 @@ kotlin {
     }
 
     configureJs()
+
+    @OptIn(ExperimentalWasmDsl::class)
+    wasmJs {
+        nodejs()
+        browser()
+    }
+
+    configureWasm()
 
     macosX64()
     macosArm64()

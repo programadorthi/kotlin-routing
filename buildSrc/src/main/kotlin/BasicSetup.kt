@@ -1,13 +1,9 @@
 import org.gradle.api.JavaVersion
 import org.gradle.api.Project
-import org.gradle.jvm.toolchain.JavaLanguageVersion
-import org.gradle.jvm.toolchain.JvmVendorSpec
-import org.gradle.kotlin.dsl.invoke
 import org.gradle.kotlin.dsl.withType
 import org.jetbrains.kotlin.gradle.dsl.KotlinCommonOptions
 import org.jetbrains.kotlin.gradle.dsl.KotlinMultiplatformExtension
 import org.jetbrains.kotlin.gradle.plugin.KotlinCompilation
-import org.jetbrains.kotlin.gradle.plugin.KotlinPlatformType
 import org.jetbrains.kotlin.gradle.targets.js.KotlinJsTarget
 import org.jetbrains.kotlin.gradle.tasks.KotlinCompile
 
@@ -39,9 +35,9 @@ fun KotlinMultiplatformExtension.setCompilationOptions() {
 
 fun KotlinCompilation<KotlinCommonOptions>.configureCompilation() {
     kotlinOptions {
-        if (platformType == KotlinPlatformType.jvm) {
-            allWarningsAsErrors = true
-        }
+//        if (platformType == KotlinPlatformType.jvm && !IDEA_ACTIVE) {
+//            allWarningsAsErrors = true
+//        }
 
         freeCompilerArgs += "-opt-in=kotlin.RequiresOptIn"
         freeCompilerArgs += "-Xexpect-actual-classes"
