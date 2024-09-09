@@ -125,7 +125,9 @@ public inline fun <reified P : Principal> ApplicationCall.principal(): P? = prin
 /**
  * Retrieves an authenticated [Principal] for `this` call from provider with name [provider]
  */
-public inline fun <reified P : Principal> ApplicationCall.principal(provider: String?): P? = authentication.principal(provider)
+public inline fun <reified P : Principal> ApplicationCall.principal(provider: String?): P? = authentication.principal(
+    provider
+)
 
 /**
  * Installs the [Authentication] plugin if not yet installed and invokes [block] on its config.

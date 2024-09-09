@@ -28,7 +28,9 @@ internal val EventResourceInstanceKey: AttributeKey<Any> = AttributeKey("EventRe
  *
  * @param body receives an instance of the typed resource [T] as the first parameter.
  */
-public inline fun <reified T : Any> Route.event(noinline body: suspend PipelineContext<Unit, ApplicationCall>.(T) -> Unit): Route {
+public inline fun <reified T : Any> Route.event(
+    noinline body: suspend PipelineContext<Unit, ApplicationCall>.(T) -> Unit
+): Route {
     val serializer = serializer<T>()
     val resources = application.plugin(EventResources)
     val path = resources.resourcesFormat.encodeToPathPattern(serializer)

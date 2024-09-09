@@ -40,7 +40,9 @@ public inline fun <reified T : Any> Route.resource(noinline body: Route.() -> Un
  *
  * @param body receives an instance of the typed resource [T] as the first parameter.
  */
-public inline fun <reified T : Any> Route.handle(noinline body: suspend PipelineContext<Unit, ApplicationCall>.(T) -> Unit): Route =
+public inline fun <reified T : Any> Route.handle(
+    noinline body: suspend PipelineContext<Unit, ApplicationCall>.(T) -> Unit
+): Route =
     resource<T> {
         handle(serializer<T>(), body)
     }

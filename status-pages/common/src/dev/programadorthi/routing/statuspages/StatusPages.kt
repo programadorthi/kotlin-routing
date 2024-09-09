@@ -85,7 +85,9 @@ public class StatusPagesConfig {
     /**
      * Register an exception [handler] for the exception type [T] and its children.
      */
-    public inline fun <reified T : Throwable> exception(noinline handler: suspend (call: ApplicationCall, cause: T) -> Unit): Unit =
+    public inline fun <reified T : Throwable> exception(
+        noinline handler: suspend (call: ApplicationCall, cause: T) -> Unit
+    ): Unit =
         exception(T::class, handler)
 
     /**
