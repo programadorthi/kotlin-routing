@@ -47,11 +47,11 @@ import kotlin.native.HiddenFromObjC
 public class Routing internal constructor(
     internal val application: Application,
 ) : Route(
-        parent = application.environment.parentRouting,
-        selector = RootRouteSelector(application.environment.rootPath),
-        application.environment.developmentMode,
-        application.environment,
-    ) {
+    parent = application.environment.parentRouting,
+    selector = RootRouteSelector(application.environment.rootPath),
+    application.environment.developmentMode,
+    application.environment,
+) {
     private val tracers = mutableListOf<(RoutingResolveTrace) -> Unit>()
     private val namedRoutes = mutableMapOf<String, Route>()
     private var disposed = false

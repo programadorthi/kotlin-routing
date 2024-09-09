@@ -16,12 +16,12 @@ public open class ApplicationCallPipeline public constructor(
     final override val developmentMode: Boolean = false,
     public open val environment: ApplicationEnvironment? = null,
 ) : Pipeline<Unit, ApplicationCall>(
-        Setup,
-        Monitoring,
-        Plugins,
-        Call,
-        Fallback,
-    ) {
+    Setup,
+    Monitoring,
+    Plugins,
+    Call,
+    Fallback,
+) {
     /**
      * Standard phases for application call pipelines
      */

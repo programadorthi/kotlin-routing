@@ -24,11 +24,11 @@ public class MissingRequestParameterException(
     message: String? = null,
 ) : BadRequestException(message ?: "Request parameter $parameterName is missing"),
     CopyableThrowable<MissingRequestParameterException> {
-    override fun createCopy(): MissingRequestParameterException =
-        MissingRequestParameterException(parameterName, message).also {
-            it.initCauseBridge(this)
-        }
-}
+        override fun createCopy(): MissingRequestParameterException =
+            MissingRequestParameterException(parameterName, message).also {
+                it.initCauseBridge(this)
+            }
+    }
 
 /**
  * URL decoder exception
