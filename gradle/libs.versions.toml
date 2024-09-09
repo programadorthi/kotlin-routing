@@ -1,18 +1,18 @@
 [versions]
-plugin-android = "8.2.2"
-plugin-kover = "0.7.5"
-plugin-ktlint = "12.1.0"
+plugin-android = "8.4.2"
+plugin-kover = "0.8.3"
+plugin-kotlinter = "3.15.0"
 plugin-maven = "0.29.0"
 
 androidx-activity = "1.8.2"
 androidx-startup = "1.1.1"
 
-compose = "1.6.0"
+compose = "1.6.2"
 
-coroutines = "1.8.0-RC2"
-kotlin = "1.9.21"
+coroutines = "1.8.0"
+kotlin = "2.0.0"
 ktor = "3.0.0-beta-2"
-serialization = "1.6.2"
+serialization = "1.6.1" # Do not upgrade, 1.6.2 breaks maven publishing!
 slf4j = "2.0.4"
 voyager = "1.1.0-alpha03"
 kodein = "7.21.2"
@@ -35,6 +35,7 @@ compose-bom = "2022.10.00"
 [libraries]
 plugin-android = { module = "com.android.tools.build:gradle", version.ref = "plugin-android" }
 plugin-kotlin = { module = "org.jetbrains.kotlin:kotlin-gradle-plugin", version.ref = "kotlin" }
+plugin-kotlinter = { module = "org.jmailen.gradle:kotlinter-gradle", version.ref = "plugin-kotlinter" }
 plugin-kover = { module = "org.jetbrains.kotlinx:kover-gradle-plugin", version.ref = "plugin-kover"}
 
 androidx-activity = { module = "androidx.activity:activity", version.ref = "androidx-activity" }
@@ -82,5 +83,4 @@ material3 = { group = "androidx.compose.material3", name = "material3" }
 [plugins]
 jetbrains-compose = { id = "org.jetbrains.compose", version.ref = "compose" }
 kotlin-serialization = { id = "org.jetbrains.kotlin.plugin.serialization", version.ref = "kotlin"}
-ktlint = { id = "org.jlleitschuh.gradle.ktlint", version.ref = "plugin-ktlint"}
 maven-publish = { id = "com.vanniktech.maven.publish", version.ref = "plugin-maven"}

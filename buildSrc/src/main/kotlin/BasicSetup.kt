@@ -1,18 +1,13 @@
-import org.gradle.api.JavaVersion
 import org.gradle.api.Project
-import org.gradle.kotlin.dsl.withType
-import org.jetbrains.kotlin.gradle.dsl.KotlinCommonOptions
 import org.jetbrains.kotlin.gradle.dsl.KotlinMultiplatformExtension
-import org.jetbrains.kotlin.gradle.plugin.KotlinCompilation
-import org.jetbrains.kotlin.gradle.targets.js.KotlinJsTarget
-import org.jetbrains.kotlin.gradle.tasks.KotlinCompile
 
 fun Project.applyBasicSetup() {
+    configureCodestyle()
     configureTargets()
-    setupJvmToolchain()
 
     kotlin {
         explicitApi()
+        jvmToolchain(8)
 
         setCompilationOptions()
         configureSourceSets()
@@ -22,25 +17,9 @@ fun Project.applyBasicSetup() {
 
 fun KotlinMultiplatformExtension.setCompilationOptions() {
     targets.all {
-        if (this is KotlinJsTarget) {
-            irTarget?.compilations?.all {
-                configureCompilation()
-            }
-        }
         compilations.all {
             configureCompilation()
         }
-    }
-}
-
-fun KotlinCompilation<KotlinCommonOptions>.configureCompilation() {
-    kotlinOptions {
-//        if (platformType == KotlinPlatformType.jvm && !IDEA_ACTIVE) {
-//            allWarningsAsErrors = true
-//        }
-
-        freeCompilerArgs += "-opt-in=kotlin.RequiresOptIn"
-        freeCompilerArgs += "-Xexpect-actual-classes"
     }
 }
 
@@ -59,12 +38,4 @@ fun KotlinMultiplatformExtension.configureSourceSets() {
                 progressiveMode = true
             }
         }
-}
-
-fun Project.setupJvmToolchain() {
-    tasks.withType<KotlinCompile> {
-        kotlinOptions {
-            jvmTarget = JavaVersion.VERSION_1_8.toString()
-        }
-    }
 }

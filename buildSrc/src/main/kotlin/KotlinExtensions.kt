@@ -12,12 +12,15 @@ import org.jetbrains.kotlin.gradle.dsl.KotlinMultiplatformExtension
 import org.jetbrains.kotlin.gradle.plugin.KotlinSourceSet
 import org.jetbrains.kotlin.gradle.plugin.mpp.DefaultCInteropSettings
 import org.jetbrains.kotlin.gradle.plugin.mpp.KotlinNativeTarget
+import org.jmailen.gradle.kotlinter.KotlinterExtension
 
 fun Project.kotlin(block: KotlinMultiplatformExtension.() -> Unit) {
     configure(block)
 }
 
 val Project.kotlin: KotlinMultiplatformExtension get() = the()
+
+val Project.kotlinter: KotlinterExtension get() = the()
 
 fun KotlinMultiplatformExtension.createCInterop(
     name: String,
@@ -68,26 +71,6 @@ fun NamedDomainObjectContainer<KotlinSourceSet>.darwinMain(block: KotlinSourceSe
 
 fun NamedDomainObjectContainer<KotlinSourceSet>.darwinTest(block: KotlinSourceSet.() -> Unit) {
     val sourceSet = findByName("darwinTest") ?: return
-    block(sourceSet)
-}
-
-fun NamedDomainObjectContainer<KotlinSourceSet>.jsMain(block: KotlinSourceSet.() -> Unit) {
-    val sourceSet = findByName("jsMain") ?: return
-    block(sourceSet)
-}
-
-fun NamedDomainObjectContainer<KotlinSourceSet>.jsTest(block: KotlinSourceSet.() -> Unit) {
-    val sourceSet = findByName("jsTest") ?: return
-    block(sourceSet)
-}
-
-fun NamedDomainObjectContainer<KotlinSourceSet>.wasmJsMain(block: KotlinSourceSet.() -> Unit) {
-    val sourceSet = findByName("wasmJsMain") ?: return
-    block(sourceSet)
-}
-
-fun NamedDomainObjectContainer<KotlinSourceSet>.wasmJsTest(block: KotlinSourceSet.() -> Unit) {
-    val sourceSet = findByName("wasmJsTest") ?: return
     block(sourceSet)
 }
 

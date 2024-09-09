@@ -1,8 +1,7 @@
-import kotlinx.kover.gradle.plugin.dsl.KoverReportExtension
+//import kotlinx.kover.gradle.plugin.dsl.KoverReportExtension
 
 plugins {
     kotlin("multiplatform")
-    id("org.jlleitschuh.gradle.ktlint")
     id("org.jetbrains.kotlinx.kover")
     alias(libs.plugins.maven.publish)
 }
@@ -24,7 +23,7 @@ kotlin {
     }
 }
 
-configure<KoverReportExtension> {
+/*configure<KoverReportExtension> {
     filters {
         excludes {
             packages(
@@ -34,4 +33,4 @@ configure<KoverReportExtension> {
             )
         }
     }
-}
+}*/
