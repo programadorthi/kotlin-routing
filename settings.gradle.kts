@@ -21,9 +21,9 @@ dependencyResolutionManagement {
 rootProject.name = "kotlin-routing"
 
 /*include(":auth")
-include(":call-logging")
+include(":call-logging")*/
 include(":core")
-include(":events")
+/*include(":events")
 include(":events-resources")
 include(":resources")
 include(":sessions")

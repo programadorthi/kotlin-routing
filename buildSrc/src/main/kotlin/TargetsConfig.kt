@@ -54,124 +54,225 @@ fun Project.configureTargets() {
 
         if (hasPosix || hasLinux || hasDarwin || hasWindows) extra.set("hasNative", true)
 
-        applyDefaultHierarchyTemplate()
-
-        /*sourceSets {
-            val mainSourceSet = { sourceSetName: String ->
-                findByName(sourceSetName) ?: commonMain.get()
-            }
-
-            val testSourceSet = { sourceSetName: String ->
-                findByName(sourceSetName) ?: commonTest.get()
-            }
-
-            if (hasJvmAndNix) {
-                val jvmAndNixMain by creating {
-                    dependsOn(commonMain.get())
+        sourceSets {
+            if (hasJsAndWasmShared) {
+                val commonMain by getting {}
+                val jsAndWasmSharedMain by creating {
+                    dependsOn(commonMain)
+                }
+                val commonTest by getting {}
+                val jsAndWasmSharedTest by creating {
+                    dependsOn(commonTest)
                 }
 
-                val jvmAndNixTest by creating {
-                    dependsOn(commonTest.get())
+                jsMain {
+                    dependsOn(jsAndWasmSharedMain)
+                }
+                jsTest {
+                    dependsOn(jsAndWasmSharedTest)
+                }
+                wasmJsMain {
+                    dependsOn(jsAndWasmSharedMain)
+                }
+                wasmJsTest {
+                    dependsOn(jsAndWasmSharedTest)
                 }
             }
 
             if (hasPosix) {
-                val posixMain by creating {
-                    dependsOn(commonMain.get())
-                }
-
-                val posixTest by creating {
-                    dependsOn(commonTest.get())
-                }
-            }
-
-            if (hasDesktop) {
-                val desktopMain by creating {
-                    dependsOn(mainSourceSet("posixMain"))
-                }
-
-                val desktopTest by creating {
-                    dependsOn(testSourceSet("posixTest"))
-                }
+                val posixMain by creating
+                val posixTest by creating
             }
 
             if (hasNix) {
-                val nixMain by creating {
-                    findByName("jvmAndNixMain")?.let(::dependsOn)
-                    findByName("posixMain")?.let(::dependsOn)
+                val nixMain by creating
+                val nixTest by creating
+            }
+
+            if (hasDarwin) {
+                val darwinMain by creating
+                val darwinTest by creating {
+                    dependencies {
+                        implementation(kotlin("test"))
+                    }
                 }
 
-                val nixTest by creating {
-                    findByName("jvmAndNixTest")?.let(::dependsOn)
-                    findByName("posixTest")?.let(::dependsOn)
+                val macosMain by creating
+                val macosTest by creating
+
+                val watchosMain by creating
+                val watchosTest by creating
+
+                val tvosMain by creating
+                val tvosTest by creating
+
+                val iosMain by creating
+                val iosTest by creating
+            }
+
+            if (hasDesktop) {
+                val desktopMain by creating
+                val desktopTest by creating {
+                    dependencies {
+                        implementation(kotlin("test"))
+                    }
                 }
             }
 
             if (hasLinux) {
-                linuxMain {
-                    val dep = findByName("nixMain") ?: findByName("desktopMain") ?: commonMain.get()
-                    dependsOn(dep)
+                val linuxMain by creating
+                val linuxTest by creating
+            }
+
+            if (hasWindows) {
+                val windowsMain by creating
+                val windowsTest by creating
+            }
+
+            if (hasJvmAndNix) {
+                val jvmAndNixMain by creating {
+                    findByName("commonMain")?.let { dependsOn(it) }
                 }
 
-                linuxTest {
-                    val dep = findByName("nixTest") ?: findByName("desktopTest") ?: commonTest.get()
-                    dependsOn(dep)
+                val jvmAndNixTest by creating {
+                    findByName("commonTest")?.let { dependsOn(it) }
+                }
+            }
+
+            if (hasJvm) {
+                val jvmMain by getting {
+                    findByName("jvmAndNixMain")?.let { dependsOn(it) }
                 }
 
-                linuxTargets().forEach {
-                    getByName("${it}Main").dependsOn(linuxMain.get())
-                    getByName("${it}Test").dependsOn(linuxTest.get())
+                val jvmTest by getting {
+                    findByName("jvmAndNixTest")?.let { dependsOn(it) }
+                }
+            }
+
+            if (hasPosix) {
+                val posixMain by getting {
+                    findByName("commonMain")?.let { dependsOn(it) }
+                }
+
+                val posixTest by getting {
+                    findByName("commonTest")?.let { dependsOn(it) }
+
+                    dependencies {
+                        implementation(kotlin("test"))
+                    }
+                }
+
+                posixTargets().forEach {
+                    getByName("${it}Main").dependsOn(posixMain)
+                    getByName("${it}Test").dependsOn(posixTest)
+                }
+            }
+
+            if (hasNix) {
+                val nixMain by getting {
+                    findByName("posixMain")?.let { dependsOn(it) }
+                    findByName("jvmAndNixMain")?.let { dependsOn(it) }
+                }
+
+                val nixTest by getting {
+                    findByName("posixTest")?.let { dependsOn(it) }
+                    findByName("jvmAndNixTest")?.let { dependsOn(it) }
+                }
+
+                nixTargets().forEach {
+                    getByName("${it}Main").dependsOn(nixMain)
+                    getByName("${it}Test").dependsOn(nixTest)
                 }
             }
 
             if (hasDarwin) {
-                val darwinMain by creating {
-                    dependsOn(commonMain.get())
-                }
-                val darwinTest by creating {
-                    dependsOn(commonTest.get())
-                }
+                val nixMain: KotlinSourceSet? = findByName("nixMain")
+                val nixTest: KotlinSourceSet? = findByName("nixTest")
+                val darwinMain by getting
+                val darwinTest by getting
+                val macosMain by getting
+                val macosTest by getting
+                val iosMain by getting
+                val iosTest by getting
+                val watchosMain by getting
+                val watchosTest by getting
+                val tvosMain by getting
+                val tvosTest by getting
 
-                macosMain.get().dependsOn(darwinMain)
-                tvosMain.get().dependsOn(darwinMain)
-                iosMain.get().dependsOn(darwinMain)
-                watchosMain.get().dependsOn(darwinMain)
-
-                macosTest.get().dependsOn(darwinTest)
-                tvosTest.get().dependsOn(darwinTest)
-                iosTest.get().dependsOn(darwinTest)
-                watchosTest.get().dependsOn(darwinTest)
+                nixMain?.let { darwinMain.dependsOn(it) }
+                nixTest?.let { darwinTest.dependsOn(it) }
+                macosMain.dependsOn(darwinMain)
+                tvosMain.dependsOn(darwinMain)
+                iosMain.dependsOn(darwinMain)
+                watchosMain.dependsOn(darwinMain)
 
                 macosTargets().forEach {
-                    getByName("${it}Main").dependsOn(macosMain.get())
-                    getByName("${it}Test").dependsOn(macosTest.get())
+                    getByName("${it}Main").dependsOn(macosMain)
+                    getByName("${it}Test").dependsOn(macosTest)
                 }
 
                 iosTargets().forEach {
-                    getByName("${it}Main").dependsOn(iosMain.get())
-                    getByName("${it}Test").dependsOn(iosTest.get())
+                    getByName("${it}Main").dependsOn(iosMain)
+                    getByName("${it}Test").dependsOn(iosTest)
                 }
 
                 watchosTargets().forEach {
-                    getByName("${it}Main").dependsOn(watchosMain.get())
-                    getByName("${it}Test").dependsOn(watchosTest.get())
+                    getByName("${it}Main").dependsOn(watchosMain)
+                    getByName("${it}Test").dependsOn(watchosTest)
                 }
 
                 tvosTargets().forEach {
-                    getByName("${it}Main").dependsOn(tvosMain.get())
-                    getByName("${it}Test").dependsOn(tvosTest.get())
+                    getByName("${it}Main").dependsOn(tvosMain)
+                    getByName("${it}Test").dependsOn(tvosTest)
+                }
+
+                darwinTargets().forEach {
+                    getByName("${it}Main").dependsOn(darwinMain)
+                    getByName("${it}Test").dependsOn(darwinTest)
+                }
+            }
+
+            if (hasLinux) {
+                val linuxMain by getting {
+                    findByName("nixMain")?.let { dependsOn(it) }
+                }
+
+                val linuxTest by getting {
+                    findByName("nixTest")?.let { dependsOn(it) }
+
+                    dependencies {
+                        implementation(kotlin("test"))
+                    }
+                }
+
+                linuxTargets().forEach {
+                    getByName("${it}Main").dependsOn(linuxMain)
+                    getByName("${it}Test").dependsOn(linuxTest)
+                }
+            }
+
+            if (hasDesktop) {
+                val desktopMain by getting {
+                    findByName("posixMain")?.let { dependsOn(it) }
+                }
+
+                val desktopTest by getting
+
+                desktopTargets().forEach {
+                    getByName("${it}Main").dependsOn(desktopMain)
+                    getByName("${it}Test").dependsOn(desktopTest)
                 }
             }
 
             if (hasWindows) {
-                val windowsMain by creating {
-                    val dep = findByName("desktopMain") ?: findByName("posixMain") ?: commonMain.get()
-                    dependsOn(dep)
+                val windowsMain by getting {
+                    findByName("posixMain")?.let { dependsOn(it) }
                 }
 
-                val windowsTest by creating {
-                    val dep = findByName("desktopTest") ?: findByName("posixTest") ?: commonTest.get()
-                    dependsOn(dep)
+                val windowsTest by getting {
+                    dependencies {
+                        implementation(kotlin("test"))
+                    }
                 }
 
                 windowsTargets().forEach {
@@ -180,49 +281,12 @@ fun Project.configureTargets() {
                 }
             }
 
-            if (hasJsAndWasmShared) {
-                val jsAndWasmSharedMain by creating {
-                    dependsOn(commonMain.get())
-                }
-                val jsAndWasmSharedTest by creating {
-                    dependsOn(commonTest.get())
-                }
-            }
-
-            if (hasJs) {
-                jsMain {
-                    findByName("jsAndWasmSharedMain")?.let(::dependsOn)
-                }
-                jsTest {
-                    findByName("jsAndWasmSharedTest")?.let(::dependsOn)
-                }
-            }
-
-            if (hasWasm) {
-                wasmJsMain {
-                    findByName("jsAndWasmSharedMain")?.let(::dependsOn)
-                }
-                wasmJsTest {
-                    findByName("jsAndWasmSharedTest")?.let(::dependsOn)
-                }
-            }
-
-            if (hasJvm) {
-                jvmMain {
-                    findByName("jvmAndNixMain")?.let(::dependsOn)
-                }
-
-                jvmTest {
-                    findByName("jvmAndNixTest")?.let(::dependsOn)
-                }
-            }
-
             if (hasNative) {
                 tasks.findByName("linkDebugTestLinuxX64")?.onlyIf { HOST_NAME == "linux" }
                 tasks.findByName("linkDebugTestLinuxArm64")?.onlyIf { HOST_NAME == "linux" }
                 tasks.findByName("linkDebugTestMingwX64")?.onlyIf { HOST_NAME == "windows" }
             }
-        }*/
+        }
     }
 
     if (hasJsAndWasmShared) {

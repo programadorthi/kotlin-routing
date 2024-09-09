@@ -1,4 +1,4 @@
-//import kotlinx.kover.gradle.plugin.dsl.KoverReportExtension
+import kotlinx.kover.gradle.plugin.dsl.KoverProjectExtension
 
 plugins {
     kotlin("multiplatform")
@@ -23,14 +23,16 @@ kotlin {
     }
 }
 
-/*configure<KoverReportExtension> {
-    filters {
-        excludes {
-            packages(
-                "dev.programadorthi.routing.core.application",
-                "dev.programadorthi.routing.core.errors",
-                "dev.programadorthi.routing.core.logging",
-            )
+configure<KoverProjectExtension> {
+    reports {
+        filters {
+            excludes {
+                packages(
+                    "dev.programadorthi.routing.core.application",
+                    "dev.programadorthi.routing.core.errors",
+                    "dev.programadorthi.routing.core.logging",
+                )
+            }
         }
     }
-}*/
+}
