@@ -3,7 +3,6 @@ import org.jetbrains.kotlin.gradle.tasks.KotlinCompile
 plugins {
     id("com.android.library")
     kotlin("android")
-    id("org.jlleitschuh.gradle.ktlint")
     id("org.jetbrains.kotlinx.kover")
     alias(libs.plugins.maven.publish)
 }
@@ -30,8 +29,8 @@ android {
     }
 
     compileOptions {
-        sourceCompatibility = JavaVersion.VERSION_1_8
-        targetCompatibility = JavaVersion.VERSION_1_8
+        sourceCompatibility = JavaVersion.VERSION_11
+        targetCompatibility = JavaVersion.VERSION_11
     }
 
     testOptions {
@@ -43,7 +42,7 @@ android {
 
 tasks.withType<KotlinCompile>().configureEach {
     kotlinOptions {
-        jvmTarget = JavaVersion.VERSION_1_8.toString()
+        jvmTarget = JavaVersion.VERSION_11.toString()
         freeCompilerArgs += listOf("-Xexplicit-api=strict")
     }
 }

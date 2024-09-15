@@ -29,14 +29,14 @@ include(":resources")
 include(":sessions")
 include(":status-pages")
 
-/*include(":integration:android")
+include(":integration:android")
 include(":integration:compose")
 include(":integration:compose-animation")
 include(":integration:javascript")
 include(":integration:kodein")
 include(":integration:koin")
 include(":integration:uikit")
-include(":integration:voyager")*/
+//include(":integration:voyager")
 
 // Samples are disabled by default to avoid sync their.
 //include(":samples:android-activity")

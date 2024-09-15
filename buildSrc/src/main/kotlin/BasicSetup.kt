@@ -1,13 +1,17 @@
+import org.gradle.api.JavaVersion
 import org.gradle.api.Project
+import org.gradle.kotlin.dsl.withType
 import org.jetbrains.kotlin.gradle.dsl.KotlinMultiplatformExtension
+import org.jetbrains.kotlin.gradle.tasks.KotlinCompile
 
 fun Project.applyBasicSetup() {
     configureCodestyle()
     configureTargets()
+    setupJvmTarget()
 
     kotlin {
         explicitApi()
-        jvmToolchain(8)
+        jvmToolchain(11)
 
         setCompilationOptions()
         configureSourceSets()
@@ -38,4 +42,12 @@ fun KotlinMultiplatformExtension.configureSourceSets() {
                 progressiveMode = true
             }
         }
+}
+
+fun Project.setupJvmTarget() {
+    tasks.withType<KotlinCompile> {
+        kotlinOptions {
+            jvmTarget = JavaVersion.VERSION_11.toString()
+        }
+    }
 }
