@@ -4,14 +4,14 @@ plugins {
     kotlin("multiplatform")
     kotlin("plugin.serialization")
     alias(libs.plugins.jetbrains.compose)
-    id("org.jlleitschuh.gradle.ktlint")
+    alias(libs.plugins.compose.compiler)
     id("org.jetbrains.kotlinx.kover")
     alias(libs.plugins.maven.publish)
 }
 
 configureCommon()
 configureJvm()
-setupJvmToolchain()
+setupJvmTarget()
 
 kotlin {
     explicitApi()

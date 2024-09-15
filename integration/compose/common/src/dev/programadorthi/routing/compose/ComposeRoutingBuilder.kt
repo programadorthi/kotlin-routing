@@ -43,7 +43,9 @@ public fun Route.composable(body: @Composable PipelineContext<Unit, ApplicationC
 }
 
 @KtorDsl
-public inline fun <reified T : Any> Route.composable(noinline body: @Composable PipelineContext<Unit, ApplicationCall>.(T) -> Unit): Route {
+public inline fun <reified T : Any> Route.composable(
+    noinline body: @Composable PipelineContext<Unit, ApplicationCall>.(T) -> Unit
+): Route {
     val routing = asRouting ?: error("Your route $this must have a parent Routing")
     return handle<T> { resource ->
         composable(routing = routing, resource = resource) {

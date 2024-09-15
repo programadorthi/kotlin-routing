@@ -36,7 +36,7 @@ include(":integration:javascript")
 include(":integration:kodein")
 include(":integration:koin")
 include(":integration:uikit")
-//include(":integration:voyager")
+include(":integration:voyager")
 
 // Samples are disabled by default to avoid sync their.
 //include(":samples:android-activity")

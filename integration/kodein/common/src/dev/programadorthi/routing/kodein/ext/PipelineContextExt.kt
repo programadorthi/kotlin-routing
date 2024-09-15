@@ -31,8 +31,9 @@ import org.kodein.di.providerOrNull
  * @throws DI.NotFoundException if no factory was found.
  * @throws DI.DependencyLoopException When calling the factory function, if the instance construction triggered a dependency loop.
  */
-public inline fun <reified A : Any, reified T : Any> PipelineContext<*, ApplicationCall>.factory(tag: Any? = null): LazyDelegate<(A) -> T> =
-    closestDI().factory(tag = tag)
+public inline fun <reified A : Any, reified T : Any> PipelineContext<*, ApplicationCall>.factory(
+    tag: Any? = null
+): LazyDelegate<(A) -> T> = closestDI().factory(tag = tag)
 
 /**
  * Gets a factory of `T` for the given argument type, return type and tag, or nul if none is found.
