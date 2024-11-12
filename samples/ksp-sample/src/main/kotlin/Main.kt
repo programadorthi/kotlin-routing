@@ -9,5 +9,7 @@ suspend fun main() {
         configure()
     }
     router.call(uri = "/path")
-    delay(1_000)
+    delay(500)
+    router.call(uri = "/path/1.2/routing")
+    delay(500)
 }
