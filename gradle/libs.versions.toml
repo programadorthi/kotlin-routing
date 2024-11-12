@@ -18,6 +18,7 @@ slf4j = "2.0.4"
 voyager = "1.1.0-beta02"
 kodein = "7.22.0"
 koin = "4.0.0-RC1"
+kotlin-poet = "1.18.1"
 tomlj = "1.1.1"
 
 junit = "4.13.2"
@@ -55,6 +56,8 @@ slf4j-simple = { module = "org.slf4j:slf4j-simple", version.ref = "slf4j" }
 voyager-navigator = { module = "cafe.adriel.voyager:voyager-navigator", version.ref = "voyager" }
 kodein-di = { module = "org.kodein.di:kodein-di", version.ref = "kodein" }
 koin-core = { module = "io.insert-koin:koin-core", version.ref = "koin" }
+kotlin-poet = { module = "com.squareup:kotlinpoet", version.ref = "kotlin-poet" }
+kotlin-poet-ksp = { module = "com.squareup:kotlinpoet-ksp", version.ref = "kotlin-poet" }
 
 tomlj = { module = "org.tomlj:tomlj", version.ref = "tomlj" }
 
