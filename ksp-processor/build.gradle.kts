@@ -10,6 +10,7 @@ kotlin {
     sourceSets {
         jvmMain {
             dependencies {
+                implementation(projects.kspAnnotations)
                 implementation(libs.ksp.api)
             }
         }
