@@ -11,6 +11,7 @@ compose = "1.6.10"
 
 coroutines = "1.8.0"
 kotlin = "2.0.10"
+ksp = "2.0.10-1.0.24"
 ktor = "3.0.0-beta-2"
 serialization = "1.6.1" # Do not upgrade, 1.6.2 breaks maven publishing!
 slf4j = "2.0.4"
@@ -42,6 +43,7 @@ androidx-activity = { module = "androidx.activity:activity", version.ref = "andr
 androidx-startup = { module = "androidx.startup:startup-runtime", version.ref = "androidx-startup" }
 
 coroutines-core = { module = "org.jetbrains.kotlinx:kotlinx-coroutines-core", version.ref = "coroutines" }
+ksp-api = { module = "com.google.devtools.ksp:symbol-processing-api", version.ref = "ksp" }
 ktor-events = { module = "io.ktor:ktor-events", version.ref = "ktor" }
 ktor-http = { module = "io.ktor:ktor-http", version.ref = "ktor" }
 ktor-resources = { module = "io.ktor:ktor-resources", version.ref = "ktor" }
@@ -85,3 +87,4 @@ compose-compiler = { id = "org.jetbrains.kotlin.plugin.compose", version.ref = "
 jetbrains-compose = { id = "org.jetbrains.compose", version.ref = "compose" }
 kotlin-serialization = { id = "org.jetbrains.kotlin.plugin.serialization", version.ref = "kotlin"}
 maven-publish = { id = "com.vanniktech.maven.publish", version.ref = "plugin-maven"}
+ksp = { id = "com.google.devtools.ksp", version.ref = "ksp"}
