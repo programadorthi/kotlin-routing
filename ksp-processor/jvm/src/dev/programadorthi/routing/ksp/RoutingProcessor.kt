@@ -75,6 +75,14 @@ private class RoutingProcessor(
                 val routeAnnotation = checkNotNull(func.getAnnotationsByType(Route::class).firstOrNull()) {
                     "Invalid state because a @Route was not found to '$qualifiedName'"
                 }
+                val isRegexRoute = routeAnnotation.regex.isNotBlank()
+                check(isRegexRoute || routeAnnotation.path.isNotBlank()) {
+                    "Using @Route a path or a regex is required"
+                }
+                check(!isRegexRoute || routeAnnotation.name.isBlank()) {
+                    "@Route using regex can't be named"
+                }
+
                 val parameters = mutableListOf<String>()
 
                 for (param in func.parameters) {
@@ -88,16 +96,17 @@ private class RoutingProcessor(
                         ?.value
                         ?: paramName
                     val paramType = param.type.resolve()
-                    if (routeAnnotation.path.contains("{$customName...}")) {
+                    if (!isRegexRoute && routeAnnotation.path.contains("{$customName...}")) {
                         val listDeclaration = checkNotNull(resolver.getClassDeclarationByName<List<*>>()) {
                             "Class declaration not found to List<String>?"
                         }
                         check(paramType.declaration == listDeclaration) {
                             "Tailcard parameter must be a List<String>?"
                         }
-                        val genericArgument = checkNotNull(param.type.element?.typeArguments?.firstOrNull()?.type?.resolve()) {
-                            "No <String> type found at tailcard parameter"
-                        }
+                        val genericArgument =
+                            checkNotNull(param.type.element?.typeArguments?.firstOrNull()?.type?.resolve()) {
+                                "No <String> type found at tailcard parameter"
+                            }
                         check(genericArgument == resolver.builtIns.stringType) {
                             "Tailcard list items type must be non nullable String"
                         }
@@ -108,9 +117,10 @@ private class RoutingProcessor(
                         continue
                     }
 
-                    val isOptional = routeAnnotation.path.contains("{$customName?}")
-                    val isRequired = routeAnnotation.path.contains("{$customName}")
-                    check(isOptional || isRequired) {
+                    val isRegex = isRegexRoute && routeAnnotation.regex.contains("(?<$customName>")
+                    val isOptional = !isRegex && routeAnnotation.path.contains("{$customName?}")
+                    val isRequired = !isRegex && routeAnnotation.path.contains("{$customName}")
+                    check(isRegex || isOptional || isRequired) {
                         "'$qualifiedName' has parameter '$paramName' that is not declared as path parameter {$customName}"
                     }
                     val parsed = """$paramName = %M.parameters["$customName"]"""
@@ -127,9 +137,13 @@ private class RoutingProcessor(
                     else -> """name = "${routeAnnotation.name}""""
                 }
 
-                configureSpec
-                    .beginControlFlow("""%M(path = "${routeAnnotation.path}", $named)""", handle)
-                    .addStatement("""$qualifiedName$params""", *calls)
+                with(configureSpec) {
+                    if (isRegexRoute) {
+                        beginControlFlow("""%M(%T(%S))""", handle, Regex::class, routeAnnotation.regex)
+                    } else {
+                        beginControlFlow("""%M(path = %S, $named)""", handle, routeAnnotation.path)
+                    }
+                }.addStatement("""$qualifiedName$params""", *calls)
                     .endControlFlow()
             }
 

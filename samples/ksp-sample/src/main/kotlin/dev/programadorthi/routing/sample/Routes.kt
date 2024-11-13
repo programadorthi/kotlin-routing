@@ -33,6 +33,16 @@ fun tailcard(param: List<String>?) {
     println(">>>> Tailcard params: $param")
 }
 
+@Route(regex = ".+/hello")
+fun regex1() {
+    println(">>>> Routing with regex")
+}
+
+@Route(regex = "/(?<number>\\d+)")
+fun regex2(number: Int) {
+    println(">>>> Routing with regex to number: $number")
+}
+
 class Routes {
     //@Route("/path")
     fun run() {

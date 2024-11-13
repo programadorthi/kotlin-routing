@@ -27,4 +27,8 @@ suspend fun main() {
     delay(500)
     router.call(uri = "/tailcard/p1/p2/p3/p4")
     delay(500)
+    router.call(uri = "/foo/hello") // regex1
+    delay(500)
+    router.call(uri = "/456") // regex2
+    delay(500)
 }
