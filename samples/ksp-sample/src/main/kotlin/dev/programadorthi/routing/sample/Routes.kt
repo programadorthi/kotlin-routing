@@ -23,6 +23,11 @@ fun custom(@Path("random") value: String) {
     println(">>>> value: $value")
 }
 
+@Route(path = "/optional/{id?}")
+fun optional(id: Char?) {
+    println(">>>> Optional ID: $id")
+}
+
 class Routes {
     //@Route("/path")
     fun run() {

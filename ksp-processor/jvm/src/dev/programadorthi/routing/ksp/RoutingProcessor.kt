@@ -13,6 +13,7 @@ import com.google.devtools.ksp.processing.SymbolProcessorProvider
 import com.google.devtools.ksp.symbol.FunctionKind
 import com.google.devtools.ksp.symbol.KSAnnotated
 import com.google.devtools.ksp.symbol.KSFunctionDeclaration
+import com.google.devtools.ksp.symbol.KSType
 import com.google.devtools.ksp.symbol.Visibility
 import com.squareup.kotlinpoet.FileSpec
 import com.squareup.kotlinpoet.FunSpec
@@ -85,22 +86,16 @@ private class RoutingProcessor(
                         .firstOrNull()
                         ?.value
                         ?: paramName
-                    check(routeAnnotation.path.contains("{$customName}")) {
+                    val isOptional = routeAnnotation.path.contains("{$customName?}")
+                    val isRequired = routeAnnotation.path.contains("{$customName}")
+                    check(isOptional || isRequired) {
                         "'$qualifiedName' has parameter '$paramName' that is not declared as path parameter {$customName}"
                     }
-
-                    val parsed = """$paramName = %M.parameters["$customName"]!!"""
-                    parameters += when (param.type.resolve()) {
-                        resolver.builtIns.booleanType -> "$parsed.toBoolean()"
-                        resolver.builtIns.byteType -> "$parsed.toByte()"
-                        resolver.builtIns.charType -> "$parsed[0]"
-                        resolver.builtIns.doubleType -> "$parsed.toDouble()"
-                        resolver.builtIns.floatType -> "$parsed.toFloat()"
-                        resolver.builtIns.intType -> "$parsed.toInt()"
-                        resolver.builtIns.longType -> "$parsed.toInt()"
-                        resolver.builtIns.shortType -> "$parsed.toInt()"
-                        resolver.builtIns.stringType -> parsed
-                        else -> error("Path parameters must be primitive type only")
+                    val paramType = param.type.resolve()
+                    val parsed = """$paramName = %M.parameters["$customName"]"""
+                    parameters += when {
+                        isOptional -> optionalParse(paramType, resolver, parsed)
+                        else -> requiredParse(paramType, resolver, parsed)
                     }
                 }
 
@@ -131,6 +126,40 @@ private class RoutingProcessor(
             )
 
         return emptyList()
+    }
+
+    private fun optionalParse(
+        paramType: KSType,
+        resolver: Resolver,
+        parsed: String
+    ) = when (paramType) {
+        resolver.builtIns.booleanType.makeNullable() -> "$parsed?.toBooleanOrNull()"
+        resolver.builtIns.byteType.makeNullable() -> "$parsed?.toByteOrNull()"
+        resolver.builtIns.charType.makeNullable() -> "$parsed?.firstOrNull()"
+        resolver.builtIns.doubleType.makeNullable() -> "$parsed?.toDoubleOrNull()"
+        resolver.builtIns.floatType.makeNullable() -> "$parsed?.toFloatOrNull()"
+        resolver.builtIns.intType.makeNullable() -> "$parsed?.toIntOrNull()"
+        resolver.builtIns.longType.makeNullable() -> "$parsed?.toLongOrNull()"
+        resolver.builtIns.shortType.makeNullable() -> "$parsed?.toShortOrNull()"
+        resolver.builtIns.stringType.makeNullable() -> parsed
+        else -> error("Path parameters must be primitive type only")
+    }
+
+    private fun requiredParse(
+        paramType: KSType,
+        resolver: Resolver,
+        parsed: String
+    ) = when (paramType) {
+        resolver.builtIns.booleanType -> "$parsed!!.toBoolean()"
+        resolver.builtIns.byteType -> "$parsed!!.toByte()"
+        resolver.builtIns.charType -> "$parsed!!.first()"
+        resolver.builtIns.doubleType -> "$parsed!!.toDouble()"
+        resolver.builtIns.floatType -> "$parsed!!.toFloat()"
+        resolver.builtIns.intType -> "$parsed!!.toInt()"
+        resolver.builtIns.longType -> "$parsed!!.toLong()"
+        resolver.builtIns.shortType -> "$parsed!!.toShort()"
+        resolver.builtIns.stringType -> "$parsed!!"
+        else -> optionalParse(paramType, resolver, parsed)
     }
 
 }

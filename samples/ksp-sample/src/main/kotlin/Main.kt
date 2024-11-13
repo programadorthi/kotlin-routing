@@ -19,4 +19,8 @@ suspend fun main() {
     //router.call(name = "custom", parameters = parametersOf("random", "abc123"))
     router.call(uri = "/custom/${Random.Default.nextInt()}")
     delay(500)
+    router.call(uri = "/optional")
+    delay(500)
+    router.call(uri = "/optional/ABC")
+    delay(500)
 }
