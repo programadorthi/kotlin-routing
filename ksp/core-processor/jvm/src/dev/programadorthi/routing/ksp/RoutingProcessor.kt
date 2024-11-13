@@ -7,7 +7,6 @@ import com.google.devtools.ksp.getVisibility
 import com.google.devtools.ksp.processing.CodeGenerator
 import com.google.devtools.ksp.processing.Dependencies
 import com.google.devtools.ksp.processing.KSBuiltIns
-import com.google.devtools.ksp.processing.KSPLogger
 import com.google.devtools.ksp.processing.Resolver
 import com.google.devtools.ksp.processing.SymbolProcessor
 import com.google.devtools.ksp.processing.SymbolProcessorEnvironment
@@ -31,16 +30,12 @@ import dev.programadorthi.routing.annotation.Route
 
 public class RoutingProcessorProvider : SymbolProcessorProvider {
     override fun create(environment: SymbolProcessorEnvironment): SymbolProcessor {
-        return RoutingProcessor(
-            codeGenerator = environment.codeGenerator,
-            logger = environment.logger
-        )
+        return RoutingProcessor(codeGenerator = environment.codeGenerator)
     }
 }
 
 private class RoutingProcessor(
     private val codeGenerator: CodeGenerator,
-    private val logger: KSPLogger
 ) : SymbolProcessor {
     private var invoked = false
 
@@ -99,11 +94,23 @@ private class RoutingProcessor(
         if (isRegexRoute) {
             if (routeAnnotation.method.isBlank()) {
                 configureSpec
-                    .beginControlFlow("%M(path = %T(%S))", handle, Regex::class, routeAnnotation.regex)
+                    .beginControlFlow(
+                        "%M(path = %T(%S))",
+                        handle,
+                        Regex::class,
+                        routeAnnotation.regex
+                    )
             } else {
-                val template = """%M(path = %T(%S), method = %M(value = "${routeAnnotation.method}"))"""
+                val template =
+                    """%M(path = %T(%S), method = %M(value = "${routeAnnotation.method}"))"""
                 configureSpec
-                    .beginControlFlow(template, handle, Regex::class, routeAnnotation.regex, routeMethod)
+                    .beginControlFlow(
+                        template,
+                        handle,
+                        Regex::class,
+                        routeAnnotation.regex,
+                        routeMethod
+                    )
             }
         } else {
             val named = when {
@@ -114,7 +121,8 @@ private class RoutingProcessor(
                 configureSpec
                     .beginControlFlow("%M(path = %S, $named)", handle, routeAnnotation.path)
             } else {
-                val template = """%M(path = %S, $named, method = %M(value = "${routeAnnotation.method}"))"""
+                val template =
+                    """%M(path = %S, $named, method = %M(value = "${routeAnnotation.method}"))"""
                 configureSpec
                     .beginControlFlow(template, handle, routeAnnotation.path, routeMethod)
             }
@@ -206,7 +214,14 @@ private class RoutingProcessor(
             else -> resolver.builtIns.requiredParse(type.resolve())
         }
         when {
-            hasZeroOrOneParameter -> builder.add(PATH_TEMPLATE, paramName, call, customName, literal)
+            hasZeroOrOneParameter -> builder.add(
+                PATH_TEMPLATE,
+                paramName,
+                call,
+                customName,
+                literal
+            )
+
             else -> builder.addStatement(PATH_TEMPLATE, paramName, call, customName, "$literal,")
         }
     }
@@ -233,9 +248,10 @@ private class RoutingProcessor(
         check(paramType.declaration == listDeclaration) {
             "TailCard parameter must be a List<String>?"
         }
-        val genericArgument = checkNotNull(type.element?.typeArguments?.firstOrNull()?.type?.resolve()) {
-            "No <String> type found at tailcard parameter"
-        }
+        val genericArgument =
+            checkNotNull(type.element?.typeArguments?.firstOrNull()?.type?.resolve()) {
+                "No <String> type found at tailcard parameter"
+            }
         check(genericArgument == resolver.builtIns.stringType) {
             "TailCard list item type must be non nullable String"
         }
@@ -318,7 +334,8 @@ private class RoutingProcessor(
         private val routeMethod = MemberName("dev.programadorthi.routing.core", "RouteMethod")
         private val call = MemberName("dev.programadorthi.routing.core.application", "call")
         private val receive = MemberName("dev.programadorthi.routing.core.application", "receive")
-        private val receiveNullable = MemberName("dev.programadorthi.routing.core.application", "receiveNullable")
+        private val receiveNullable =
+            MemberName("dev.programadorthi.routing.core.application", "receiveNullable")
 
         private const val BODY_TEMPLATE = "%L = %M.%M()%L"
         private const val FUN_INVOKE_END = ")"

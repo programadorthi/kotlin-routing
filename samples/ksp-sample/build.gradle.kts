@@ -5,7 +5,7 @@ plugins {
 
 dependencies {
     implementation(projects.core)
-    implementation(projects.kspAnnotations)
-    implementation(projects.kspProcessor)
-    ksp(projects.kspProcessor)
+    implementation(projects.ksp.coreAnnotations)
+    implementation(projects.ksp.coreProcessor)
+    ksp(projects.ksp.coreProcessor)
 }
