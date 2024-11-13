@@ -1,5 +1,6 @@
 package dev.programadorthi.routing.sample
 
+import dev.programadorthi.routing.annotation.Path
 import dev.programadorthi.routing.annotation.Route
 
 @Route("/path")
@@ -15,6 +16,11 @@ fun execute(id: Double) {
 @Route(path = "/named/{name}", name = "named")
 fun named(name: String) {
     println(">>>> name: $name")
+}
+
+@Route(path = "/custom/{random}", name = "custom")
+fun custom(@Path("random") value: String) {
+    println(">>>> value: $value")
 }
 
 class Routes {

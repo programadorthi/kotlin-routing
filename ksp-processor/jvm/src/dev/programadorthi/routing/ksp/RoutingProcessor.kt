@@ -1,7 +1,8 @@
 package dev.programadorthi.routing.ksp
 
+import com.google.devtools.ksp.KspExperimental
+import com.google.devtools.ksp.getAnnotationsByType
 import com.google.devtools.ksp.getVisibility
-import com.google.devtools.ksp.isLocal
 import com.google.devtools.ksp.processing.CodeGenerator
 import com.google.devtools.ksp.processing.Dependencies
 import com.google.devtools.ksp.processing.KSPLogger
@@ -11,15 +12,14 @@ import com.google.devtools.ksp.processing.SymbolProcessorEnvironment
 import com.google.devtools.ksp.processing.SymbolProcessorProvider
 import com.google.devtools.ksp.symbol.FunctionKind
 import com.google.devtools.ksp.symbol.KSAnnotated
-import com.google.devtools.ksp.symbol.KSAnnotation
 import com.google.devtools.ksp.symbol.KSFunctionDeclaration
-import com.google.devtools.ksp.symbol.KSTypeReference
 import com.google.devtools.ksp.symbol.Visibility
 import com.squareup.kotlinpoet.FileSpec
 import com.squareup.kotlinpoet.FunSpec
 import com.squareup.kotlinpoet.KModifier
 import com.squareup.kotlinpoet.MemberName
 import com.squareup.kotlinpoet.ksp.writeTo
+import dev.programadorthi.routing.annotation.Path
 import dev.programadorthi.routing.annotation.Route
 
 public class RoutingProcessorProvider : SymbolProcessorProvider {
@@ -37,6 +37,7 @@ private class RoutingProcessor(
 ) : SymbolProcessor {
     private var invoked = false
 
+    @OptIn(KspExperimental::class)
     override fun process(resolver: Resolver): List<KSAnnotated> {
         if (invoked) {
             return emptyList()
@@ -56,7 +57,7 @@ private class RoutingProcessor(
             .filterIsInstance<KSFunctionDeclaration>()
             .forEach { func ->
                 val qualifiedName = func.qualifiedName?.asString()
-                
+
                 check(func.functionKind == FunctionKind.TOP_LEVEL) {
                     "$qualifiedName fun must be a top level fun"
                 }
@@ -69,21 +70,26 @@ private class RoutingProcessor(
                     "Top level fun '$qualifiedName' must have a package"
                 }
 
-                val annotation = func.getAnnotationByName("Route")
-                val path = checkNotNull(annotation?.getArgumentValueByName<String>("path")) {
-                    "No path provided to @Route annotation at '$qualifiedName'"
+                val routeAnnotation = checkNotNull(func.getAnnotationsByType(Route::class).firstOrNull()) {
+                    "Invalid state because a @Route was not found to '$qualifiedName'"
                 }
-                val name = annotation?.getArgumentValueByName<String>("name")
-
                 val parameters = mutableListOf<String>()
 
                 for (param in func.parameters) {
+                    check(param.isVararg.not()) {
+                        "Vararg is not supported as fun parameter"
+                    }
                     val paramName = param.name?.asString()
-                    check(path.contains("{$paramName}")) {
-                        "'$qualifiedName' has parameter '$paramName' that is not declared as path parameter {$paramName}"
+                    val customName = param
+                        .getAnnotationsByType(Path::class)
+                        .firstOrNull()
+                        ?.value
+                        ?: paramName
+                    check(routeAnnotation.path.contains("{$customName}")) {
+                        "'$qualifiedName' has parameter '$paramName' that is not declared as path parameter {$customName}"
                     }
 
-                    val parsed = """$paramName = %M.parameters["$paramName"]!!"""
+                    val parsed = """$paramName = %M.parameters["$customName"]!!"""
                     parameters += when (param.type.resolve()) {
                         resolver.builtIns.booleanType -> "$parsed.toBoolean()"
                         resolver.builtIns.byteType -> "$parsed.toByte()"
@@ -101,12 +107,12 @@ private class RoutingProcessor(
                 val calls = Array(size = parameters.size) { call }
                 val params = parameters.joinToString(prefix = "(", postfix = ")") { "\n$it" }
                 val named = when {
-                    name.isNullOrBlank() -> "name = null"
-                    else -> """name = "$name""""
+                    routeAnnotation.name.isBlank() -> "name = null"
+                    else -> """name = "${routeAnnotation.name}""""
                 }
 
                 configureSpec
-                    .beginControlFlow("""%M(path = "$path", $named)""", handle)
+                    .beginControlFlow("""%M(path = "${routeAnnotation.path}", $named)""", handle)
                     .addStatement("""$qualifiedName$params""", *calls)
                     .endControlFlow()
             }
@@ -128,9 +134,3 @@ private class RoutingProcessor(
     }
 
 }
-
-private fun KSFunctionDeclaration.getAnnotationByName(name: String): KSAnnotation? =
-    annotations.firstOrNull { it.shortName.asString() == name }
-
-private fun <T> KSAnnotation.getArgumentValueByName(name: String): T? =
-    arguments.firstOrNull { it.name?.asString() == name }?.value as? T
