@@ -70,9 +70,10 @@ private class RoutingProcessor(
                 }
 
                 val annotation = func.getAnnotationByName("Route")
-                val path = checkNotNull(annotation?.getArgumentValueByName<String>("value")) {
+                val path = checkNotNull(annotation?.getArgumentValueByName<String>("path")) {
                     "No path provided to @Route annotation at '$qualifiedName'"
                 }
+                val name = annotation?.getArgumentValueByName<String>("name")
 
                 val parameters = mutableListOf<String>()
 
@@ -98,11 +99,14 @@ private class RoutingProcessor(
                 }
 
                 val calls = Array(size = parameters.size) { call }
-                val params = parameters
-                    .joinToString(prefix = "(", postfix = ")") { "\n$it" }
+                val params = parameters.joinToString(prefix = "(", postfix = ")") { "\n$it" }
+                val named = when {
+                    name.isNullOrBlank() -> "name = null"
+                    else -> """name = "$name""""
+                }
 
                 configureSpec
-                    .beginControlFlow("""%M(path = "$path")""", handle)
+                    .beginControlFlow("""%M(path = "$path", $named)""", handle)
                     .addStatement("""$qualifiedName$params""", *calls)
                     .endControlFlow()
             }

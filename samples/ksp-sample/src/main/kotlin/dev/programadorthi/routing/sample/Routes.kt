@@ -7,9 +7,14 @@ fun execute() {
     println(">>>> I'm routing")
 }
 
-@Route("/path/{id}/{name}")
-fun execute(id: Double, name: String) {
-    println(">>>> ID: $id, name: $name")
+@Route(path = "/path/{id}")
+fun execute(id: Double) {
+    println(">>>> ID: $id")
+}
+
+@Route(path = "/named/{name}", name = "named")
+fun named(name: String) {
+    println(">>>> name: $name")
 }
 
 class Routes {
