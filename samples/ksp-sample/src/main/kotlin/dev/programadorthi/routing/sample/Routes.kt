@@ -3,6 +3,7 @@ package dev.programadorthi.routing.sample
 import dev.programadorthi.routing.annotation.Body
 import dev.programadorthi.routing.annotation.Path
 import dev.programadorthi.routing.annotation.Route
+import dev.programadorthi.routing.core.RouteMethod
 
 data class User(
     val id: Int,
@@ -57,6 +58,16 @@ fun withBody(@Body user: User) {
 @Route("/with-null-body")
 fun withNullBody(@Body user: User?) {
     println(">>>> null body $user")
+}
+
+@Route("/path", method = "PUSH")
+fun byPushMethod() {
+    println(">>>> I'm pushing a route")
+}
+
+@Route("/path/{part1}/{part2}")
+fun multiParameters(part1: Int, part2: String) {
+    println(">>>> Parts: $part1 and $part2")
 }
 
 class Routes {

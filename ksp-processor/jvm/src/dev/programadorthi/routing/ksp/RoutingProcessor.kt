@@ -6,6 +6,7 @@ import com.google.devtools.ksp.getClassDeclarationByName
 import com.google.devtools.ksp.getVisibility
 import com.google.devtools.ksp.processing.CodeGenerator
 import com.google.devtools.ksp.processing.Dependencies
+import com.google.devtools.ksp.processing.KSBuiltIns
 import com.google.devtools.ksp.processing.KSPLogger
 import com.google.devtools.ksp.processing.Resolver
 import com.google.devtools.ksp.processing.SymbolProcessor
@@ -13,8 +14,10 @@ import com.google.devtools.ksp.processing.SymbolProcessorEnvironment
 import com.google.devtools.ksp.processing.SymbolProcessorProvider
 import com.google.devtools.ksp.symbol.FunctionKind
 import com.google.devtools.ksp.symbol.KSAnnotated
+import com.google.devtools.ksp.symbol.KSFile
 import com.google.devtools.ksp.symbol.KSFunctionDeclaration
 import com.google.devtools.ksp.symbol.KSType
+import com.google.devtools.ksp.symbol.KSValueParameter
 import com.google.devtools.ksp.symbol.Visibility
 import com.squareup.kotlinpoet.CodeBlock
 import com.squareup.kotlinpoet.FileSpec
@@ -48,11 +51,7 @@ private class RoutingProcessor(
         }
         invoked = true
 
-        val call = MemberName("dev.programadorthi.routing.core.application", "call")
-        val receive = MemberName("dev.programadorthi.routing.core.application", "receive")
-        val receiveNullable = MemberName("dev.programadorthi.routing.core.application", "receiveNullable")
-        val handle = MemberName("dev.programadorthi.routing.core", "handle")
-
+        val ksFiles = mutableSetOf<KSFile>()
         val configureSpec = FunSpec
             .builder("configure")
             .addModifiers(KModifier.INTERNAL)
@@ -63,176 +62,269 @@ private class RoutingProcessor(
             .filterIsInstance<KSFunctionDeclaration>()
             .forEach { func ->
                 val qualifiedName = func.qualifiedName?.asString()
-
                 check(func.functionKind == FunctionKind.TOP_LEVEL) {
                     "$qualifiedName fun must be a top level fun"
                 }
-
                 check(func.getVisibility() != Visibility.PRIVATE) {
                     "$qualifiedName fun must not be private"
                 }
-
-                val routeAnnotation = checkNotNull(func.getAnnotationsByType(Route::class).firstOrNull()) {
-                    "Invalid state because a @Route was not found to '$qualifiedName'"
-                }
-                val isRegexRoute = routeAnnotation.regex.isNotBlank()
-                check(isRegexRoute || routeAnnotation.path.isNotBlank()) {
-                    "Using @Route a path or a regex is required"
-                }
-                check(!isRegexRoute || routeAnnotation.name.isBlank()) {
-                    "@Route using regex can't be named"
-                }
-
-                val named = when {
-                    routeAnnotation.name.isBlank() -> "name = null"
-                    else -> """name = "${routeAnnotation.name}""""
-                }
-                if (isRegexRoute) {
-                    configureSpec.beginControlFlow("%M(%T(%S))", handle, Regex::class, routeAnnotation.regex)
-                } else {
-                    configureSpec.beginControlFlow("%M(path = %S, $named)", handle, routeAnnotation.path)
-                }
-
-                val funcMember = MemberName(func.packageName.asString(), func.simpleName.asString())
-                val funcBuilder = CodeBlock.builder()
-                val isMultipleParameters = func.parameters.size > 1
-                if (isMultipleParameters) {
-                    funcBuilder
-                        .addStatement("%M(", funcMember)
-                        .indent()
-                } else {
-                    funcBuilder.add("%M(", funcMember)
-                }
-
-                for (param in func.parameters) {
-                    check(param.isVararg.not()) {
-                        "Vararg is not supported as fun parameter"
-                    }
-                    val paramName = param.name?.asString()
-                    val paramType = param.type.resolve()
-                    val body = param
-                        .getAnnotationsByType(Body::class)
-                        .firstOrNull()
-                    if (body != null) {
-                        val member = when {
-                            paramType.isMarkedNullable -> receiveNullable
-                            else -> receive
-                        }
-                        when {
-                            isMultipleParameters -> funcBuilder.addStatement("$paramName = %M.%M(),", call, member)
-                            else -> funcBuilder.add("$paramName = %M.%M()", call, member)
-                        }
-                        continue
-                    }
-
-                    val customName = param
-                        .getAnnotationsByType(Path::class)
-                        .firstOrNull()
-                        ?.value
-                        ?: paramName
-                    if (!isRegexRoute && routeAnnotation.path.contains("{$customName...}")) {
-                        val listDeclaration = checkNotNull(resolver.getClassDeclarationByName<List<*>>()) {
-                            "Class declaration not found to List<String>?"
-                        }
-                        check(paramType.declaration == listDeclaration) {
-                            "Tailcard parameter must be a List<String>?"
-                        }
-                        val genericArgument =
-                            checkNotNull(param.type.element?.typeArguments?.firstOrNull()?.type?.resolve()) {
-                                "No <String> type found at tailcard parameter"
-                            }
-                        check(genericArgument == resolver.builtIns.stringType) {
-                            "Tailcard list items type must be non nullable String"
-                        }
-                        check(paramType.isMarkedNullable) {
-                            "Tailcard list must be nullable as List<String>?"
-                        }
-
-                        when {
-                            isMultipleParameters -> funcBuilder.addStatement("""$paramName = %M.parameters.getAll("$customName"),""", call)
-                            else -> funcBuilder.add("""$paramName = %M.parameters.getAll("$customName")""", call)
-                        }
-                        continue
-                    }
-
-                    val isRegex = isRegexRoute && routeAnnotation.regex.contains("(?<$customName>")
-                    val isOptional = !isRegex && routeAnnotation.path.contains("{$customName?}")
-                    val isRequired = !isRegex && routeAnnotation.path.contains("{$customName}")
-                    check(isRegex || isOptional || isRequired) {
-                        "'$qualifiedName' has parameter '$paramName' that is not declared as path parameter {$customName}"
-                    }
-                    val parsed = """$paramName = %M.parameters["$customName"]"""
-                    val statement = when {
-                        isOptional -> optionalParse(paramType, resolver, parsed)
-                        else -> requiredParse(paramType, resolver, parsed)
-                    }
-                    when {
-                        isMultipleParameters -> funcBuilder.addStatement("$statement,", call)
-                        else -> funcBuilder.add(statement, call)
-                    }
-                }
-
-                if (isMultipleParameters) {
-                    funcBuilder
-                        .unindent()
-                        .addStatement(")")
-                } else {
-                    funcBuilder.addStatement(")")
-                }
-
-                configureSpec
-                    .addCode(funcBuilder.build())
-                    .endControlFlow()
+                func.containingFile?.let(ksFiles::add)
+                func.wrapFunctionWithHandle(qualifiedName, configureSpec, resolver)
             }
 
+        configureSpec
+            .build()
+            .generateFile(ksFiles = ksFiles)
+
+        return emptyList()
+    }
+
+    @OptIn(KspExperimental::class)
+    private fun KSFunctionDeclaration.wrapFunctionWithHandle(
+        qualifiedName: String?,
+        configureSpec: FunSpec.Builder,
+        resolver: Resolver
+    ) {
+        val routeAnnotation = checkNotNull(getAnnotationsByType(Route::class).firstOrNull()) {
+            "Invalid state because a @Route was not found to '$qualifiedName'"
+        }
+        val isRegexRoute = routeAnnotation.regex.isNotBlank()
+        check(isRegexRoute || routeAnnotation.path.isNotBlank()) {
+            "Using @Route a path or a regex is required"
+        }
+        check(!isRegexRoute || routeAnnotation.name.isBlank()) {
+            "@Route with regex can't be named"
+        }
+
+        if (isRegexRoute) {
+            if (routeAnnotation.method.isBlank()) {
+                configureSpec
+                    .beginControlFlow("%M(path = %T(%S))", handle, Regex::class, routeAnnotation.regex)
+            } else {
+                val template = """%M(path = %T(%S), method = %M(value = "${routeAnnotation.method}"))"""
+                configureSpec
+                    .beginControlFlow(template, handle, Regex::class, routeAnnotation.regex, routeMethod)
+            }
+        } else {
+            val named = when {
+                routeAnnotation.name.isBlank() -> "name = null"
+                else -> """name = "${routeAnnotation.name}""""
+            }
+            if (routeAnnotation.method.isBlank()) {
+                configureSpec
+                    .beginControlFlow("%M(path = %S, $named)", handle, routeAnnotation.path)
+            } else {
+                val template = """%M(path = %S, $named, method = %M(value = "${routeAnnotation.method}"))"""
+                configureSpec
+                    .beginControlFlow(template, handle, routeAnnotation.path, routeMethod)
+            }
+        }
+
+        val codeBlock = generateHandleBody(isRegexRoute, routeAnnotation, resolver, qualifiedName)
+
+        configureSpec
+            .addCode(codeBlock)
+            .endControlFlow()
+    }
+
+    @OptIn(KspExperimental::class)
+    private fun KSFunctionDeclaration.generateHandleBody(
+        isRegexRoute: Boolean,
+        routeAnnotation: Route,
+        resolver: Resolver,
+        qualifiedName: String?
+    ): CodeBlock {
+        val funcMember = MemberName(packageName.asString(), simpleName.asString())
+        val funcBuilder = CodeBlock.builder()
+        val hasZeroOrOneParameter = parameters.size < 2
+        if (hasZeroOrOneParameter) {
+            funcBuilder.add(FUN_INVOKE_START, funcMember)
+        } else {
+            funcBuilder
+                .addStatement(FUN_INVOKE_START, funcMember)
+                .indent()
+        }
+
+        for (param in parameters) {
+            check(param.isVararg.not()) {
+                "Vararg is not supported as fun parameter"
+            }
+            var applied = param.tryApplyBody(hasZeroOrOneParameter, funcBuilder)
+            if (!isRegexRoute && !applied) {
+                applied = param.tryApplyTailCard(
+                    routePath = routeAnnotation.path,
+                    resolver = resolver,
+                    hasZeroOrOneParameter = hasZeroOrOneParameter,
+                    builder = funcBuilder,
+                )
+            }
+            if (!applied) {
+                param.tryApplyPath(
+                    isRegexRoute = isRegexRoute,
+                    routeAnnotation = routeAnnotation,
+                    qualifiedName = qualifiedName,
+                    resolver = resolver,
+                    hasZeroOrOneParameter = hasZeroOrOneParameter,
+                    builder = funcBuilder,
+                )
+            }
+        }
+
+        if (hasZeroOrOneParameter) {
+            funcBuilder.addStatement(FUN_INVOKE_END)
+        } else {
+            funcBuilder
+                .unindent()
+                .addStatement(FUN_INVOKE_END)
+        }
+
+        return funcBuilder.build()
+    }
+
+    @OptIn(KspExperimental::class)
+    private fun KSValueParameter.tryApplyPath(
+        isRegexRoute: Boolean,
+        routeAnnotation: Route,
+        qualifiedName: String?,
+        resolver: Resolver,
+        hasZeroOrOneParameter: Boolean,
+        builder: CodeBlock.Builder
+    ) {
+        val paramName = name?.asString()
+        val customName = getAnnotationsByType(Path::class)
+            .firstOrNull()
+            ?.value
+            ?: paramName
+        val isRegex = isRegexRoute && routeAnnotation.regex.contains("(?<$customName>")
+        val isOptional = !isRegex && routeAnnotation.path.contains("{$customName?}")
+        val isRequired = !isRegex && routeAnnotation.path.contains("{$customName}")
+        check(isRegex || isOptional || isRequired) {
+            "'$qualifiedName' has parameter '$paramName' that is not declared as path parameter {$customName}"
+        }
+        val literal = when {
+            isOptional -> resolver.builtIns.optionalParse(type.resolve())
+            else -> resolver.builtIns.requiredParse(type.resolve())
+        }
+        when {
+            hasZeroOrOneParameter -> builder.add(PATH_TEMPLATE, paramName, call, customName, literal)
+            else -> builder.addStatement(PATH_TEMPLATE, paramName, call, customName, "$literal,")
+        }
+    }
+
+    @OptIn(KspExperimental::class)
+    private fun KSValueParameter.tryApplyTailCard(
+        routePath: String,
+        resolver: Resolver,
+        hasZeroOrOneParameter: Boolean,
+        builder: CodeBlock.Builder,
+    ): Boolean {
+        val paramName = name?.asString()
+        val customName = getAnnotationsByType(Path::class)
+            .firstOrNull()
+            ?.value
+            ?: paramName
+        if (routePath.contains("{$customName...}").not()) {
+            return false
+        }
+        val listDeclaration = checkNotNull(resolver.getClassDeclarationByName<List<*>>()) {
+            "Class declaration not found to List<String>?"
+        }
+        val paramType = type.resolve()
+        check(paramType.declaration == listDeclaration) {
+            "TailCard parameter must be a List<String>?"
+        }
+        val genericArgument = checkNotNull(type.element?.typeArguments?.firstOrNull()?.type?.resolve()) {
+            "No <String> type found at tailcard parameter"
+        }
+        check(genericArgument == resolver.builtIns.stringType) {
+            "TailCard list item type must be non nullable String"
+        }
+        check(paramType.isMarkedNullable) {
+            "TailCard list must be nullable as List<String>?"
+        }
+
+        when {
+            hasZeroOrOneParameter -> builder.add(TAILCARD_TEMPLATE, paramName, call, customName, "")
+            else -> builder.addStatement(TAILCARD_TEMPLATE, paramName, call, customName, ",")
+        }
+
+        return true
+    }
+
+    @OptIn(KspExperimental::class)
+    private fun KSValueParameter.tryApplyBody(
+        hasZeroOrOneParameter: Boolean,
+        builder: CodeBlock.Builder,
+    ): Boolean {
+        if (getAnnotationsByType(Body::class).none()) {
+            return false
+        }
+        val paramName = name?.asString()
+        val paramType = type.resolve()
+        val member = when {
+            paramType.isMarkedNullable -> receiveNullable
+            else -> receive
+        }
+        when {
+            hasZeroOrOneParameter -> builder.add(BODY_TEMPLATE, paramName, call, member, "")
+            else -> builder.addStatement(BODY_TEMPLATE, paramName, call, member, ",")
+        }
+        return true
+    }
+
+    private fun FunSpec.generateFile(ksFiles: Set<KSFile>) {
         FileSpec
             .builder(
                 packageName = "dev.programadorthi.routing.generated",
                 fileName = "ModuleRoutes"
             )
             .addFileComment("Generated by Kotlin Routing")
-            .addFunction(configureSpec.build())
+            .addFunction(this)
             .build()
             .writeTo(
                 codeGenerator = codeGenerator,
-                dependencies = Dependencies.ALL_FILES
+                dependencies = Dependencies(false, *ksFiles.toTypedArray())
             )
-
-        return emptyList()
     }
 
-    private fun optionalParse(
-        paramType: KSType,
-        resolver: Resolver,
-        parsed: String
-    ) = when (paramType) {
-        resolver.builtIns.booleanType.makeNullable() -> "$parsed?.toBooleanOrNull()"
-        resolver.builtIns.byteType.makeNullable() -> "$parsed?.toByteOrNull()"
-        resolver.builtIns.charType.makeNullable() -> "$parsed?.firstOrNull()"
-        resolver.builtIns.doubleType.makeNullable() -> "$parsed?.toDoubleOrNull()"
-        resolver.builtIns.floatType.makeNullable() -> "$parsed?.toFloatOrNull()"
-        resolver.builtIns.intType.makeNullable() -> "$parsed?.toIntOrNull()"
-        resolver.builtIns.longType.makeNullable() -> "$parsed?.toLongOrNull()"
-        resolver.builtIns.shortType.makeNullable() -> "$parsed?.toShortOrNull()"
-        resolver.builtIns.stringType.makeNullable() -> parsed
-        else -> error("Path parameters must be primitive type only")
+    private fun KSBuiltIns.optionalParse(paramType: KSType): String = when (paramType) {
+        booleanType.makeNullable() -> "?.toBooleanOrNull()"
+        byteType.makeNullable() -> "?.toByteOrNull()"
+        charType.makeNullable() -> "?.firstOrNull()"
+        doubleType.makeNullable() -> "?.toDoubleOrNull()"
+        floatType.makeNullable() -> "?.toFloatOrNull()"
+        intType.makeNullable() -> "?.toIntOrNull()"
+        longType.makeNullable() -> "?.toLongOrNull()"
+        shortType.makeNullable() -> "?.toShortOrNull()"
+        stringType.makeNullable() -> ""
+        else -> error("Path parameter must be primitive type only")
     }
 
-    private fun requiredParse(
-        paramType: KSType,
-        resolver: Resolver,
-        parsed: String
-    ) = when (paramType) {
-        resolver.builtIns.booleanType -> "$parsed!!.toBoolean()"
-        resolver.builtIns.byteType -> "$parsed!!.toByte()"
-        resolver.builtIns.charType -> "$parsed!!.first()"
-        resolver.builtIns.doubleType -> "$parsed!!.toDouble()"
-        resolver.builtIns.floatType -> "$parsed!!.toFloat()"
-        resolver.builtIns.intType -> "$parsed!!.toInt()"
-        resolver.builtIns.longType -> "$parsed!!.toLong()"
-        resolver.builtIns.shortType -> "$parsed!!.toShort()"
-        resolver.builtIns.stringType -> "$parsed!!"
-        else -> optionalParse(paramType, resolver, parsed)
+    private fun KSBuiltIns.requiredParse(paramType: KSType): String = when (paramType) {
+        booleanType -> "!!.toBoolean()"
+        byteType -> "!!.toByte()"
+        charType -> "!!.first()"
+        doubleType -> "!!.toDouble()"
+        floatType -> "!!.toFloat()"
+        intType -> "!!.toInt()"
+        longType -> "!!.toLong()"
+        shortType -> "!!.toShort()"
+        stringType -> "!!"
+        else -> optionalParse(paramType)
+    }
+
+    private companion object {
+        private val handle = MemberName("dev.programadorthi.routing.core", "handle")
+        private val routeMethod = MemberName("dev.programadorthi.routing.core", "RouteMethod")
+        private val call = MemberName("dev.programadorthi.routing.core.application", "call")
+        private val receive = MemberName("dev.programadorthi.routing.core.application", "receive")
+        private val receiveNullable = MemberName("dev.programadorthi.routing.core.application", "receiveNullable")
+
+        private const val BODY_TEMPLATE = "%L = %M.%M()%L"
+        private const val FUN_INVOKE_END = ")"
+        private const val FUN_INVOKE_START = "%M("
+        private const val PATH_TEMPLATE = """%L = %M.parameters["%L"]%L"""
+        private const val TAILCARD_TEMPLATE = """%L = %M.parameters.getAll("%L")%L"""
     }
 
 }
