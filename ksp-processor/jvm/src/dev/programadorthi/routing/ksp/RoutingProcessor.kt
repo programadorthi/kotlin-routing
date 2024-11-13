@@ -2,6 +2,7 @@ package dev.programadorthi.routing.ksp
 
 import com.google.devtools.ksp.KspExperimental
 import com.google.devtools.ksp.getAnnotationsByType
+import com.google.devtools.ksp.getClassDeclarationByName
 import com.google.devtools.ksp.getVisibility
 import com.google.devtools.ksp.processing.CodeGenerator
 import com.google.devtools.ksp.processing.Dependencies
@@ -86,12 +87,32 @@ private class RoutingProcessor(
                         .firstOrNull()
                         ?.value
                         ?: paramName
+                    val paramType = param.type.resolve()
+                    if (routeAnnotation.path.contains("{$customName...}")) {
+                        val listDeclaration = checkNotNull(resolver.getClassDeclarationByName<List<*>>()) {
+                            "Class declaration not found to List<String>?"
+                        }
+                        check(paramType.declaration == listDeclaration) {
+                            "Tailcard parameter must be a List<String>?"
+                        }
+                        val genericArgument = checkNotNull(param.type.element?.typeArguments?.firstOrNull()?.type?.resolve()) {
+                            "No <String> type found at tailcard parameter"
+                        }
+                        check(genericArgument == resolver.builtIns.stringType) {
+                            "Tailcard list items type must be non nullable String"
+                        }
+                        check(paramType.isMarkedNullable) {
+                            "Tailcard list must be nullable as List<String>?"
+                        }
+                        parameters += """$paramName = %M.parameters.getAll("$customName")"""
+                        continue
+                    }
+
                     val isOptional = routeAnnotation.path.contains("{$customName?}")
                     val isRequired = routeAnnotation.path.contains("{$customName}")
                     check(isOptional || isRequired) {
                         "'$qualifiedName' has parameter '$paramName' that is not declared as path parameter {$customName}"
                     }
-                    val paramType = param.type.resolve()
                     val parsed = """$paramName = %M.parameters["$customName"]"""
                     parameters += when {
                         isOptional -> optionalParse(paramType, resolver, parsed)

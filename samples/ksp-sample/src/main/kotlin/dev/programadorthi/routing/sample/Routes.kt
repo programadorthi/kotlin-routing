@@ -28,6 +28,11 @@ fun optional(id: Char?) {
     println(">>>> Optional ID: $id")
 }
 
+@Route(path = "/tailcard/{param...}")
+fun tailcard(param: List<String>?) {
+    println(">>>> Tailcard params: $param")
+}
+
 class Routes {
     //@Route("/path")
     fun run() {

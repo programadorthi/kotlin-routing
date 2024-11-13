@@ -23,4 +23,8 @@ suspend fun main() {
     delay(500)
     router.call(uri = "/optional/ABC")
     delay(500)
+    router.call(uri = "/tailcard/p1")
+    delay(500)
+    router.call(uri = "/tailcard/p1/p2/p3/p4")
+    delay(500)
 }
