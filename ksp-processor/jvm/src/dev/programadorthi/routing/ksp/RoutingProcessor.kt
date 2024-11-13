@@ -16,11 +16,13 @@ import com.google.devtools.ksp.symbol.KSAnnotated
 import com.google.devtools.ksp.symbol.KSFunctionDeclaration
 import com.google.devtools.ksp.symbol.KSType
 import com.google.devtools.ksp.symbol.Visibility
+import com.squareup.kotlinpoet.CodeBlock
 import com.squareup.kotlinpoet.FileSpec
 import com.squareup.kotlinpoet.FunSpec
 import com.squareup.kotlinpoet.KModifier
 import com.squareup.kotlinpoet.MemberName
 import com.squareup.kotlinpoet.ksp.writeTo
+import dev.programadorthi.routing.annotation.Body
 import dev.programadorthi.routing.annotation.Path
 import dev.programadorthi.routing.annotation.Route
 
@@ -47,6 +49,8 @@ private class RoutingProcessor(
         invoked = true
 
         val call = MemberName("dev.programadorthi.routing.core.application", "call")
+        val receive = MemberName("dev.programadorthi.routing.core.application", "receive")
+        val receiveNullable = MemberName("dev.programadorthi.routing.core.application", "receiveNullable")
         val handle = MemberName("dev.programadorthi.routing.core", "handle")
 
         val configureSpec = FunSpec
@@ -68,10 +72,6 @@ private class RoutingProcessor(
                     "$qualifiedName fun must not be private"
                 }
 
-                check(func.packageName.asString().isNotBlank()) {
-                    "Top level fun '$qualifiedName' must have a package"
-                }
-
                 val routeAnnotation = checkNotNull(func.getAnnotationsByType(Route::class).firstOrNull()) {
                     "Invalid state because a @Route was not found to '$qualifiedName'"
                 }
@@ -83,19 +83,53 @@ private class RoutingProcessor(
                     "@Route using regex can't be named"
                 }
 
-                val parameters = mutableListOf<String>()
+                val named = when {
+                    routeAnnotation.name.isBlank() -> "name = null"
+                    else -> """name = "${routeAnnotation.name}""""
+                }
+                if (isRegexRoute) {
+                    configureSpec.beginControlFlow("%M(%T(%S))", handle, Regex::class, routeAnnotation.regex)
+                } else {
+                    configureSpec.beginControlFlow("%M(path = %S, $named)", handle, routeAnnotation.path)
+                }
+
+                val funcMember = MemberName(func.packageName.asString(), func.simpleName.asString())
+                val funcBuilder = CodeBlock.builder()
+                val isMultipleParameters = func.parameters.size > 1
+                if (isMultipleParameters) {
+                    funcBuilder
+                        .addStatement("%M(", funcMember)
+                        .indent()
+                } else {
+                    funcBuilder.add("%M(", funcMember)
+                }
 
                 for (param in func.parameters) {
                     check(param.isVararg.not()) {
                         "Vararg is not supported as fun parameter"
                     }
                     val paramName = param.name?.asString()
+                    val paramType = param.type.resolve()
+                    val body = param
+                        .getAnnotationsByType(Body::class)
+                        .firstOrNull()
+                    if (body != null) {
+                        val member = when {
+                            paramType.isMarkedNullable -> receiveNullable
+                            else -> receive
+                        }
+                        when {
+                            isMultipleParameters -> funcBuilder.addStatement("$paramName = %M.%M(),", call, member)
+                            else -> funcBuilder.add("$paramName = %M.%M()", call, member)
+                        }
+                        continue
+                    }
+
                     val customName = param
                         .getAnnotationsByType(Path::class)
                         .firstOrNull()
                         ?.value
                         ?: paramName
-                    val paramType = param.type.resolve()
                     if (!isRegexRoute && routeAnnotation.path.contains("{$customName...}")) {
                         val listDeclaration = checkNotNull(resolver.getClassDeclarationByName<List<*>>()) {
                             "Class declaration not found to List<String>?"
@@ -113,7 +147,11 @@ private class RoutingProcessor(
                         check(paramType.isMarkedNullable) {
                             "Tailcard list must be nullable as List<String>?"
                         }
-                        parameters += """$paramName = %M.parameters.getAll("$customName")"""
+
+                        when {
+                            isMultipleParameters -> funcBuilder.addStatement("""$paramName = %M.parameters.getAll("$customName"),""", call)
+                            else -> funcBuilder.add("""$paramName = %M.parameters.getAll("$customName")""", call)
+                        }
                         continue
                     }
 
@@ -124,26 +162,26 @@ private class RoutingProcessor(
                         "'$qualifiedName' has parameter '$paramName' that is not declared as path parameter {$customName}"
                     }
                     val parsed = """$paramName = %M.parameters["$customName"]"""
-                    parameters += when {
+                    val statement = when {
                         isOptional -> optionalParse(paramType, resolver, parsed)
                         else -> requiredParse(paramType, resolver, parsed)
                     }
-                }
-
-                val calls = Array(size = parameters.size) { call }
-                val params = parameters.joinToString(prefix = "(", postfix = ")") { "\n$it" }
-                val named = when {
-                    routeAnnotation.name.isBlank() -> "name = null"
-                    else -> """name = "${routeAnnotation.name}""""
-                }
-
-                with(configureSpec) {
-                    if (isRegexRoute) {
-                        beginControlFlow("""%M(%T(%S))""", handle, Regex::class, routeAnnotation.regex)
-                    } else {
-                        beginControlFlow("""%M(path = %S, $named)""", handle, routeAnnotation.path)
+                    when {
+                        isMultipleParameters -> funcBuilder.addStatement("$statement,", call)
+                        else -> funcBuilder.add(statement, call)
                     }
-                }.addStatement("""$qualifiedName$params""", *calls)
+                }
+
+                if (isMultipleParameters) {
+                    funcBuilder
+                        .unindent()
+                        .addStatement(")")
+                } else {
+                    funcBuilder.addStatement(")")
+                }
+
+                configureSpec
+                    .addCode(funcBuilder.build())
                     .endControlFlow()
             }
 

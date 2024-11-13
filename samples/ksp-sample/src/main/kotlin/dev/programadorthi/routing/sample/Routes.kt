@@ -1,7 +1,13 @@
 package dev.programadorthi.routing.sample
 
+import dev.programadorthi.routing.annotation.Body
 import dev.programadorthi.routing.annotation.Path
 import dev.programadorthi.routing.annotation.Route
+
+data class User(
+    val id: Int,
+    val name: String,
+)
 
 @Route("/path")
 fun execute() {
@@ -41,6 +47,16 @@ fun regex1() {
 @Route(regex = "/(?<number>\\d+)")
 fun regex2(number: Int) {
     println(">>>> Routing with regex to number: $number")
+}
+
+@Route("/with-body")
+fun withBody(@Body user: User) {
+    println(">>>> with body $user")
+}
+
+@Route("/with-null-body")
+fun withNullBody(@Body user: User?) {
+    println(">>>> null body $user")
 }
 
 class Routes {
