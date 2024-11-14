@@ -43,4 +43,6 @@ suspend fun main() {
     delay(500)
     router.call(uri = "/path/13579/partition")
     delay(500)
+    router.call(uri = "/call/p01/p02")
+    delay(500)
 }

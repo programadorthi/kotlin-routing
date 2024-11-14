@@ -4,6 +4,9 @@ import dev.programadorthi.routing.annotation.Body
 import dev.programadorthi.routing.annotation.Path
 import dev.programadorthi.routing.annotation.Route
 import dev.programadorthi.routing.core.RouteMethod
+import dev.programadorthi.routing.core.application.Application
+import io.ktor.http.Parameters
+import io.ktor.util.Attributes
 
 data class User(
     val id: Int,
@@ -68,6 +71,19 @@ fun byPushMethod() {
 @Route("/path/{part1}/{part2}")
 fun multiParameters(part1: Int, part2: String) {
     println(">>>> Parts: $part1 and $part2")
+}
+
+@Route("/call/{part1}/{part2}")
+fun callParameters(
+    application: Application,
+    parameters: Parameters,
+    attributes: Attributes,
+) {
+    println("""
+        >>>> application: $application
+        >>>> parameters: $parameters
+        >>>> attributes: $attributes
+    """.trimIndent())
 }
 
 class Routes {

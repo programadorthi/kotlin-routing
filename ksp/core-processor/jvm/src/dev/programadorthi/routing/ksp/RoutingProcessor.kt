@@ -27,6 +27,9 @@ import com.squareup.kotlinpoet.ksp.writeTo
 import dev.programadorthi.routing.annotation.Body
 import dev.programadorthi.routing.annotation.Path
 import dev.programadorthi.routing.annotation.Route
+import dev.programadorthi.routing.core.application.Application
+import io.ktor.http.Parameters
+import io.ktor.util.Attributes
 
 public class RoutingProcessorProvider : SymbolProcessorProvider {
     override fun create(environment: SymbolProcessorEnvironment): SymbolProcessor {
@@ -39,7 +42,6 @@ private class RoutingProcessor(
 ) : SymbolProcessor {
     private var invoked = false
 
-    @OptIn(KspExperimental::class)
     override fun process(resolver: Resolver): List<KSAnnotated> {
         if (invoked) {
             return emptyList()
@@ -135,7 +137,6 @@ private class RoutingProcessor(
             .endControlFlow()
     }
 
-    @OptIn(KspExperimental::class)
     private fun KSFunctionDeclaration.generateHandleBody(
         isRegexRoute: Boolean,
         routeAnnotation: Route,
@@ -157,8 +158,11 @@ private class RoutingProcessor(
             check(param.isVararg.not()) {
                 "Vararg is not supported as fun parameter"
             }
-            var applied = param.tryApplyBody(hasZeroOrOneParameter, funcBuilder)
-            if (!isRegexRoute && !applied) {
+            var applied = param.tryApplyCallProperty(hasZeroOrOneParameter, resolver, funcBuilder)
+            if (!applied) {
+                applied = param.tryApplyBody(hasZeroOrOneParameter, funcBuilder)
+            }
+            if (!applied && !isRegexRoute) {
                 applied = param.tryApplyTailCard(
                     routePath = routeAnnotation.path,
                     resolver = resolver,
@@ -288,6 +292,26 @@ private class RoutingProcessor(
         return true
     }
 
+    private fun KSValueParameter.tryApplyCallProperty(
+        hasZeroOrOneParameter: Boolean,
+        resolver: Resolver,
+        builder: CodeBlock.Builder,
+    ): Boolean {
+        val paramType = type.resolve()
+        val propertyName = when (paramType.declaration) {
+            resolver.getClassDeclarationByName<Application>() -> "application"
+            resolver.getClassDeclarationByName<Parameters>() -> "parameters"
+            resolver.getClassDeclarationByName<Attributes>() -> "attributes"
+            else -> return false
+        }
+        val paramName = name?.asString()
+        when {
+            hasZeroOrOneParameter -> builder.add(CALL_PROPERTY_TEMPLATE, paramName, call, propertyName, "")
+            else -> builder.addStatement(CALL_PROPERTY_TEMPLATE, paramName, call, propertyName, ",")
+        }
+        return true
+    }
+
     private fun FunSpec.generateFile(ksFiles: Set<KSFile>) {
         FileSpec
             .builder(
@@ -337,6 +361,7 @@ private class RoutingProcessor(
         private val receiveNullable =
             MemberName("dev.programadorthi.routing.core.application", "receiveNullable")
 
+        private const val CALL_PROPERTY_TEMPLATE = """%L = %M.%L%L"""
         private const val BODY_TEMPLATE = "%L = %M.%M()%L"
         private const val FUN_INVOKE_END = ")"
         private const val FUN_INVOKE_START = "%M("
