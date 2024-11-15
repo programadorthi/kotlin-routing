@@ -1,11 +1,27 @@
+import org.jetbrains.kotlin.gradle.ExperimentalKotlinGradlePluginApi
+
 plugins {
-    kotlin("jvm")
+    kotlin("multiplatform")
     alias(libs.plugins.ksp)
-    //id("dev.programadorthi.routing") version "0.0.99"
+    id("dev.programadorthi.routing") version "0.0.99"
 }
 
-dependencies {
-    implementation(projects.core)
+kotlin {
+    jvm {
+        @OptIn(ExperimentalKotlinGradlePluginApi::class)
+        mainRun {
+            mainClass.set("MainKt")
+        }
+    }
+
+    sourceSets {
+        commonMain {
+            dependencies {
+                implementation(projects.core)
+                implementation(projects.ksp.coreAnnotations)
+            }
+        }
+    }
 }
 
 configurations.all {

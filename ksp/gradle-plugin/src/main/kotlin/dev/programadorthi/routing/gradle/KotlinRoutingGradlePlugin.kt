@@ -7,6 +7,7 @@ import org.jetbrains.kotlin.gradle.dsl.KotlinSingleTargetExtension
 import org.jetbrains.kotlin.gradle.dsl.kotlinExtension
 import java.util.Locale
 
+@Suppress("unused")
 class KotlinRoutingGradlePlugin : Plugin<Project> {
     override fun apply(target: Project) {
         with(target) {
@@ -16,16 +17,12 @@ class KotlinRoutingGradlePlugin : Plugin<Project> {
 
             val kex = kotlinExtension
             if (kex is KotlinSingleTargetExtension<*>) {
-                dependencies.add("implementation", ANNOTATIONS)
                 dependencies.add("ksp", PROCESSOR)
                 return@with
             }
 
             if (kex is KotlinMultiplatformExtension) {
                 kex.targets.configureEach { kTarget ->
-                    kTarget.compilations.configureEach { compilation ->
-                        println(">>>> $kTarget -> $compilation")
-                    }
                     if (kTarget.platformType.name == "common") {
                         dependencies.add("kspCommonMainMetadata", PROCESSOR)
                         return@configureEach
@@ -50,7 +47,6 @@ class KotlinRoutingGradlePlugin : Plugin<Project> {
 
     private companion object {
         // Version will be replaced by Gradle Exec Task
-        private const val ANNOTATIONS = "dev.programadorthi.routing:ksp-core-annotations:<version>"
         private const val PROCESSOR = "dev.programadorthi.routing:ksp-core-processor:<version>"
     }
 }
