@@ -15,6 +15,15 @@ class KotlinRoutingGradlePlugin : Plugin<Project> {
                 "KSP plugin not found. Please, apply ksp plugin before routing plugin"
             }
 
+            val kspExtension = extensions.findByName("ksp") ?: error("KSP config not found")
+            val argMethod = kspExtension.javaClass.getMethod("arg", String::class.java, String::class.java)
+            val customModuleName = project.path
+                .split(Regex("""\W"""))
+                .joinToString(separator = "", prefix = "_") { part ->
+                    part.replaceFirstChar { it.titlecase() }
+                }
+            argMethod.invoke(kspExtension, "Routing_Module_Name", customModuleName)
+
             val kex = kotlinExtension
             if (kex is KotlinSingleTargetExtension<*>) {
                 dependencies.add("ksp", PROCESSOR)
