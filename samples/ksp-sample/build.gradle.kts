@@ -4,6 +4,12 @@ plugins {
     kotlin("multiplatform")
     alias(libs.plugins.ksp)
     id("dev.programadorthi.routing") version "0.0.99"
+    alias(libs.plugins.jetbrains.compose)
+    alias(libs.plugins.compose.compiler)
+}
+
+ksp {
+    arg("Routing_Compose_Enable", "true")
 }
 
 kotlin {
@@ -18,7 +24,9 @@ kotlin {
         commonMain {
             dependencies {
                 implementation(projects.core)
+                implementation(projects.integration.compose)
                 implementation(projects.ksp.coreAnnotations)
+                implementation(compose.runtime)
             }
         }
     }
