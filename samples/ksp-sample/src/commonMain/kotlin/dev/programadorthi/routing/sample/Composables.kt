@@ -44,6 +44,12 @@ fun composeTailcard(param: List<String>?) {
     println(">>>> Tailcard params: $param")
 }
 
+/*@Route(regex = ".+/hello")
+@Composable
+fun composeRegex1() {
+    println(">>>> Routing with regex")
+}*/
+
 @Route("/compose-with-body")
 @Composable
 fun composeWithBody(@Body user: User) {

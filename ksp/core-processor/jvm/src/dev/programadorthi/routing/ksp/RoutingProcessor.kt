@@ -7,17 +7,22 @@ import com.google.devtools.ksp.getVisibility
 import com.google.devtools.ksp.processing.CodeGenerator
 import com.google.devtools.ksp.processing.Dependencies
 import com.google.devtools.ksp.processing.KSBuiltIns
+import com.google.devtools.ksp.processing.KSPLogger
 import com.google.devtools.ksp.processing.Resolver
 import com.google.devtools.ksp.processing.SymbolProcessor
 import com.google.devtools.ksp.processing.SymbolProcessorEnvironment
 import com.google.devtools.ksp.processing.SymbolProcessorProvider
+import com.google.devtools.ksp.symbol.ClassKind
 import com.google.devtools.ksp.symbol.FunctionKind
 import com.google.devtools.ksp.symbol.KSAnnotated
+import com.google.devtools.ksp.symbol.KSClassDeclaration
+import com.google.devtools.ksp.symbol.KSDeclaration
 import com.google.devtools.ksp.symbol.KSFile
 import com.google.devtools.ksp.symbol.KSFunctionDeclaration
 import com.google.devtools.ksp.symbol.KSType
 import com.google.devtools.ksp.symbol.KSValueParameter
 import com.google.devtools.ksp.symbol.Visibility
+import com.squareup.kotlinpoet.ClassName
 import com.squareup.kotlinpoet.CodeBlock
 import com.squareup.kotlinpoet.FileSpec
 import com.squareup.kotlinpoet.FunSpec
@@ -35,7 +40,8 @@ public class RoutingProcessorProvider : SymbolProcessorProvider {
     override fun create(environment: SymbolProcessorEnvironment): SymbolProcessor {
         return RoutingProcessor(
             codeGenerator = environment.codeGenerator,
-            options = environment.options
+            options = environment.options,
+            logger = environment.logger,
         )
     }
 }
@@ -43,14 +49,12 @@ public class RoutingProcessorProvider : SymbolProcessorProvider {
 private class RoutingProcessor(
     private val codeGenerator: CodeGenerator,
     private val options: Map<String, String>,
+    private val logger: KSPLogger,
 ) : SymbolProcessor {
     private var invoked = false
 
     private val fileName: String
-        get() = options["Routing_Module_Name"] ?: "Module"
-
-    private val composableEnabled: Boolean
-        get() = options["Routing_Compose_Enable"]?.toBooleanStrictOrNull() ?: false
+        get() = (options[FLAG_ROUTING_MODULE_NAME] ?: "Module") + "Routes"
 
     override fun process(resolver: Resolver): List<KSAnnotated> {
         if (invoked) {
@@ -66,17 +70,9 @@ private class RoutingProcessor(
 
         resolver
             .getSymbolsWithAnnotation(Route::class.java.name)
-            .filterIsInstance<KSFunctionDeclaration>()
-            .forEach { func ->
-                val qualifiedName = func.qualifiedName?.asString()
-                check(func.functionKind == FunctionKind.TOP_LEVEL) {
-                    "$qualifiedName fun must be a top level fun"
-                }
-                check(func.getVisibility() != Visibility.PRIVATE) {
-                    "$qualifiedName fun must not be private"
-                }
-                func.containingFile?.let(ksFiles::add)
-                func.wrapFunctionWithHandle(qualifiedName, configureSpec, resolver)
+            .filterIsInstance<KSDeclaration>()
+            .forEach { symbol ->
+                symbol.transform(ksFiles, configureSpec, resolver)
             }
 
         configureSpec
@@ -87,28 +83,80 @@ private class RoutingProcessor(
     }
 
     @OptIn(KspExperimental::class)
-    private fun KSFunctionDeclaration.wrapFunctionWithHandle(
-        qualifiedName: String?,
+    private fun KSDeclaration.transform(
+        ksFiles: MutableSet<KSFile>,
         configureSpec: FunSpec.Builder,
         resolver: Resolver
     ) {
-        val routeAnnotation = checkNotNull(getAnnotationsByType(Route::class).firstOrNull()) {
-            "Invalid state because a @Route was not found to '$qualifiedName'"
+        val qualifiedName = qualifiedName?.asString() ?: return
+        logger.info(">>>> transforming: $qualifiedName")
+        check(getVisibility() != Visibility.PRIVATE) {
+            "$qualifiedName must not be private"
         }
+        containingFile?.let(ksFiles::add)
+        val routeAnnotation = checkNotNull(getAnnotationsByType(Route::class).firstOrNull()) {
+            "Invalid state because is missing @Route to '$qualifiedName'"
+        }
+        when (this) {
+            is KSFunctionDeclaration -> {
+                check(functionKind == FunctionKind.TOP_LEVEL) {
+                    "$qualifiedName must be a top level fun"
+                }
+                logger.info(">>>> transforming fun: $qualifiedName")
+                wrapFunctionWithHandle(routeAnnotation, qualifiedName, configureSpec, resolver, null)
+            }
+
+            is KSClassDeclaration -> {
+                check(classKind == ClassKind.OBJECT || classKind == ClassKind.CLASS) {
+                    "$qualifiedName must be a class or object. ${classKind.type} is not supported"
+                }
+                check(superTypes.any { type ->
+                    type.resolve().declaration.qualifiedName?.asString() == VOYAGER_SCREEN_QUALIFIED_NAME
+                }) {
+                    "@Route can be applied to object or class that inherit from '$VOYAGER_SCREEN_QUALIFIED_NAME' only"
+                }
+                logger.info(">>>> transforming class: $qualifiedName")
+                declarations
+                    .filterIsInstance<KSFunctionDeclaration>()
+                    .filter { func -> func.simpleName.asString() == CONSTRUCTOR_NAME }
+                    .forEach { constructor ->
+                        val annotation = constructor.getAnnotationsByType(Route::class).firstOrNull() ?: routeAnnotation
+                        constructor.wrapFunctionWithHandle(
+                            annotation,
+                            qualifiedName,
+                            configureSpec,
+                            resolver,
+                            classKind
+                        )
+                    }
+            }
+
+            else -> error("$qualifiedName is not supported. Class and top level fun are supported only")
+        }
+    }
+
+    private fun KSFunctionDeclaration.wrapFunctionWithHandle(
+        routeAnnotation: Route,
+        qualifiedName: String,
+        configureSpec: FunSpec.Builder,
+        resolver: Resolver,
+        classKind: ClassKind?,
+    ) {
         val isRegexRoute = routeAnnotation.regex.isNotBlank()
         check(isRegexRoute || routeAnnotation.path.isNotBlank()) {
-            "Using @Route a path or a regex is required"
+            "@Route requires a path or a regex"
         }
         check(!isRegexRoute || routeAnnotation.name.isBlank()) {
-            "@Route with regex can't be named"
+            "@Route having regex can't be named"
         }
 
-        val isComposable = annotations.any { it.shortName.asString() == "Composable" }
+        val isScreen = classKind != null
+        val isComposable = !isScreen && annotations.any { it.shortName.asString() == "Composable" }
 
         if (isRegexRoute) {
-            check(!isComposable) {
+            check(!isComposable && !isScreen) {
                 // TODO: Add regex support to composable handle
-                "Combining @Route(regex = ...) and @Composable are not supported for $qualifiedName"
+                "$qualifiedName has @Route(regex = ...) that cannot be applied to @Composable or Voyager Screen"
             }
             if (routeAnnotation.method.isBlank()) {
                 configureSpec
@@ -135,10 +183,12 @@ private class RoutingProcessor(
                 routeAnnotation.name.isBlank() -> "name = null"
                 else -> """name = "${routeAnnotation.name}""""
             }
-            var memberName = handle
-            if (composableEnabled && isComposable) {
-                memberName = composable
+            val memberName = when {
+                isComposable -> composable
+                isScreen -> screen
+                else -> handle
             }
+            logger.info(">>>> transforming -> name: $named and member: $memberName")
             if (routeAnnotation.method.isBlank()) {
                 configureSpec
                     .beginControlFlow("%M(path = %S, $named)", memberName, routeAnnotation.path)
@@ -150,7 +200,7 @@ private class RoutingProcessor(
             }
         }
 
-        val codeBlock = generateHandleBody(isRegexRoute, routeAnnotation, resolver, qualifiedName)
+        val codeBlock = generateHandleBody(isRegexRoute, routeAnnotation, resolver, qualifiedName, classKind)
 
         configureSpec
             .addCode(codeBlock)
@@ -161,16 +211,27 @@ private class RoutingProcessor(
         isRegexRoute: Boolean,
         routeAnnotation: Route,
         resolver: Resolver,
-        qualifiedName: String?
+        qualifiedName: String,
+        classKind: ClassKind?,
     ): CodeBlock {
-        val funcMember = MemberName(packageName.asString(), simpleName.asString())
         val funcBuilder = CodeBlock.builder()
         val hasZeroOrOneParameter = parameters.size < 2
-        if (hasZeroOrOneParameter) {
-            funcBuilder.add(FUN_INVOKE_START, funcMember)
-        } else {
-            funcBuilder
-                .addStatement(FUN_INVOKE_START, funcMember)
+        val funName = simpleName.asString()
+        val member: Any = when {
+            classKind != null -> ClassName(packageName.asString(), qualifiedName.split(".").last())
+            else -> MemberName(packageName.asString(), funName)
+        }
+        val template = when (classKind) {
+            ClassKind.OBJECT -> FUN_TYPE_INVOKE
+            ClassKind.CLASS -> FUN_TYPE_INVOKE_START
+            else -> FUN_MEMBER_INVOKE_START
+        }
+        logger.info(">>>> fun name: $funName -> template: $template -> member: $member")
+        when {
+            classKind == ClassKind.OBJECT -> funcBuilder.addStatement(template, member)
+            hasZeroOrOneParameter -> funcBuilder.add(template, member)
+            else -> funcBuilder
+                .addStatement(template, member)
                 .indent()
         }
 
@@ -202,15 +263,17 @@ private class RoutingProcessor(
             }
         }
 
-        if (hasZeroOrOneParameter) {
-            funcBuilder.addStatement(FUN_INVOKE_END)
-        } else {
-            funcBuilder
-                .unindent()
-                .addStatement(FUN_INVOKE_END)
+        if (classKind == ClassKind.OBJECT) {
+            return funcBuilder.build()
         }
 
-        return funcBuilder.build()
+        if (hasZeroOrOneParameter.not()) {
+            funcBuilder.unindent()
+        }
+
+        return funcBuilder
+            .addStatement(FUN_INVOKE_END)
+            .build()
     }
 
     @OptIn(KspExperimental::class)
@@ -336,7 +399,7 @@ private class RoutingProcessor(
         FileSpec
             .builder(
                 packageName = "dev.programadorthi.routing.generated",
-                fileName = "${fileName}Routes",
+                fileName = fileName,
             )
             .addFileComment("Generated by Kotlin Routing")
             .addFunction(this)
@@ -374,6 +437,7 @@ private class RoutingProcessor(
     }
 
     private companion object {
+        private val screen = MemberName("dev.programadorthi.routing.voyager", "screen")
         private val composable = MemberName("dev.programadorthi.routing.compose", "composable")
         private val handle = MemberName("dev.programadorthi.routing.core", "handle")
         private val routeMethod = MemberName("dev.programadorthi.routing.core", "RouteMethod")
@@ -385,9 +449,17 @@ private class RoutingProcessor(
         private const val CALL_PROPERTY_TEMPLATE = """%L = %M.%L%L"""
         private const val BODY_TEMPLATE = "%L = %M.%M()%L"
         private const val FUN_INVOKE_END = ")"
-        private const val FUN_INVOKE_START = "%M("
+        private const val FUN_MEMBER_INVOKE_START = "%M("
+        private const val FUN_TYPE_INVOKE = "%T"
+        private const val FUN_TYPE_INVOKE_START = "$FUN_TYPE_INVOKE("
         private const val PATH_TEMPLATE = """%L = %M.parameters["%L"]%L"""
         private const val TAILCARD_TEMPLATE = """%L = %M.parameters.getAll("%L")%L"""
+
+        private const val FLAG_ROUTING_MODULE_NAME = "Routing_Module_Name"
+
+        private const val VOYAGER_SCREEN_QUALIFIED_NAME = "cafe.adriel.voyager.core.screen.Screen"
+
+        private const val CONSTRUCTOR_NAME = "<init>"
     }
 
 }
