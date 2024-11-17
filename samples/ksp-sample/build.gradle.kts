@@ -3,7 +3,7 @@ import org.jetbrains.kotlin.gradle.ExperimentalKotlinGradlePluginApi
 plugins {
     kotlin("multiplatform")
     alias(libs.plugins.ksp)
-    //id("dev.programadorthi.routing") version "0.0.99"
+    alias(libs.plugins.routing)
     alias(libs.plugins.jetbrains.compose)
     alias(libs.plugins.compose.compiler)
 }
@@ -19,24 +19,29 @@ kotlin {
     sourceSets {
         commonMain {
             dependencies {
-                implementation(projects.core)
-                implementation(projects.integration.compose)
-                implementation(projects.integration.voyager)
-                implementation(projects.ksp.coreAnnotations)
+                implementation(libs.routing.core)
+                implementation(libs.routing.compose)
+                implementation(libs.routing.voyager)
+                implementation(libs.routing.annotations)
                 implementation(compose.runtime)
             }
         }
     }
 }
 
-dependencies {
+/*dependencies {
     add("kspJvm", projects.ksp.coreProcessor)
 }
 
-/*configurations.all {
+configurations.all {
     resolutionStrategy.dependencySubstitution {
         substitute(module("dev.programadorthi.routing:core"))
             .using(project(":core"))
-            .because("KSP gradle plugin have maven central dependencies")
+        substitute(module("dev.programadorthi.routing:compose"))
+            .using(project(":integration:compose"))
+        substitute(module("dev.programadorthi.routing:voyager"))
+            .using(project(":integration:voyager"))
+        substitute(module("dev.programadorthi.routing:ksp-core-annotations"))
+            .using(project(":ksp:core-annotations"))
     }
 }*/

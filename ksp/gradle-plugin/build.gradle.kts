@@ -27,15 +27,18 @@ gradlePlugin {
     }
 }
 
-val versionRegister = tasks.register<Exec>("version-register") {
-    commandLine(
-        "find", "./src",
-        "-type", "f",
-        "-exec",
-        "sed", "-i",
-        "''", """s/<version>/${providers.gradleProperty("version").get()}/g""",
-        "{}", "+"
-    )
+if (project.hasProperty("version")) {
+    val versionProperty = project.property("version")
+    if (versionProperty != "unspecified") {
+        project.exec {
+            commandLine(
+                "find", "./src",
+                "-type", "f",
+                "-exec",
+                "sed", "-i",
+                "''", """s/<version>/$versionProperty/g""",
+                "{}", "+"
+            )
+        }
+    }
 }
-
-tasks.named("processResources").dependsOn(versionRegister)
