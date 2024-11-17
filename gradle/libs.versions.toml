@@ -11,12 +11,14 @@ compose = "1.6.10"
 
 coroutines = "1.8.0"
 kotlin = "2.0.10"
+ksp = "2.0.10-1.0.24"
 ktor = "3.0.0-beta-2"
 serialization = "1.6.1" # Do not upgrade, 1.6.2 breaks maven publishing!
 slf4j = "2.0.4"
 voyager = "1.1.0-beta02"
 kodein = "7.22.0"
 koin = "4.0.0-RC1"
+kotlin-poet = "1.18.1"
 tomlj = "1.1.1"
 
 junit = "4.13.2"
@@ -30,6 +32,7 @@ espresso-core = "3.5.1"
 lifecycle-runtime-ktx = "2.3.1"
 activity-compose = "1.5.1"
 compose-bom = "2022.10.00"
+routing = "2.0.0-alpha02"
 # SAMPLE VERSIONS #
 
 [libraries]
@@ -42,6 +45,7 @@ androidx-activity = { module = "androidx.activity:activity", version.ref = "andr
 androidx-startup = { module = "androidx.startup:startup-runtime", version.ref = "androidx-startup" }
 
 coroutines-core = { module = "org.jetbrains.kotlinx:kotlinx-coroutines-core", version.ref = "coroutines" }
+ksp-api = { module = "com.google.devtools.ksp:symbol-processing-api", version.ref = "ksp" }
 ktor-events = { module = "io.ktor:ktor-events", version.ref = "ktor" }
 ktor-http = { module = "io.ktor:ktor-http", version.ref = "ktor" }
 ktor-resources = { module = "io.ktor:ktor-resources", version.ref = "ktor" }
@@ -53,6 +57,8 @@ slf4j-simple = { module = "org.slf4j:slf4j-simple", version.ref = "slf4j" }
 voyager-navigator = { module = "cafe.adriel.voyager:voyager-navigator", version.ref = "voyager" }
 kodein-di = { module = "org.kodein.di:kodein-di", version.ref = "kodein" }
 koin-core = { module = "io.insert-koin:koin-core", version.ref = "koin" }
+kotlin-poet = { module = "com.squareup:kotlinpoet", version.ref = "kotlin-poet" }
+kotlin-poet-ksp = { module = "com.squareup:kotlinpoet-ksp", version.ref = "kotlin-poet" }
 
 tomlj = { module = "org.tomlj:tomlj", version.ref = "tomlj" }
 
@@ -78,6 +84,10 @@ ui-tooling-preview = { group = "androidx.compose.ui", name = "ui-tooling-preview
 ui-test-manifest = { group = "androidx.compose.ui", name = "ui-test-manifest" }
 ui-test-junit4 = { group = "androidx.compose.ui", name = "ui-test-junit4" }
 material3 = { group = "androidx.compose.material3", name = "material3" }
+routing-core = { module = "dev.programadorthi.routing:core", version.ref = "routing" }
+routing-compose = { module = "dev.programadorthi.routing:compose", version.ref = "routing" }
+routing-voyager = { module = "dev.programadorthi.routing:voyager", version.ref = "routing" }
+routing-annotations = { module = "dev.programadorthi.routing:ksp-core-annotations", version.ref = "routing" }
 # SAMPLE LIBRARIES #
 
 [plugins]
@@ -85,3 +95,5 @@ compose-compiler = { id = "org.jetbrains.kotlin.plugin.compose", version.ref = "
 jetbrains-compose = { id = "org.jetbrains.compose", version.ref = "compose" }
 kotlin-serialization = { id = "org.jetbrains.kotlin.plugin.serialization", version.ref = "kotlin"}
 maven-publish = { id = "com.vanniktech.maven.publish", version.ref = "plugin-maven"}
+ksp = { id = "com.google.devtools.ksp", version.ref = "ksp"}
+routing = { id = "dev.programadorthi.routing", version.ref = "routing"}
