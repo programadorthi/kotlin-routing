@@ -1,9 +1,6 @@
-import com.android.build.gradle.internal.tasks.factory.dependsOn
-
 plugins {
     kotlin("jvm")
-    id("java-gradle-plugin")
-    id("com.gradle.plugin-publish") version "1.2.1"
+    id("com.gradle.plugin-publish") version "1.3.0"
     id("org.jetbrains.kotlinx.kover")
     alias(libs.plugins.maven.publish)
 }
