@@ -1,10 +1,10 @@
-package dev.programadorthi.routing.sample
+package dev.programadorthi.routing.core
 
 import dev.programadorthi.routing.annotation.Body
 import dev.programadorthi.routing.annotation.Path
 import dev.programadorthi.routing.annotation.Route
-import dev.programadorthi.routing.core.RouteMethod
 import dev.programadorthi.routing.core.application.Application
+import dev.programadorthi.routing.core.application.ApplicationCall
 import io.ktor.http.Parameters
 import io.ktor.util.Attributes
 
@@ -29,7 +29,9 @@ fun named(name: String) {
 }
 
 @Route(path = "/custom/{random}", name = "custom")
-fun custom(@Path("random") value: String) {
+fun custom(
+    @Path("random") value: String
+) {
     println(">>>> value: $value")
 }
 
@@ -54,12 +56,16 @@ fun regex2(number: Int) {
 }
 
 @Route("/with-body")
-fun withBody(@Body user: User) {
+fun withBody(
+    @Body user: User
+) {
     println(">>>> with body $user")
 }
 
 @Route("/with-null-body")
-fun withNullBody(@Body user: User?) {
+fun withNullBody(
+    @Body user: User?
+) {
     println(">>>> null body $user")
 }
 
@@ -73,22 +79,22 @@ fun multiParameters(part1: Int, part2: String) {
     println(">>>> Parts: $part1 and $part2")
 }
 
+@Route("/call")
+fun call(call: ApplicationCall) {
+    println(">>>> call: $call")
+}
+
 @Route("/call/{part1}/{part2}")
 fun callParameters(
     application: Application,
     parameters: Parameters,
     attributes: Attributes,
 ) {
-    println("""
+    println(
+        """
         >>>> application: $application
         >>>> parameters: $parameters
         >>>> attributes: $attributes
-    """.trimIndent())
-}
-
-class Routes {
-    //@Route("/path")
-    fun run() {
-        println(">>>> I'm routing")
-    }
+        """.trimIndent()
+    )
 }

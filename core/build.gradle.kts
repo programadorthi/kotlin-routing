@@ -2,6 +2,7 @@ import kotlinx.kover.gradle.plugin.dsl.KoverProjectExtension
 
 plugins {
     kotlin("multiplatform")
+    alias(libs.plugins.ksp)
     id("org.jetbrains.kotlinx.kover")
     alias(libs.plugins.maven.publish)
 }
@@ -20,6 +21,11 @@ kotlin {
                 api(libs.ktor.http)
             }
         }
+        commonTest {
+            dependencies {
+                implementation(projects.ksp.coreAnnotations)
+            }
+        }
     }
 }
 
@@ -35,4 +41,12 @@ configure<KoverProjectExtension> {
             }
         }
     }
+}
+
+dependencies {
+    add("kspJvmTest", projects.ksp.coreProcessor)
+}
+
+ksp {
+    arg("Routing_Module_Name", "Core")
 }

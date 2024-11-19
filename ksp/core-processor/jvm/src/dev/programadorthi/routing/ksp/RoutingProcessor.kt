@@ -28,13 +28,11 @@ import com.squareup.kotlinpoet.FileSpec
 import com.squareup.kotlinpoet.FunSpec
 import com.squareup.kotlinpoet.KModifier
 import com.squareup.kotlinpoet.MemberName
+import com.squareup.kotlinpoet.ksp.toTypeName
 import com.squareup.kotlinpoet.ksp.writeTo
 import dev.programadorthi.routing.annotation.Body
 import dev.programadorthi.routing.annotation.Path
 import dev.programadorthi.routing.annotation.Route
-import dev.programadorthi.routing.core.application.Application
-import io.ktor.http.Parameters
-import io.ktor.util.Attributes
 
 public class RoutingProcessorProvider : SymbolProcessorProvider {
     override fun create(environment: SymbolProcessorEnvironment): SymbolProcessor {
@@ -66,7 +64,7 @@ private class RoutingProcessor(
         val configureSpec = FunSpec
             .builder("configure")
             .addModifiers(KModifier.INTERNAL)
-            .receiver(dev.programadorthi.routing.core.Route::class)
+            .receiver(route)
 
         resolver
             .getSymbolsWithAnnotation(Route::class.java.name)
@@ -110,9 +108,11 @@ private class RoutingProcessor(
                 check(classKind == ClassKind.OBJECT || classKind == ClassKind.CLASS) {
                     "$qualifiedName must be a class or object. ${classKind.type} is not supported"
                 }
-                check(superTypes.any { type ->
-                    type.resolve().declaration.qualifiedName?.asString() == VOYAGER_SCREEN_QUALIFIED_NAME
-                }) {
+                check(
+                    superTypes.any { type ->
+                        type.resolve().declaration.qualifiedName?.asString() == VOYAGER_SCREEN_QUALIFIED_NAME
+                    }
+                ) {
                     "@Route can be applied to object or class that inherit from '$VOYAGER_SCREEN_QUALIFIED_NAME' only"
                 }
                 logger.info(">>>> transforming class: $qualifiedName")
@@ -230,16 +230,17 @@ private class RoutingProcessor(
         when {
             classKind == ClassKind.OBJECT -> funcBuilder.addStatement(template, member)
             hasZeroOrOneParameter -> funcBuilder.add(template, member)
-            else -> funcBuilder
-                .addStatement(template, member)
-                .indent()
+            else ->
+                funcBuilder
+                    .addStatement(template, member)
+                    .indent()
         }
 
         for (param in parameters) {
             check(param.isVararg.not()) {
                 "Vararg is not supported as fun parameter"
             }
-            var applied = param.tryApplyCallProperty(hasZeroOrOneParameter, resolver, funcBuilder)
+            var applied = param.tryApplyCallProperty(hasZeroOrOneParameter, funcBuilder)
             if (!applied) {
                 applied = param.tryApplyBody(hasZeroOrOneParameter, funcBuilder)
             }
@@ -377,17 +378,25 @@ private class RoutingProcessor(
 
     private fun KSValueParameter.tryApplyCallProperty(
         hasZeroOrOneParameter: Boolean,
-        resolver: Resolver,
         builder: CodeBlock.Builder,
     ): Boolean {
         val paramType = type.resolve()
-        val propertyName = when (paramType.declaration) {
-            resolver.getClassDeclarationByName<Application>() -> "application"
-            resolver.getClassDeclarationByName<Parameters>() -> "parameters"
-            resolver.getClassDeclarationByName<Attributes>() -> "attributes"
+        val paramName = name?.asString()
+        val asTypeName = paramType.toTypeName()
+        if (asTypeName == applicationCall) {
+            when {
+                hasZeroOrOneParameter -> builder.add(CALL_TEMPLATE, paramName, call, "")
+                else -> builder.addStatement(CALL_TEMPLATE, paramName, call, ",")
+            }
+            return true
+        }
+
+        val propertyName = when (asTypeName) {
+            application -> "application"
+            parameters -> "parameters"
+            attributes -> "attributes"
             else -> return false
         }
-        val paramName = name?.asString()
         when {
             hasZeroOrOneParameter -> builder.add(CALL_PROPERTY_TEMPLATE, paramName, call, propertyName, "")
             else -> builder.addStatement(CALL_PROPERTY_TEMPLATE, paramName, call, propertyName, ",")
@@ -437,6 +446,12 @@ private class RoutingProcessor(
     }
 
     private companion object {
+        private val route = ClassName("dev.programadorthi.routing.core", "Route")
+        private val application = ClassName("dev.programadorthi.routing.core.application", "Application")
+        private val applicationCall = ClassName("dev.programadorthi.routing.core.application", "ApplicationCall")
+        private val parameters = ClassName("io.ktor.http", "Parameters")
+        private val attributes = ClassName("io.ktor.util", "Attributes")
+
         private val screen = MemberName("dev.programadorthi.routing.voyager", "screen")
         private val composable = MemberName("dev.programadorthi.routing.compose", "composable")
         private val handle = MemberName("dev.programadorthi.routing.core", "handle")
@@ -446,6 +461,7 @@ private class RoutingProcessor(
         private val receiveNullable =
             MemberName("dev.programadorthi.routing.core.application", "receiveNullable")
 
+        private const val CALL_TEMPLATE = """%L = %M%L"""
         private const val CALL_PROPERTY_TEMPLATE = """%L = %M.%L%L"""
         private const val BODY_TEMPLATE = "%L = %M.%M()%L"
         private const val FUN_INVOKE_END = ")"
@@ -461,5 +477,4 @@ private class RoutingProcessor(
 
         private const val CONSTRUCTOR_NAME = "<init>"
     }
-
 }
