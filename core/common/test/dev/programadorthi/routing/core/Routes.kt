@@ -7,6 +7,9 @@ import dev.programadorthi.routing.core.application.Application
 import dev.programadorthi.routing.core.application.ApplicationCall
 import io.ktor.http.Parameters
 import io.ktor.util.Attributes
+import kotlin.to
+
+val invoked = mutableMapOf<String, List<Any?>>()
 
 data class User(
     val id: Int,
@@ -15,73 +18,73 @@ data class User(
 
 @Route("/path")
 fun execute() {
-    println(">>>> I'm routing")
+    invoked += "/path" to emptyList()
 }
 
 @Route(path = "/path/{id}")
 fun execute(id: Double) {
-    println(">>>> ID: $id")
+    invoked += "/path/{id}" to listOf(id)
 }
 
 @Route(path = "/named/{name}", name = "named")
 fun named(name: String) {
-    println(">>>> name: $name")
+    invoked += "/named/{name}" to listOf(name)
 }
 
 @Route(path = "/custom/{random}", name = "custom")
 fun custom(
     @Path("random") value: String
 ) {
-    println(">>>> value: $value")
+    invoked += "/custom/{random}" to listOf(value)
 }
 
 @Route(path = "/optional/{id?}")
 fun optional(id: Char?) {
-    println(">>>> Optional ID: $id")
+    invoked += "/optional/{id?}" to listOf(id)
 }
 
 @Route(path = "/tailcard/{param...}")
 fun tailcard(param: List<String>?) {
-    println(">>>> Tailcard params: $param")
+    invoked += "/tailcard/{param...}" to (param ?: emptyList())
 }
 
 @Route(regex = ".+/hello")
 fun regex1() {
-    println(">>>> Routing with regex")
+    invoked += ".+/hello" to listOf()
 }
 
 @Route(regex = "/(?<number>\\d+)")
 fun regex2(number: Int) {
-    println(">>>> Routing with regex to number: $number")
+    invoked += "/(?<number>\\d+)" to listOf(number)
 }
 
 @Route("/with-body")
 fun withBody(
     @Body user: User
 ) {
-    println(">>>> with body $user")
+    invoked += "/with-body" to listOf(user)
 }
 
 @Route("/with-null-body")
 fun withNullBody(
     @Body user: User?
 ) {
-    println(">>>> null body $user")
+    invoked += "/with-null-body" to listOf(user)
 }
 
 @Route("/path", method = "PUSH")
 fun byPushMethod() {
-    println(">>>> I'm pushing a route")
+    invoked += "/path" to listOf("PUSH")
 }
 
 @Route("/path/{part1}/{part2}")
 fun multiParameters(part1: Int, part2: String) {
-    println(">>>> Parts: $part1 and $part2")
+    invoked += "/path/{part1}/{part2}" to listOf(part1, part2)
 }
 
 @Route("/call")
 fun call(call: ApplicationCall) {
-    println(">>>> call: $call")
+    invoked += "/call" to listOf(call)
 }
 
 @Route("/call/{part1}/{part2}")
@@ -90,11 +93,5 @@ fun callParameters(
     parameters: Parameters,
     attributes: Attributes,
 ) {
-    println(
-        """
-        >>>> application: $application
-        >>>> parameters: $parameters
-        >>>> attributes: $attributes
-        """.trimIndent()
-    )
+    invoked += "/call/{part1}/{part2}" to listOf(application, parameters, attributes)
 }

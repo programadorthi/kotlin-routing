@@ -415,7 +415,7 @@ private class RoutingProcessor(
             .build()
             .writeTo(
                 codeGenerator = codeGenerator,
-                dependencies = Dependencies(false, *ksFiles.toTypedArray())
+                dependencies = Dependencies(true, *ksFiles.toTypedArray())
             )
     }
 
