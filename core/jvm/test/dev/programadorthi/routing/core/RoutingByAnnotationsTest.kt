@@ -6,15 +6,15 @@ import dev.programadorthi.routing.generated.configure
 import io.ktor.http.Parameters
 import io.ktor.http.parametersOf
 import io.ktor.util.Attributes
+import kotlinx.coroutines.ExperimentalCoroutinesApi
+import kotlinx.coroutines.Job
+import kotlinx.coroutines.test.advanceTimeBy
+import kotlinx.coroutines.test.runTest
 import kotlin.random.Random
 import kotlin.test.Test
 import kotlin.test.assertEquals
 import kotlin.test.assertIs
 import kotlin.test.assertNotNull
-import kotlinx.coroutines.ExperimentalCoroutinesApi
-import kotlinx.coroutines.Job
-import kotlinx.coroutines.test.advanceTimeBy
-import kotlinx.coroutines.test.runTest
 
 @OptIn(ExperimentalCoroutinesApi::class)
 class RoutingByAnnotationsTest {
@@ -268,11 +268,11 @@ class RoutingByAnnotationsTest {
                 }
 
             // WHEN
-            routing.call(uri = "/path", routeMethod = RouteMethod.Push)
+            routing.push(path = "/path")
             advanceTimeBy(99)
 
             // THEN
-            assertEquals(listOf("PUSH"), invoked.remove("/path"))
+            assertEquals(listOf(RouteMethod.Push.value), invoked.remove("/path"))
         }
 
     @Test
