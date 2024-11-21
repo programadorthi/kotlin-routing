@@ -18,7 +18,6 @@ import io.ktor.util.Attributes
 import kotlinx.coroutines.ExperimentalCoroutinesApi
 import kotlinx.coroutines.test.advanceTimeBy
 import kotlin.random.Random
-import kotlin.test.Ignore
 import kotlin.test.Test
 import kotlin.test.assertEquals
 import kotlin.test.assertIs
@@ -267,7 +266,6 @@ class ComposeRoutingByAnnotationsTest {
             assertEquals(listOf("p1", "p2", "p3", "p4"), invoked.remove("/tailcard/{param...}"))
         }
 
-    @Ignore("Compose Regex is not supported yet")
     @Test
     fun shouldHandleByRegex() =
         runComposeTest { coroutineContext, composition, clock ->
@@ -295,7 +293,6 @@ class ComposeRoutingByAnnotationsTest {
             assertEquals(listOf(), invoked.remove(".+/hello"))
         }
 
-    @Ignore("Compose Regex is not supported yet")
     @Test
     fun shouldHandleByRegexWithParameters() =
         runComposeTest { coroutineContext, composition, clock ->

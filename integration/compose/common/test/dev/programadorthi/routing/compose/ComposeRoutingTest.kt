@@ -446,4 +446,80 @@ class ComposeRoutingTest {
             // THEN
             assertNull(poppedMessage, "Pop result should be cleared after other routing call")
         }
+
+    @Test
+    fun shouldComposeByRegex() =
+        runComposeTest { coroutineContext, composition, clock ->
+            // GIVEN
+            val fakeContent = FakeContent()
+
+            val routing =
+                routing(parentCoroutineContext = coroutineContext) {
+                    composable(path = "/initial") {
+                        fakeContent.content = "I'm the initial content"
+                        fakeContent.Composable()
+                    }
+                    composable(path = Regex("/(?<number>\\d+)")) {
+                        fakeContent.content = "I'm the regex based content with ${call.parameters["number"]}"
+                        fakeContent.Composable()
+                    }
+                }
+
+            composition.setContent {
+                Routing(
+                    routing = routing,
+                    startUri = "/initial",
+                )
+            }
+
+            // WHEN
+            advanceTimeBy(99) // Ask for start uri routing
+            clock.sendFrame(0L) // Ask for recomposition
+
+            routing.push(path = "/123")
+            advanceTimeBy(99) // Ask for /path routing
+            clock.sendFrame(0L) // Ask for recomposition
+
+            // THEN
+            assertEquals("I'm the regex based content with 123", fakeContent.result)
+        }
+
+    @Test
+    fun shouldComposeByRegexWithMultipleParameters() =
+        runComposeTest { coroutineContext, composition, clock ->
+            // GIVEN
+            val fakeContent = FakeContent()
+
+            val routing =
+                routing(parentCoroutineContext = coroutineContext) {
+                    composable(path = "/initial") {
+                        fakeContent.content = "I'm the initial content"
+                        fakeContent.Composable()
+                    }
+                    route(path = Regex("/(?<number>\\d+)")) {
+                        composable(path = Regex("(?<user>\\w+)/(?<login>.+)")) {
+                            fakeContent.content = "Regex with ${call.parameters}"
+                            fakeContent.Composable()
+                        }
+                    }
+                }
+
+            composition.setContent {
+                Routing(
+                    routing = routing,
+                    startUri = "/initial",
+                )
+            }
+
+            // WHEN
+            advanceTimeBy(99) // Ask for start uri routing
+            clock.sendFrame(0L) // Ask for recomposition
+
+            routing.push(path = "/456/qwe/rty")
+            advanceTimeBy(99) // Ask for /path routing
+            clock.sendFrame(0L) // Ask for recomposition
+
+            // THEN
+            assertEquals("Regex with Parameters [number=[456], user=[qwe], login=[rty]]", fakeContent.result)
+        }
 }

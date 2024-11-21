@@ -60,7 +60,7 @@ fun tailcard(param: List<String>?) {
     invoked += "/tailcard/{param...}" to (param ?: emptyList())
 }
 
-/*@Route(regex = ".+/hello")
+@Route(regex = ".+/hello")
 @Composable
 fun regex1() {
     invoked += ".+/hello" to listOf()
@@ -70,7 +70,7 @@ fun regex1() {
 @Composable
 fun regex2(number: Int) {
     invoked += "/(?<number>\\d+)" to listOf(number)
-}*/
+}
 
 @Route("/with-body")
 @Composable

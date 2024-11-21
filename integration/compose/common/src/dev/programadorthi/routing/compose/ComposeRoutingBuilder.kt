@@ -33,6 +33,19 @@ public fun Route.composable(
 ): Route = route(path = path, name = name, method = method) { composable(body) }
 
 @KtorDsl
+public fun Route.composable(
+    path: Regex,
+    body: @Composable PipelineContext<Unit, ApplicationCall>.() -> Unit,
+): Route = route(path = path) { composable(body) }
+
+@KtorDsl
+public fun Route.composable(
+    path: Regex,
+    method: RouteMethod,
+    body: @Composable PipelineContext<Unit, ApplicationCall>.() -> Unit,
+): Route = route(path = path, method = method) { composable(body) }
+
+@KtorDsl
 public fun Route.composable(body: @Composable PipelineContext<Unit, ApplicationCall>.() -> Unit) {
     val routing = asRouting ?: error("Your route $this must have a parent Routing")
     handle {

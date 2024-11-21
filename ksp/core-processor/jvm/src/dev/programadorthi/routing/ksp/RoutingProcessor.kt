@@ -151,10 +151,14 @@ private class RoutingProcessor(
         }
 
         val isScreen = classKind != null
-        val isComposable = !isScreen && annotations.any { it.shortName.asString() == "Composable" }
+        val memberName = when {
+            annotations.any { it.shortName.asString() == "Composable" } -> composable
+            isScreen -> screen
+            else -> handle
+        }
 
         if (isRegexRoute) {
-            check(!isComposable && !isScreen) {
+            check(!isScreen) {
                 // TODO: Add regex support to composable handle
                 "$qualifiedName has @Route(regex = ...) that cannot be applied to @Composable or Voyager Screen"
             }
@@ -162,7 +166,7 @@ private class RoutingProcessor(
                 configureSpec
                     .beginControlFlow(
                         "%M(path = %T(%S))",
-                        handle,
+                        memberName,
                         Regex::class,
                         routeAnnotation.regex
                     )
@@ -172,7 +176,7 @@ private class RoutingProcessor(
                 configureSpec
                     .beginControlFlow(
                         template,
-                        handle,
+                        memberName,
                         Regex::class,
                         routeAnnotation.regex,
                         routeMethod
@@ -182,11 +186,6 @@ private class RoutingProcessor(
             val named = when {
                 routeAnnotation.name.isBlank() -> "name = null"
                 else -> """name = "${routeAnnotation.name}""""
-            }
-            val memberName = when {
-                isComposable -> composable
-                isScreen -> screen
-                else -> handle
             }
             logger.info(">>>> transforming -> name: $named and member: $memberName")
             if (routeAnnotation.method.isBlank()) {
