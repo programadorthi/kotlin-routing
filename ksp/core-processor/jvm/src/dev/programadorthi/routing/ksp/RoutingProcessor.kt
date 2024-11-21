@@ -150,18 +150,13 @@ private class RoutingProcessor(
             "@Route having regex can't be named"
         }
 
-        val isScreen = classKind != null
         val memberName = when {
             annotations.any { it.shortName.asString() == "Composable" } -> composable
-            isScreen -> screen
+            classKind != null -> screen
             else -> handle
         }
 
         if (isRegexRoute) {
-            check(!isScreen) {
-                // TODO: Add regex support to composable handle
-                "$qualifiedName has @Route(regex = ...) that cannot be applied to @Composable or Voyager Screen"
-            }
             if (routeAnnotation.method.isBlank()) {
                 configureSpec
                     .beginControlFlow(

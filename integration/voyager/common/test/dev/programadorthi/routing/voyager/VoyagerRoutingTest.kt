@@ -4,6 +4,7 @@ import cafe.adriel.voyager.navigator.CurrentScreen
 import cafe.adriel.voyager.navigator.Navigator
 import dev.programadorthi.routing.core.RouteMethod
 import dev.programadorthi.routing.core.application.ApplicationCall
+import dev.programadorthi.routing.core.application.call
 import dev.programadorthi.routing.core.application.createApplicationPlugin
 import dev.programadorthi.routing.core.application.hooks.CallFailed
 import dev.programadorthi.routing.core.call
@@ -17,12 +18,12 @@ import dev.programadorthi.routing.voyager.helper.FakeScreen
 import dev.programadorthi.routing.voyager.helper.runComposeTest
 import io.ktor.http.Parameters
 import io.ktor.http.parametersOf
-import kotlinx.coroutines.ExperimentalCoroutinesApi
-import kotlinx.coroutines.test.advanceTimeBy
 import kotlin.test.Test
 import kotlin.test.assertEquals
 import kotlin.test.assertIs
 import kotlin.test.assertNotNull
+import kotlinx.coroutines.ExperimentalCoroutinesApi
+import kotlinx.coroutines.test.advanceTimeBy
 
 @OptIn(ExperimentalCoroutinesApi::class)
 internal class VoyagerRoutingTest {
@@ -150,10 +151,10 @@ internal class VoyagerRoutingTest {
             // THEN
             assertNotNull(result)
             assertNotNull(exception)
-            assertEquals("/path", "${result?.uri}")
-            assertEquals("", "${result?.name}")
-            assertEquals(RouteMethod.Empty, result?.routeMethod)
-            assertEquals(Parameters.Empty, result?.parameters)
+            assertEquals("/path", result.uri)
+            assertEquals("", result.name)
+            assertEquals(RouteMethod.Empty, result.routeMethod)
+            assertEquals(Parameters.Empty, result.parameters)
             assertIs<IllegalStateException>(exception)
             assertEquals(
                 "Voyager needs a stack route method to work. You called a screen /path using " +
@@ -374,9 +375,9 @@ internal class VoyagerRoutingTest {
                 VoyagerRouting(
                     routing = routing,
                     initialScreen =
-                        FakeScreen().apply {
-                            content = "I am the initial screen"
-                        },
+                    FakeScreen().apply {
+                        content = "I am the initial screen"
+                    },
                 ) { nav ->
                     navigator = nav
                     CurrentScreen()
@@ -444,9 +445,9 @@ internal class VoyagerRoutingTest {
                 VoyagerRouting(
                     routing = routing,
                     initialScreen =
-                        FakeScreen().apply {
-                            content = "I am the initial screen"
-                        },
+                    FakeScreen().apply {
+                        content = "I am the initial screen"
+                    },
                 ) { nav ->
                     navigator = nav
                     CurrentScreen()
@@ -496,9 +497,9 @@ internal class VoyagerRoutingTest {
                 VoyagerRouting(
                     routing = routing,
                     initialScreen =
-                        FakeScreen().apply {
-                            content = "I am the initial screen"
-                        },
+                    FakeScreen().apply {
+                        content = "I am the initial screen"
+                    },
                 ) { nav ->
                     navigator = nav
                     CurrentScreen()
@@ -527,5 +528,72 @@ internal class VoyagerRoutingTest {
 
             // THEN
             assertEquals(parametersOf("key" to listOf("value")), firstPushedScreen?.parameters)
+        }
+
+    @Test
+    fun shouldNavigateByRegex() =
+        runComposeTest { coroutineContext, composition, clock ->
+            // GIVEN
+            val fakeScreen = FakeScreen()
+
+            val routing =
+                routing(parentCoroutineContext = coroutineContext) {
+                    screen(path = Regex("/(?<number>\\d+)")) {
+                        fakeScreen.apply {
+                            content = "Hey, I am the called screen with number ${call.parameters["number"]}"
+                        }
+                    }
+                }
+
+            composition.setContent {
+                VoyagerRouting(
+                    routing = routing,
+                    initialScreen = FakeScreen(),
+                )
+            }
+
+            // WHEN
+            routing.push(path = "/123")
+            advanceTimeBy(99) // Ask for routing
+            clock.sendFrame(0L) // Ask for recomposition
+
+            // THEN
+            assertEquals("Hey, I am the called screen with number 123", fakeScreen.composed)
+        }
+
+    @Test
+    fun shouldNavigateByRegexWithMultipleParameters() =
+        runComposeTest { coroutineContext, composition, clock ->
+            // GIVEN
+            val fakeScreen = FakeScreen()
+
+            val routing =
+                routing(parentCoroutineContext = coroutineContext) {
+                    route(path = Regex("/(?<number>\\d+)")) {
+                        screen(path = Regex("(?<user>\\w+)/(?<login>.+)")) {
+                            fakeScreen.apply {
+                                content = "Hey, I am the called screen with ${call.parameters}"
+                            }
+                        }
+                    }
+                }
+
+            composition.setContent {
+                VoyagerRouting(
+                    routing = routing,
+                    initialScreen = FakeScreen(),
+                )
+            }
+
+            // WHEN
+            routing.push(path = "/456/qwe/rty")
+            advanceTimeBy(99) // Ask for routing
+            clock.sendFrame(0L) // Ask for recomposition
+
+            // THEN
+            assertEquals(
+                "Hey, I am the called screen with Parameters [number=[456], user=[qwe], login=[rty]]",
+                fakeScreen.composed
+            )
         }
 }

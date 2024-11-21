@@ -60,3 +60,12 @@ internal class Screen5(@Body val user: User) : Screen {
         invoked += "/screen-with-body" to listOf(user)
     }
 }
+
+@Route(regex = "/(?<number>\\d+)")
+internal class Screen6(val number: Int) : Screen {
+
+    @Composable
+    override fun Content() {
+        invoked += "/(?<number>\\d+)" to listOf(number)
+    }
+}

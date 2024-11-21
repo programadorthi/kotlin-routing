@@ -31,6 +31,19 @@ public fun Route.screen(
 ): Route = route(path = path, name = name, method = method) { screen(body) }
 
 @KtorDsl
+public fun Route.screen(
+    path: Regex,
+    body: suspend PipelineContext<Unit, ApplicationCall>.() -> Screen,
+): Route = route(path = path) { screen(body) }
+
+@KtorDsl
+public fun Route.screen(
+    path: Regex,
+    method: RouteMethod,
+    body: suspend PipelineContext<Unit, ApplicationCall>.() -> Screen,
+): Route = route(path = path, method = method) { screen(body) }
+
+@KtorDsl
 public fun Route.screen(body: suspend PipelineContext<Unit, ApplicationCall>.() -> Screen) {
     val routing = asRouting ?: error("Your route $this must have a parent Routing")
     handle {

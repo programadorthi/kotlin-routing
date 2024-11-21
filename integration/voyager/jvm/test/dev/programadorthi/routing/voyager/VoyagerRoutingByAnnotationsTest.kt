@@ -151,4 +151,29 @@ internal class VoyagerRoutingByAnnotationsTest {
             assertEquals(listOf(body), invoked.remove("/screen-with-body"))
         }
 
+    @Test
+    fun shouldHandleScreenRegex() =
+        runComposeTest { coroutineContext, composition, clock ->
+            // GIVEN
+            val routing =
+                routing(parentCoroutineContext = coroutineContext) {
+                    configure()
+                }
+
+            composition.setContent {
+                VoyagerRouting(
+                    routing = routing,
+                    initialScreen = FakeScreen(),
+                )
+            }
+
+            // WHEN
+            routing.push(path = "/123")
+            advanceTimeBy(99) // Ask for routing
+            clock.sendFrame(0L) // Ask for recomposition
+
+            // THEN
+            assertEquals(listOf(123), invoked.remove("/(?<number>\\d+)"))
+        }
+
 }
