@@ -1,6 +1,7 @@
 plugins {
     kotlin("multiplatform")
     kotlin("plugin.serialization")
+    alias(libs.plugins.ksp)
     id("org.jetbrains.kotlinx.kover")
     alias(libs.plugins.maven.publish)
 }
@@ -16,5 +17,18 @@ kotlin {
                 api(libs.serialization.core)
             }
         }
+        commonTest {
+            dependencies {
+                implementation(projects.ksp.coreAnnotations)
+            }
+        }
     }
+}
+
+dependencies {
+    add("kspJvmTest", projects.ksp.coreProcessor)
+}
+
+ksp {
+    arg("Routing_Module_Name", "Resources")
 }

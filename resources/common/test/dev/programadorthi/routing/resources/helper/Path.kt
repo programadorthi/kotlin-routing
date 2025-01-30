@@ -6,6 +6,9 @@ import io.ktor.resources.Resource
 class Path {
     @Resource("{id}")
     class Id(val parent: Path = Path(), val id: Int)
+
+    @Resource("/optional/{param?}")
+    class Optional(val parent: Path = Path(), val param: String?)
 }
 
 @Resource("/parent")

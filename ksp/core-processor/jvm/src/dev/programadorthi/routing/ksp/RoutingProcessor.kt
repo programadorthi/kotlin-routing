@@ -28,11 +28,13 @@ import com.squareup.kotlinpoet.FileSpec
 import com.squareup.kotlinpoet.FunSpec
 import com.squareup.kotlinpoet.KModifier
 import com.squareup.kotlinpoet.MemberName
+import com.squareup.kotlinpoet.ksp.toClassName
 import com.squareup.kotlinpoet.ksp.toTypeName
 import com.squareup.kotlinpoet.ksp.writeTo
 import dev.programadorthi.routing.annotation.Body
 import dev.programadorthi.routing.annotation.Path
 import dev.programadorthi.routing.annotation.Route
+import dev.programadorthi.routing.annotation.TypeSafeRoute
 
 public class RoutingProcessorProvider : SymbolProcessorProvider {
     override fun create(environment: SymbolProcessorEnvironment): SymbolProcessor {
@@ -66,8 +68,9 @@ private class RoutingProcessor(
             .addModifiers(KModifier.INTERNAL)
             .receiver(route)
 
-        resolver
-            .getSymbolsWithAnnotation(Route::class.java.name)
+        val routes = resolver.getSymbolsWithAnnotation(Route::class.java.name)
+        val typedRoutes = resolver.getSymbolsWithAnnotation(TypeSafeRoute::class.java.name)
+        (routes + typedRoutes)
             .filterIsInstance<KSDeclaration>()
             .forEach { symbol ->
                 symbol.transform(ksFiles, configureSpec, resolver)
@@ -92,8 +95,10 @@ private class RoutingProcessor(
             "$qualifiedName must not be private"
         }
         containingFile?.let(ksFiles::add)
-        val routeAnnotation = checkNotNull(getAnnotationsByType(Route::class).firstOrNull()) {
-            "Invalid state because is missing @Route to '$qualifiedName'"
+        val routeAnnotation = getAnnotationsByType(Route::class).firstOrNull()
+        val typedAnnotation = getAnnotationsByType(TypeSafeRoute::class).firstOrNull()
+        check(routeAnnotation == null || typedAnnotation == null) {
+            "@Route and @TypeSafeRoute can't be used together. Choose one or other"
         }
         when (this) {
             is KSFunctionDeclaration -> {
@@ -101,7 +106,7 @@ private class RoutingProcessor(
                     "$qualifiedName must be a top level fun"
                 }
                 logger.info(">>>> transforming fun: $qualifiedName")
-                wrapFunctionWithHandle(routeAnnotation, qualifiedName, configureSpec, resolver, null)
+                wrapFunctionWithHandle(routeAnnotation ?: typedAnnotation, qualifiedName, configureSpec, resolver, null)
             }
 
             is KSClassDeclaration -> {
@@ -120,9 +125,12 @@ private class RoutingProcessor(
                     .filterIsInstance<KSFunctionDeclaration>()
                     .filter { func -> func.simpleName.asString() == CONSTRUCTOR_NAME }
                     .forEach { constructor ->
-                        val annotation = constructor.getAnnotationsByType(Route::class).firstOrNull() ?: routeAnnotation
+                        val rAnnotation =
+                            constructor.getAnnotationsByType(Route::class).firstOrNull() ?: routeAnnotation
+                        val tAnnotation =
+                            constructor.getAnnotationsByType(TypeSafeRoute::class).firstOrNull() ?: typedAnnotation
                         constructor.wrapFunctionWithHandle(
-                            annotation,
+                            rAnnotation ?: tAnnotation,
                             qualifiedName,
                             configureSpec,
                             resolver,
@@ -136,77 +144,116 @@ private class RoutingProcessor(
     }
 
     private fun KSFunctionDeclaration.wrapFunctionWithHandle(
-        routeAnnotation: Route,
+        annotation: Any?,
         qualifiedName: String,
         configureSpec: FunSpec.Builder,
         resolver: Resolver,
         classKind: ClassKind?,
     ) {
-        val isRegexRoute = routeAnnotation.regex.isNotBlank()
-        check(isRegexRoute || routeAnnotation.path.isNotBlank()) {
-            "@Route requires a path or a regex"
-        }
-        check(!isRegexRoute || routeAnnotation.name.isBlank()) {
-            "@Route having regex can't be named"
-        }
+        val routeAnnotation = annotation as? Route
+        val typedAnnotation = annotation as? TypeSafeRoute
 
         val memberName = when {
             annotations.any { it.shortName.asString() == "Composable" } -> composable
             classKind != null -> screen
+            typedAnnotation != null -> resourceHandle
             else -> handle
         }
 
-        if (isRegexRoute) {
-            if (routeAnnotation.method.isBlank()) {
-                configureSpec
-                    .beginControlFlow(
-                        "%M(path = %T(%S))",
-                        memberName,
-                        Regex::class,
-                        routeAnnotation.regex
-                    )
-            } else {
-                val template =
-                    """%M(path = %T(%S), method = %M(value = "${routeAnnotation.method}"))"""
-                configureSpec
-                    .beginControlFlow(
-                        template,
-                        memberName,
-                        Regex::class,
-                        routeAnnotation.regex,
-                        routeMethod
-                    )
-            }
-        } else {
-            val named = when {
-                routeAnnotation.name.isBlank() -> "name = null"
-                else -> """name = "${routeAnnotation.name}""""
-            }
-            logger.info(">>>> transforming -> name: $named and member: $memberName")
-            if (routeAnnotation.method.isBlank()) {
-                configureSpec
-                    .beginControlFlow("%M(path = %S, $named)", memberName, routeAnnotation.path)
-            } else {
-                val template =
-                    """%M(path = %S, $named, method = %M(value = "${routeAnnotation.method}"))"""
-                configureSpec
-                    .beginControlFlow(template, memberName, routeAnnotation.path, routeMethod)
-            }
-        }
+        val codeBlock = when {
+            typedAnnotation != null -> {
+                val type = annotations
+                    .filter { it.shortName.asString() == "TypeSafeRoute" }
+                    .mapNotNull { it.arguments.find { it.name?.asString() == "type" }?.value as? KSType }
+                    .firstOrNull() ?: error("'$qualifiedName' should be annotated with @TypeSafeRoute")
+                when {
+                    typedAnnotation.method.isBlank() ->
+                        configureSpec
+                            .beginControlFlow("%M<%T>", memberName, type.toClassName())
 
-        val codeBlock = generateHandleBody(isRegexRoute, routeAnnotation, resolver, qualifiedName, classKind)
+                    else ->
+                        configureSpec
+                            .beginControlFlow(
+                                "%M<%T>(method = %M(value = \"${typedAnnotation.method}\"))",
+                                memberName,
+                                type.toClassName(),
+                                routeMethod
+                            )
+                }
+                generateHandleBody(false, typedAnnotation, resolver, qualifiedName, classKind, type)
+            }
+
+            routeAnnotation != null -> {
+                val isRegexRoute = routeAnnotation.regex.isNotBlank()
+                routeAnnotation.setupAnnotation(isRegexRoute, configureSpec, memberName)
+                generateHandleBody(isRegexRoute, routeAnnotation, resolver, qualifiedName, classKind, null)
+            }
+
+            else -> error("'$qualifiedName' should have been annotated with @Route or @TypeSafeRoute")
+        }
 
         configureSpec
             .addCode(codeBlock)
             .endControlFlow()
     }
 
+    private fun Route.setupAnnotation(
+        isRegexRoute: Boolean,
+        configureSpec: FunSpec.Builder,
+        memberName: MemberName
+    ) {
+        check(isRegexRoute || path.isNotBlank()) {
+            "@Route requires a path or a regex"
+        }
+        check(!isRegexRoute || name.isBlank()) {
+            "@Route having regex can't be named"
+        }
+
+        if (isRegexRoute) {
+            if (method.isBlank()) {
+                configureSpec
+                    .beginControlFlow(
+                        "%M(path = %T(%S))",
+                        memberName,
+                        Regex::class,
+                        regex
+                    )
+            } else {
+                val template = """%M(path = %T(%S), method = %M(value = "$method"))"""
+                configureSpec
+                    .beginControlFlow(
+                        template,
+                        memberName,
+                        Regex::class,
+                        regex,
+                        routeMethod
+                    )
+            }
+        } else {
+            val named = when {
+                name.isBlank() -> "name = null"
+                else -> """name = "$name""""
+            }
+            logger.info(">>>> transforming -> name: $named and member: $memberName")
+            if (method.isBlank()) {
+                configureSpec
+                    .beginControlFlow("%M(path = %S, $named)", memberName, path)
+            } else {
+                val template =
+                    """%M(path = %S, $named, method = %M(value = "$method"))"""
+                configureSpec
+                    .beginControlFlow(template, memberName, path, routeMethod)
+            }
+        }
+    }
+
     private fun KSFunctionDeclaration.generateHandleBody(
         isRegexRoute: Boolean,
-        routeAnnotation: Route,
+        routeAnnotation: Any,
         resolver: Resolver,
         qualifiedName: String,
         classKind: ClassKind?,
+        safeType: KSType?,
     ): CodeBlock {
         val funcBuilder = CodeBlock.builder()
         val hasZeroOrOneParameter = parameters.size < 2
@@ -230,31 +277,43 @@ private class RoutingProcessor(
                     .indent()
         }
 
+        var bodyCount = 0
         for (param in parameters) {
             check(param.isVararg.not()) {
                 "Vararg is not supported as fun parameter"
             }
+            check(bodyCount < 1) {
+                "Multiple parameters annotated with @Body are not supported"
+            }
             var applied = param.tryApplyCallProperty(hasZeroOrOneParameter, funcBuilder)
             if (!applied) {
                 applied = param.tryApplyBody(hasZeroOrOneParameter, funcBuilder)
+                if (applied) {
+                    bodyCount++
+                }
             }
-            if (!applied && !isRegexRoute) {
-                applied = param.tryApplyTailCard(
-                    routePath = routeAnnotation.path,
-                    resolver = resolver,
-                    hasZeroOrOneParameter = hasZeroOrOneParameter,
-                    builder = funcBuilder,
-                )
+            if (!applied && routeAnnotation is TypeSafeRoute) {
+                applied = param.tryApplySafeParams(hasZeroOrOneParameter, funcBuilder, safeType)
             }
-            if (!applied) {
-                param.tryApplyPath(
-                    isRegexRoute = isRegexRoute,
-                    routeAnnotation = routeAnnotation,
-                    qualifiedName = qualifiedName,
-                    resolver = resolver,
-                    hasZeroOrOneParameter = hasZeroOrOneParameter,
-                    builder = funcBuilder,
-                )
+            if (!applied && routeAnnotation is Route) {
+                if (!isRegexRoute) {
+                    applied = param.tryApplyTailCard(
+                        routePath = routeAnnotation.path,
+                        resolver = resolver,
+                        hasZeroOrOneParameter = hasZeroOrOneParameter,
+                        builder = funcBuilder,
+                    )
+                }
+                if (!applied) {
+                    param.tryApplyPath(
+                        isRegexRoute = isRegexRoute,
+                        routeAnnotation = routeAnnotation,
+                        qualifiedName = qualifiedName,
+                        resolver = resolver,
+                        hasZeroOrOneParameter = hasZeroOrOneParameter,
+                        builder = funcBuilder,
+                    )
+                }
             }
         }
 
@@ -306,6 +365,25 @@ private class RoutingProcessor(
 
             else -> builder.addStatement(PATH_TEMPLATE, paramName, call, customName, "$literal,")
         }
+    }
+
+    private fun KSValueParameter.tryApplySafeParams(
+        hasZeroOrOneParameter: Boolean,
+        builder: CodeBlock.Builder,
+        safeType: KSType?,
+    ): Boolean {
+        val paramName = name?.asString()
+        val paramType = type.resolve()
+        check(paramType == safeType) {
+            "'$paramName' has a not supported type. It must be a " +
+                "'${safeType?.declaration?.qualifiedName?.asString()}', annotated with @Body or be " +
+                "an ApplicationCall or an ApplicationCall parameter"
+        }
+        when {
+            hasZeroOrOneParameter -> builder.add(TYPE_TEMPLATE, paramName, "it", "")
+            else -> builder.addStatement(TYPE_TEMPLATE, paramName, "it", ",")
+        }
+        return true
     }
 
     @OptIn(KspExperimental::class)
@@ -454,6 +532,7 @@ private class RoutingProcessor(
         private val receive = MemberName("dev.programadorthi.routing.core.application", "receive")
         private val receiveNullable =
             MemberName("dev.programadorthi.routing.core.application", "receiveNullable")
+        private val resourceHandle = MemberName("dev.programadorthi.routing.resources", "handle")
 
         private const val CALL_TEMPLATE = """%L = %M%L"""
         private const val CALL_PROPERTY_TEMPLATE = """%L = %M.%L%L"""
@@ -464,6 +543,7 @@ private class RoutingProcessor(
         private const val FUN_TYPE_INVOKE_START = "$FUN_TYPE_INVOKE("
         private const val PATH_TEMPLATE = """%L = %M.parameters["%L"]%L"""
         private const val TAILCARD_TEMPLATE = """%L = %M.parameters.getAll("%L")%L"""
+        private const val TYPE_TEMPLATE = """%L = %L%L"""
 
         private const val FLAG_ROUTING_MODULE_NAME = "Routing_Module_Name"
 
